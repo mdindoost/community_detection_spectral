@@ -1,0 +1,9 @@
+name = "SparsificationProject"
+uuid = "65fcf83e-13e6-4800-ae74-5727ca81a943"
+authors = ["mdindoost <mohammad.dindoost@gmail.com>"]
+version = "0.1.0"
+
+[deps]
+Laplacians = "6f8e5838-0efe-5de0-80a3-5fb4f8dbb1de"
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"

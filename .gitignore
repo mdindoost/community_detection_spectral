@@ -1,0 +1,39 @@
+# Python
+venv/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+
+# Data and results (large files)
+datasets/
+results/
+logs/
+temp_lfr/
+
+# Julia
+julia-*/
+julia_depot/
+*.jl.cov
+*.jl.mem
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Environment
+.env
+*.log
