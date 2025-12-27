@@ -33,6 +33,7 @@ PROJECT_ROOT = Path(__file__).parent.parent.resolve()
 # Dataset configurations
 SNAP_DATASETS = {
     # name: (url, has_ground_truth, ground_truth_url)
+    # ----- Small datasets -----
     'email-Eu-core': (
         'https://snap.stanford.edu/data/email-Eu-core.txt.gz',
         True,
@@ -53,6 +54,7 @@ SNAP_DATASETS = {
         False,
         None
     ),
+    # ----- Medium datasets -----
     'com-DBLP': (
         'https://snap.stanford.edu/data/bigdata/communities/com-dblp.ungraph.txt.gz',
         True,
@@ -68,7 +70,48 @@ SNAP_DATASETS = {
         True,
         'https://snap.stanford.edu/data/bigdata/communities/com-youtube.top5000.cmty.txt.gz'
     ),
+    # ----- Large datasets -----
+    'com-LiveJournal': (
+        'https://snap.stanford.edu/data/bigdata/communities/com-lj.ungraph.txt.gz',
+        True,
+        'https://snap.stanford.edu/data/bigdata/communities/com-lj.top5000.cmty.txt.gz'
+    ),
+    'com-Orkut': (
+        'https://snap.stanford.edu/data/bigdata/communities/com-orkut.ungraph.txt.gz',
+        True,
+        'https://snap.stanford.edu/data/bigdata/communities/com-orkut.top5000.cmty.txt.gz'
+    ),
+    'com-Friendster': (
+        'https://snap.stanford.edu/data/bigdata/communities/com-friendster.ungraph.txt.gz',
+        True,
+        'https://snap.stanford.edu/data/bigdata/communities/com-friendster.top5000.cmty.txt.gz'
+    ),
+    # ----- Citation networks -----
+    'cora': (
+        'https://linqs-data.soe.ucsc.edu/public/lbc/cora.tgz',
+        True,
+        None  # Labels included in tgz
+    ),
+    'citeseer': (
+        'https://linqs-data.soe.ucsc.edu/public/lbc/citeseer.tgz',
+        True,
+        None  # Labels included in tgz
+    ),
+    # ----- PPI networks -----
+    'yeast-ppi': (
+        'http://nrvis.com/download/data/bio/bio-yeast.zip',
+        False,
+        None
+    ),
+    'human-ppi': (
+        'http://nrvis.com/download/data/bio/bio-human-gene1.zip',
+        False,
+        None
+    ),
 }
+
+# Datasets requiring special parsing
+SPECIAL_DATASETS = {'cora', 'citeseer', 'yeast-ppi', 'human-ppi'}
 
 # Julia paths
 JULIA_VERSION = "1.10.2"
@@ -122,6 +165,167 @@ def download_file(url, dest_path):
     urllib.request.urlretrieve(url, dest_path)
 
 
+def _load_special_dataset(name):
+    """Load datasets with special formats (Cora, Citeseer, PPI networks)."""
+    import tarfile
+    import zipfile
+
+    dataset_dir = get_dataset_dir(name)
+    dataset_dir.mkdir(parents=True, exist_ok=True)
+
+    url, has_gt, _ = SNAP_DATASETS[name]
+
+    if name in ('cora', 'citeseer'):
+        return _load_citation_dataset(name, url, dataset_dir)
+    elif name in ('yeast-ppi', 'human-ppi'):
+        return _load_ppi_dataset(name, url, dataset_dir)
+    else:
+        raise ValueError(f"Unknown special dataset: {name}")
+
+
+def _load_citation_dataset(name, url, dataset_dir):
+    """Load Cora or Citeseer citation network."""
+    import tarfile
+
+    tgz_path = dataset_dir / f"{name}.tgz"
+    extract_dir = dataset_dir / name
+
+    # Download and extract
+    if not extract_dir.exists():
+        if not tgz_path.exists():
+            download_file(url, tgz_path)
+        print(f"  Extracting {tgz_path}...")
+        with tarfile.open(tgz_path, 'r:gz') as tar:
+            tar.extractall(dataset_dir)
+
+    # Find the cites file (edges) and content file (labels)
+    cites_file = extract_dir / f"{name}.cites"
+    content_file = extract_dir / f"{name}.content"
+
+    if not cites_file.exists():
+        raise FileNotFoundError(f"Could not find {cites_file}")
+
+    # Parse content file to get node IDs and labels
+    print(f"  Parsing {content_file}...")
+    node_to_label = {}
+    node_ids = []
+    with open(content_file, 'r') as f:
+        for line in f:
+            parts = line.strip().split('\t')
+            if len(parts) >= 2:
+                node_id = parts[0]
+                label = parts[-1]  # Last column is the label
+                node_ids.append(node_id)
+                node_to_label[node_id] = label
+
+    # Create node mapping
+    node_map = {node_id: idx for idx, node_id in enumerate(node_ids)}
+    n_nodes = len(node_ids)
+
+    # Create label to int mapping
+    unique_labels = sorted(set(node_to_label.values()))
+    label_map = {label: idx for idx, label in enumerate(unique_labels)}
+
+    # Ground truth
+    ground_truth = {node_map[nid]: label_map[label] for nid, label in node_to_label.items() if nid in node_map}
+
+    # Parse edges from cites file
+    print(f"  Parsing edges from {cites_file}...")
+    edges = []
+    for line in open(cites_file, 'r'):
+        parts = line.strip().split('\t')
+        if len(parts) >= 2:
+            src, dst = parts[0], parts[1]
+            if src in node_map and dst in node_map:
+                s, d = node_map[src], node_map[dst]
+                if s != d:
+                    edges.append((s, d))
+                    edges.append((d, s))
+
+    # Remove duplicates
+    edge_set = set((min(s, d), max(s, d)) for s, d in edges)
+    edges = []
+    for s, d in edge_set:
+        edges.append((s, d))
+        edges.append((d, s))
+
+    print(f"  Loaded: {n_nodes} nodes, {len(edges)//2} undirected edges, {len(unique_labels)} classes")
+    return edges, n_nodes, ground_truth
+
+
+def _load_ppi_dataset(name, url, dataset_dir):
+    """Load PPI network from NetworkRepository."""
+    import zipfile
+
+    zip_path = dataset_dir / f"{name}.zip"
+
+    # Download
+    if not zip_path.exists():
+        download_file(url, zip_path)
+
+    # Extract
+    print(f"  Extracting {zip_path}...")
+    with zipfile.ZipFile(zip_path, 'r') as z:
+        z.extractall(dataset_dir)
+
+    # Find the edges file (usually .edges or .mtx)
+    edges_file = None
+    for f in dataset_dir.iterdir():
+        if f.suffix == '.edges' or (f.suffix == '.mtx' and 'bio' in f.name):
+            edges_file = f
+            break
+
+    if edges_file is None:
+        # Try to find any file with edges
+        for f in dataset_dir.iterdir():
+            if f.is_file() and f.suffix not in ('.zip',):
+                edges_file = f
+                break
+
+    if edges_file is None:
+        raise FileNotFoundError(f"Could not find edges file in {dataset_dir}")
+
+    print(f"  Parsing edges from {edges_file}...")
+    edges = []
+    node_set = set()
+
+    with open(edges_file, 'r') as f:
+        for line in f:
+            line = line.strip()
+            if not line or line.startswith('%') or line.startswith('#'):
+                continue
+            parts = line.split()
+            if len(parts) >= 2:
+                try:
+                    src, dst = int(parts[0]), int(parts[1])
+                    edges.append((src, dst))
+                    node_set.add(src)
+                    node_set.add(dst)
+                except ValueError:
+                    continue
+
+    # Remap to 0-indexed
+    node_list = sorted(node_set)
+    node_map = {old: new for new, old in enumerate(node_list)}
+    n_nodes = len(node_list)
+
+    edges = [(node_map[s], node_map[d]) for s, d in edges]
+
+    # Make undirected
+    edge_set = set()
+    for s, d in edges:
+        if s != d:
+            edge_set.add((min(s, d), max(s, d)))
+
+    edges = []
+    for s, d in edge_set:
+        edges.append((s, d))
+        edges.append((d, s))
+
+    print(f"  Loaded: {n_nodes} nodes, {len(edges)//2} undirected edges")
+    return edges, n_nodes, None  # No ground truth for PPI
+
+
 def load_snap_dataset(name):
     """
     Load a SNAP dataset, downloading if necessary.
@@ -136,6 +340,10 @@ def load_snap_dataset(name):
     """
     if name not in SNAP_DATASETS:
         raise ValueError(f"Unknown dataset: {name}. Available: {list(SNAP_DATASETS.keys())}")
+
+    # Handle special datasets with different formats
+    if name in SPECIAL_DATASETS:
+        return _load_special_dataset(name)
 
     dataset_dir = get_dataset_dir(name)
     dataset_dir.mkdir(parents=True, exist_ok=True)

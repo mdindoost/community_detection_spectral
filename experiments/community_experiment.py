@@ -430,7 +430,7 @@ def main():
     if epsilon_values:
         print(f"Epsilon values (override): {epsilon_values}")
     else:
-        print("Epsilon values: auto (sparse datasets get more values)")
+        print(f"Epsilon values: {EPSILON_VALUES}")
 
     # Create results directory
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
