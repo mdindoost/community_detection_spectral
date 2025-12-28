@@ -76,6 +76,8 @@ community_detection_spectral/
 │   ├── community_experiment.py   # SNAP dataset experiments
 │   ├── lfr_experiment.py         # LFR benchmark experiments
 │   ├── noisy_lfr_experiment.py   # Noisy LFR experiments
+│   ├── cluster_sparsification.py # Cluster subgraph analysis
+│   ├── test_networks.py          # Synthetic test networks
 │   └── utils.py                  # Shared utilities
 ├── sparsify_graph.jl             # Julia spectral sparsification
 ├── gather_results.py             # Aggregate results into report
@@ -83,6 +85,7 @@ community_detection_spectral/
 ├── run_lfr.sh                    # Run LFR benchmarks
 ├── run_noisy_lfr.sh              # Run noisy LFR experiments
 ├── run_new_datasets.sh           # Run new datasets (citation, PPI)
+├── run_social_networks.sh        # Run social network datasets
 ├── JuliaProject/                 # Julia dependencies
 ├── datasets/                     # Downloaded data (auto-created)
 └── results/                      # Experiment outputs (auto-created)
@@ -104,6 +107,9 @@ python experiments/community_experiment.py --datasets email-Eu-core wiki-Vote co
 
 # New datasets (citation + PPI networks)
 ./run_new_datasets.sh
+
+# Social networks (Facebook100 + Pokec + Enron)
+./run_social_networks.sh
 ```
 
 **Available Datasets:**
@@ -117,14 +123,20 @@ python experiments/community_experiment.py --datasets email-Eu-core wiki-Vote co
 | citeseer | 3.3K | 4.7K | Yes | Low |
 | yeast-ppi | 2K | 7K | No | Low |
 | human-ppi | 4K | 86K | No | Low |
+| facebook-combined | 4K | 88K | No | Low |
+| Rice31 | 4K | 184K | No | Low |
+| Texas80 | 36K | 1.6M | No | Medium |
+| Penn94 | 42K | 1.4M | No | Medium |
+| email-Enron | 37K | 184K | No | Low |
 | soc-Epinions1 | 76K | 405K | No | Medium |
 | com-DBLP | 317K | 1M | Yes | Medium |
 | com-Amazon | 335K | 926K | Yes | Medium |
 | com-Youtube | 1.1M | 3M | Yes | High |
+| soc-Pokec | 1.6M | 30M | No | High |
 | com-LiveJournal | 4M | 34M | Yes | Very High |
 | com-Orkut | 3M | 117M | Yes | Very High |
 
-**Note:** Large datasets (com-LiveJournal, com-Orkut) require 32GB+ RAM for spectral sparsification.
+**Note:** Large datasets (soc-Pokec, com-LiveJournal, com-Orkut) require 32GB+ RAM for spectral sparsification.
 
 ### 2. LFR Benchmarks (Synthetic)
 
@@ -160,6 +172,36 @@ python experiments/noisy_lfr_experiment.py --n 1000 --repeats 5
 **Noise levels:** 0%, 10%, 20%, 30%, 50%
 
 **Expected result:** Sparsification hurts clean graphs but helps noisy graphs.
+
+### 4. Cluster Subgraph Sparsification Analysis
+
+Analyzes how spectral sparsification affects individual clusters/communities. Loads a pre-clustered graph, extracts each cluster as a subgraph, and examines sparsification impact on connectivity.
+
+```bash
+python experiments/cluster_sparsification.py
+```
+
+**Analysis includes:**
+- **Min-cut analysis:** Finds minimum edge cut before/after sparsification
+- **Well-Connected Clusters (WCC):** Identifies clusters where min_cut > log(n)
+- **Effective Resistance:** Shows ER of min-cut edges to explain why some get removed
+- **Degree-1 nodes:** Tracks nodes that become leaves after sparsification
+- **WCC preservation:** Checks if well-connected status is maintained
+
+**Key insight:** Spectral sparsification preserves cuts within (1±ε) factor, but individual min-cut edges may be removed if they have low effective resistance (i.e., parallel paths exist).
+
+### 5. Synthetic Test Networks
+
+Visualizes effective resistance and sparsification behavior on simple graph structures.
+
+```bash
+python experiments/test_networks.py
+```
+
+**Test graphs:**
+- Two triangles with bridge (tests bridge preservation)
+- Two stars with 3 bridges (tests parallel path behavior)
+- K4 with tail (tests clique vs chain ER differences)
 
 ## Metrics
 

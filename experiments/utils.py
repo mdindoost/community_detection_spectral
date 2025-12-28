@@ -108,10 +108,147 @@ SNAP_DATASETS = {
         False,
         None
     ),
+    # ----- Facebook networks -----
+    'facebook-combined': (
+        'https://snap.stanford.edu/data/facebook_combined.txt.gz',
+        False,
+        None
+    ),
+    # Facebook100 university networks (from Network Repository)
+    'Amherst41': ('https://nrvis.com/download/data/socfb/socfb-Amherst41.zip', False, None),
+    'Bowdoin47': ('https://nrvis.com/download/data/socfb/socfb-Bowdoin47.zip', False, None),
+    'Brandeis99': ('https://nrvis.com/download/data/socfb/socfb-Brandeis99.zip', False, None),
+    'Brown11': ('https://nrvis.com/download/data/socfb/socfb-Brown11.zip', False, None),
+    'Bucknell39': ('https://nrvis.com/download/data/socfb/socfb-Bucknell39.zip', False, None),
+    'Cal65': ('https://nrvis.com/download/data/socfb/socfb-Cal65.zip', False, None),
+    'Caltech36': ('https://nrvis.com/download/data/socfb/socfb-Caltech36.zip', False, None),
+    'Carnegie49': ('https://nrvis.com/download/data/socfb/socfb-Carnegie49.zip', False, None),
+    'Colgate88': ('https://nrvis.com/download/data/socfb/socfb-Colgate88.zip', False, None),
+    'Columbia2': ('https://nrvis.com/download/data/socfb/socfb-Columbia2.zip', False, None),
+    'Cornell5': ('https://nrvis.com/download/data/socfb/socfb-Cornell5.zip', False, None),
+    'Dartmouth6': ('https://nrvis.com/download/data/socfb/socfb-Dartmouth6.zip', False, None),
+    'Duke14': ('https://nrvis.com/download/data/socfb/socfb-Duke14.zip', False, None),
+    'Emory27': ('https://nrvis.com/download/data/socfb/socfb-Emory27.zip', False, None),
+    'Georgetown15': ('https://nrvis.com/download/data/socfb/socfb-Georgetown15.zip', False, None),
+    'GWU54': ('https://nrvis.com/download/data/socfb/socfb-GWU54.zip', False, None),
+    'Hamilton46': ('https://nrvis.com/download/data/socfb/socfb-Hamilton46.zip', False, None),
+    'Harvard1': ('https://nrvis.com/download/data/socfb/socfb-Harvard1.zip', False, None),
+    'Haverford76': ('https://nrvis.com/download/data/socfb/socfb-Haverford76.zip', False, None),
+    'Howard90': ('https://nrvis.com/download/data/socfb/socfb-Howard90.zip', False, None),
+    'Indiana69': ('https://nrvis.com/download/data/socfb/socfb-Indiana69.zip', False, None),
+    'JMU79': ('https://nrvis.com/download/data/socfb/socfb-JMU79.zip', False, None),
+    'JohnsHopkins55': ('https://nrvis.com/download/data/socfb/socfb-Johns-Hopkins55.zip', False, None),
+    'Lehigh96': ('https://nrvis.com/download/data/socfb/socfb-Lehigh96.zip', False, None),
+    'Maine59': ('https://nrvis.com/download/data/socfb/socfb-Maine59.zip', False, None),
+    'Mich67': ('https://nrvis.com/download/data/socfb/socfb-Mich67.zip', False, None),
+    'Michigan23': ('https://nrvis.com/download/data/socfb/socfb-Michigan23.zip', False, None),
+    'Middlebury45': ('https://nrvis.com/download/data/socfb/socfb-Middlebury45.zip', False, None),
+    'MIT8': ('https://nrvis.com/download/data/socfb/socfb-MIT8.zip', False, None),
+    'MSU24': ('https://nrvis.com/download/data/socfb/socfb-MSU24.zip', False, None),
+    'UCSB37': ('https://nrvis.com/download/data/socfb/socfb-UCSB37.zip', False, None),
+    'UNC28': ('https://nrvis.com/download/data/socfb/socfb-UNC28.zip', False, None),
+    'Northeastern19': ('https://nrvis.com/download/data/socfb/socfb-Northeastern19.zip', False, None),
+    'Northwestern25': ('https://nrvis.com/download/data/socfb/socfb-Northwestern25.zip', False, None),
+    'NotreDame57': ('https://nrvis.com/download/data/socfb/socfb-Notre-Dame57.zip', False, None),
+    'NYU9': ('https://nrvis.com/download/data/socfb/socfb-NYU9.zip', False, None),
+    'Oberlin44': ('https://nrvis.com/download/data/socfb/socfb-Oberlin44.zip', False, None),
+    'Penn94': ('https://nrvis.com/download/data/socfb/socfb-Penn94.zip', False, None),
+    'Pepperdine86': ('https://nrvis.com/download/data/socfb/socfb-Pepperdine86.zip', False, None),
+    'Princeton12': ('https://nrvis.com/download/data/socfb/socfb-Princeton12.zip', False, None),
+    'Reed98': ('https://nrvis.com/download/data/socfb/socfb-Reed98.zip', False, None),
+    'Rice31': ('https://nrvis.com/download/data/socfb/socfb-Rice31.zip', False, None),
+    'Rochester38': ('https://nrvis.com/download/data/socfb/socfb-Rochester38.zip', False, None),
+    'Rutgers89': ('https://nrvis.com/download/data/socfb/socfb-Rutgers89.zip', False, None),
+    'Santa74': ('https://nrvis.com/download/data/socfb/socfb-Santa74.zip', False, None),
+    'Simmons81': ('https://nrvis.com/download/data/socfb/socfb-Simmons81.zip', False, None),
+    'Smith60': ('https://nrvis.com/download/data/socfb/socfb-Smith60.zip', False, None),
+    'Stanford3': ('https://nrvis.com/download/data/socfb/socfb-Stanford3.zip', False, None),
+    'Swarthmore42': ('https://nrvis.com/download/data/socfb/socfb-Swarthmore42.zip', False, None),
+    'Syracuse56': ('https://nrvis.com/download/data/socfb/socfb-Syracuse56.zip', False, None),
+    'Temple83': ('https://nrvis.com/download/data/socfb/socfb-Temple83.zip', False, None),
+    'Tennessee95': ('https://nrvis.com/download/data/socfb/socfb-Tennessee95.zip', False, None),
+    'Texas80': ('https://nrvis.com/download/data/socfb/socfb-Texas80.zip', False, None),
+    'Tufts18': ('https://nrvis.com/download/data/socfb/socfb-Tufts18.zip', False, None),
+    'Tulane29': ('https://nrvis.com/download/data/socfb/socfb-Tulane29.zip', False, None),
+    'UC33': ('https://nrvis.com/download/data/socfb/socfb-UC33.zip', False, None),
+    'UC61': ('https://nrvis.com/download/data/socfb/socfb-UC61.zip', False, None),
+    'UC64': ('https://nrvis.com/download/data/socfb/socfb-UC64.zip', False, None),
+    'UCLA26': ('https://nrvis.com/download/data/socfb/socfb-UCLA26.zip', False, None),
+    'UCSC68': ('https://nrvis.com/download/data/socfb/socfb-UCSC68.zip', False, None),
+    'UChicago30': ('https://nrvis.com/download/data/socfb/socfb-UChicago30.zip', False, None),
+    'UConn91': ('https://nrvis.com/download/data/socfb/socfb-UConn91.zip', False, None),
+    'UF21': ('https://nrvis.com/download/data/socfb/socfb-UF21.zip', False, None),
+    'UIllinois20': ('https://nrvis.com/download/data/socfb/socfb-UIllinois20.zip', False, None),
+    'UMass92': ('https://nrvis.com/download/data/socfb/socfb-UMass92.zip', False, None),
+    'UPenn7': ('https://nrvis.com/download/data/socfb/socfb-UPenn7.zip', False, None),
+    'USC35': ('https://nrvis.com/download/data/socfb/socfb-USC35.zip', False, None),
+    'USF51': ('https://nrvis.com/download/data/socfb/socfb-USF51.zip', False, None),
+    'USFCA72': ('https://nrvis.com/download/data/socfb/socfb-USFCA72.zip', False, None),
+    'UVA16': ('https://nrvis.com/download/data/socfb/socfb-UVA16.zip', False, None),
+    'Vanderbilt48': ('https://nrvis.com/download/data/socfb/socfb-Vanderbilt48.zip', False, None),
+    'Vermont70': ('https://nrvis.com/download/data/socfb/socfb-Vermont70.zip', False, None),
+    'Villanova62': ('https://nrvis.com/download/data/socfb/socfb-Villanova62.zip', False, None),
+    'Virginia63': ('https://nrvis.com/download/data/socfb/socfb-Virginia63.zip', False, None),
+    'Wake73': ('https://nrvis.com/download/data/socfb/socfb-Wake73.zip', False, None),
+    'WashU32': ('https://nrvis.com/download/data/socfb/socfb-WashU32.zip', False, None),
+    'Wellesley22': ('https://nrvis.com/download/data/socfb/socfb-Wellesley22.zip', False, None),
+    'Wesleyan43': ('https://nrvis.com/download/data/socfb/socfb-Wesleyan43.zip', False, None),
+    'William77': ('https://nrvis.com/download/data/socfb/socfb-William77.zip', False, None),
+    'Williams40': ('https://nrvis.com/download/data/socfb/socfb-Williams40.zip', False, None),
+    'Wisconsin87': ('https://nrvis.com/download/data/socfb/socfb-Wisconsin87.zip', False, None),
+    'Yale4': ('https://nrvis.com/download/data/socfb/socfb-Yale4.zip', False, None),
+    # ----- Other social networks -----
+    'soc-Pokec': (
+        'https://snap.stanford.edu/data/soc-pokec-relationships.txt.gz',
+        False,
+        None
+    ),
+    'email-Enron': (
+        'https://snap.stanford.edu/data/email-Enron.txt.gz',
+        False,
+        None
+    ),
+    # ----- Classic benchmark graphs -----
+    'karate': ('networkx_builtin', True, None),  # Zachary's Karate Club
+    'dolphins': ('https://nrvis.com/download/data/soc/soc-dolphins.zip', True, None),
+    'football': ('https://nrvis.com/download/data/misc/football.zip', True, None),
+    'polbooks': ('https://nrvis.com/download/data/misc/polbooks.zip', True, None),
+    'lesmis': ('https://nrvis.com/download/data/misc/lesmis.zip', False, None),
+    'polblogs': ('networkx_builtin', True, None),  # Use KONECT mirror
+    'jazz': ('https://nrvis.com/download/data/misc/arenas-jazz.zip', False, None),
+    'celegans': ('https://nrvis.com/download/data/bio/bio-celegans.zip', False, None),
+    'netscience': ('https://nrvis.com/download/data/ca/ca-netscience.zip', False, None),
+    'power': ('https://nrvis.com/download/data/power/power-US-Grid.zip', False, None),
 }
 
 # Datasets requiring special parsing
 SPECIAL_DATASETS = {'cora', 'citeseer', 'yeast-ppi', 'human-ppi'}
+
+# Classic benchmark graphs (Newman's network data)
+CLASSIC_BENCHMARKS = {
+    'karate', 'dolphins', 'football', 'polbooks', 'lesmis',
+    'polblogs', 'jazz', 'celegans', 'netscience', 'power'
+}
+
+SPECIAL_DATASETS = SPECIAL_DATASETS | CLASSIC_BENCHMARKS
+
+# Facebook100 networks (all use same loader)
+FACEBOOK100_DATASETS = {
+    'Amherst41', 'Bowdoin47', 'Brandeis99', 'Brown11', 'Bucknell39', 'Cal65', 'Caltech36',
+    'Carnegie49', 'Colgate88', 'Columbia2', 'Cornell5', 'Dartmouth6', 'Duke14', 'Emory27',
+    'Georgetown15', 'GWU54', 'Hamilton46', 'Harvard1', 'Haverford76', 'Howard90', 'Indiana69',
+    'JMU79', 'JohnsHopkins55', 'Lehigh96', 'Maine59', 'Mich67', 'Michigan23', 'Middlebury45',
+    'MIT8', 'MSU24', 'UCSB37', 'UNC28', 'Northeastern19', 'Northwestern25', 'NotreDame57',
+    'NYU9', 'Oberlin44', 'Penn94', 'Pepperdine86', 'Princeton12', 'Reed98', 'Rice31',
+    'Rochester38', 'Rutgers89', 'Santa74', 'Simmons81', 'Smith60', 'Stanford3', 'Swarthmore42',
+    'Syracuse56', 'Temple83', 'Tennessee95', 'Texas80', 'Tufts18', 'Tulane29', 'UC33', 'UC61',
+    'UC64', 'UCLA26', 'UCSC68', 'UChicago30', 'UConn91', 'UF21', 'UIllinois20', 'UMass92',
+    'UPenn7', 'USC35', 'USF51', 'USFCA72', 'UVA16', 'Vanderbilt48', 'Vermont70', 'Villanova62',
+    'Virginia63', 'Wake73', 'WashU32', 'Wellesley22', 'Wesleyan43', 'William77', 'Williams40',
+    'Wisconsin87', 'Yale4'
+}
+
+SPECIAL_DATASETS = SPECIAL_DATASETS | FACEBOOK100_DATASETS
 
 # Julia paths
 JULIA_VERSION = "1.10.2"
@@ -166,7 +303,7 @@ def download_file(url, dest_path):
 
 
 def _load_special_dataset(name):
-    """Load datasets with special formats (Cora, Citeseer, PPI networks)."""
+    """Load datasets with special formats (Cora, Citeseer, PPI, Facebook100 networks)."""
     import tarfile
     import zipfile
 
@@ -179,6 +316,10 @@ def _load_special_dataset(name):
         return _load_citation_dataset(name, url, dataset_dir)
     elif name in ('yeast-ppi', 'human-ppi'):
         return _load_ppi_dataset(name, url, dataset_dir)
+    elif name in FACEBOOK100_DATASETS:
+        return _load_facebook100_dataset(name, url, dataset_dir)
+    elif name in CLASSIC_BENCHMARKS:
+        return _load_classic_benchmark(name, url, dataset_dir)
     else:
         raise ValueError(f"Unknown special dataset: {name}")
 
@@ -324,6 +465,191 @@ def _load_ppi_dataset(name, url, dataset_dir):
 
     print(f"  Loaded: {n_nodes} nodes, {len(edges)//2} undirected edges")
     return edges, n_nodes, None  # No ground truth for PPI
+
+
+def _load_facebook100_dataset(name, url, dataset_dir):
+    """Load Facebook100 university network from NetworkRepository."""
+    import zipfile
+
+    zip_path = dataset_dir / f"{name}.zip"
+
+    # Download
+    if not zip_path.exists():
+        download_file(url, zip_path)
+
+    # Extract
+    print(f"  Extracting {zip_path}...")
+    with zipfile.ZipFile(zip_path, 'r') as z:
+        z.extractall(dataset_dir)
+
+    # Find the edges file
+    edges_file = None
+    for f in dataset_dir.iterdir():
+        if f.suffix == '.edges' or f.suffix == '.mtx':
+            edges_file = f
+            break
+
+    if edges_file is None:
+        # Try to find any file that looks like edges
+        for f in dataset_dir.iterdir():
+            if f.is_file() and f.suffix not in ('.zip',):
+                edges_file = f
+                break
+
+    if edges_file is None:
+        raise FileNotFoundError(f"Could not find edges file in {dataset_dir}")
+
+    print(f"  Parsing edges from {edges_file}...")
+    edges = []
+    node_set = set()
+
+    with open(edges_file, 'r') as f:
+        for line in f:
+            line = line.strip()
+            if not line or line.startswith('%') or line.startswith('#'):
+                continue
+            parts = line.split()
+            if len(parts) >= 2:
+                try:
+                    src, dst = int(parts[0]), int(parts[1])
+                    edges.append((src, dst))
+                    node_set.add(src)
+                    node_set.add(dst)
+                except ValueError:
+                    continue
+
+    # Remap to 0-indexed
+    node_list = sorted(node_set)
+    node_map = {old: new for new, old in enumerate(node_list)}
+    n_nodes = len(node_list)
+
+    edges = [(node_map[s], node_map[d]) for s, d in edges]
+
+    # Make undirected
+    edge_set = set()
+    for s, d in edges:
+        if s != d:
+            edge_set.add((min(s, d), max(s, d)))
+
+    edges = []
+    for s, d in edge_set:
+        edges.append((s, d))
+        edges.append((d, s))
+
+    print(f"  Loaded: {n_nodes} nodes, {len(edges)//2} undirected edges")
+    return edges, n_nodes, None  # No ground truth for Facebook100
+
+
+def _load_classic_benchmark(name, url, dataset_dir):
+    """Load classic benchmark graphs from Network Repository."""
+    import zipfile
+
+    # Special case: karate is built into NetworkX
+    if name == 'karate':
+        G = nx.karate_club_graph()
+        edges = []
+        for u, v in G.edges():
+            edges.append((u, v))
+            edges.append((v, u))
+        # Ground truth: Mr. Hi (0) vs Officer (1)
+        ground_truth = {n: 0 if G.nodes[n]['club'] == 'Mr. Hi' else 1 for n in G.nodes()}
+        print(f"  Loaded: {G.number_of_nodes()} nodes, {G.number_of_edges()} undirected edges, 2 communities")
+        return edges, G.number_of_nodes(), ground_truth
+
+    # Special case: polblogs - skip for now (URL issues)
+    if name == 'polblogs':
+        raise ValueError("polblogs dataset temporarily unavailable - use other classic benchmarks")
+
+    # Download and extract
+    zip_path = dataset_dir / f"{name}.zip"
+    if not zip_path.exists():
+        download_file(url, zip_path)
+
+    print(f"  Extracting {zip_path}...")
+    with zipfile.ZipFile(zip_path, 'r') as z:
+        z.extractall(dataset_dir)
+
+    # Find edges file (.edges or .mtx)
+    edges_file = None
+    for f in dataset_dir.iterdir():
+        if f.suffix in ('.edges', '.mtx') and f.is_file():
+            edges_file = f
+            break
+
+    if edges_file is None:
+        # Try any file that's not zip
+        for f in dataset_dir.iterdir():
+            if f.is_file() and f.suffix not in ('.zip',):
+                edges_file = f
+                break
+
+    if edges_file is None:
+        raise FileNotFoundError(f"Could not find edges file in {dataset_dir}")
+
+    print(f"  Parsing {edges_file}...")
+
+    # Parse edge list (handle space, comma, or tab separators)
+    edges = []
+    node_set = set()
+    with open(edges_file, 'r') as f:
+        for line in f:
+            line = line.strip()
+            if not line or line.startswith('%') or line.startswith('#'):
+                continue
+            # Try different separators
+            if ',' in line:
+                parts = line.split(',')
+            elif '\t' in line:
+                parts = line.split('\t')
+            else:
+                parts = line.split()
+            if len(parts) >= 2:
+                try:
+                    src, dst = int(parts[0]), int(parts[1])
+                    edges.append((src, dst))
+                    node_set.add(src)
+                    node_set.add(dst)
+                except ValueError:
+                    continue
+
+    # Remap to 0-indexed
+    node_list = sorted(node_set)
+    node_map = {old: new for new, old in enumerate(node_list)}
+    n_nodes = len(node_list)
+
+    edges = [(node_map[s], node_map[d]) for s, d in edges]
+
+    # Make undirected
+    edge_set = set()
+    for s, d in edges:
+        if s != d:
+            edge_set.add((min(s, d), max(s, d)))
+
+    edges = []
+    for s, d in edge_set:
+        edges.append((s, d))
+        edges.append((d, s))
+
+    # Get ground truth for specific datasets
+    ground_truth = _get_classic_ground_truth(name, n_nodes)
+
+    n_communities = len(set(ground_truth.values())) if ground_truth else 0
+    gt_str = f", {n_communities} communities" if ground_truth else ""
+    print(f"  Loaded: {n_nodes} nodes, {len(edges)//2} undirected edges{gt_str}")
+
+    return edges, n_nodes, ground_truth
+
+
+def _get_classic_ground_truth(name, n_nodes):
+    """Get ground truth labels for classic benchmark graphs.
+
+    Note: Network Repository edge lists don't include node attributes,
+    so ground truth is only available for karate (via NetworkX).
+    Other datasets would need the original GML files with attributes.
+    """
+    # Only karate has reliable ground truth (handled separately via NetworkX)
+    # Other Network Repository datasets don't include node attributes
+    return None
 
 
 def load_snap_dataset(name):
