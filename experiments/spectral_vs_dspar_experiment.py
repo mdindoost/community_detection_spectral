@@ -62,7 +62,11 @@ PARAMETERS = {
     # Epsilon values to test (controls sparsification level)
     # Lower epsilon = more edges kept = denser graph
     # Higher epsilon = fewer edges kept = sparser graph
-    'epsilon_values': [0.5, 1.0, 1.5, 2.0],
+    'epsilon_values': [0.5, 1.0, 1.5, 2.0, 2.5],
+
+    # Additional epsilon values for larger datasets (more aggressive sparsification)
+    'epsilon_values_extended': [3.0, 4.0, 5.0, 6.0, 7.0],
+    'datasets_extended': ['com-DBLP', 'com-Youtube'],
 
     # Datasets (ordered smallest to largest)
     'datasets': ['cit-HepTh', 'cit-HepPh', 'com-DBLP', 'com-Youtube'],
@@ -527,8 +531,14 @@ def run_experiment(datasets, epsilon_values, resolution=1.0):
             # Load dataset and communities
             G, communities, edges = load_dataset_with_communities(dataset_name, resolution)
 
+            # Determine epsilon values for this dataset
+            dataset_epsilons = list(epsilon_values)
+            if dataset_name in PARAMETERS.get('datasets_extended', []):
+                dataset_epsilons = dataset_epsilons + PARAMETERS.get('epsilon_values_extended', [])
+                print(f"  Using extended epsilon values: {dataset_epsilons}")
+
             # Run spectral sparsification at each epsilon
-            for epsilon in epsilon_values:
+            for epsilon in dataset_epsilons:
                 print(f"\n  Epsilon = {epsilon}:")
                 result = run_spectral_sparsification_experiment(
                     G, communities, edges, epsilon, dataset_name
