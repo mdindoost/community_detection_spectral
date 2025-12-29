@@ -97,6 +97,16 @@ SNAP_DATASETS = {
         True,
         None  # Labels included in tgz
     ),
+    'cit-HepPh': (
+        'https://snap.stanford.edu/data/cit-HepPh.txt.gz',
+        False,
+        None
+    ),
+    'cit-HepTh': (
+        'https://snap.stanford.edu/data/cit-HepTh.txt.gz',
+        False,
+        None
+    ),
     # ----- PPI networks -----
     'yeast-ppi': (
         'http://nrvis.com/download/data/bio/bio-yeast.zip',
