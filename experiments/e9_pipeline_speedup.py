@@ -66,7 +66,7 @@ GT_DATASETS = {'email-Eu-core', 'test_network_1'}
 
 # Pipeline parameters
 SPECTRAL_EPSILON = 2.0
-DSPAR_KEEP_RATIO = 0.75
+DSPAR_SAMPLE_RATIO = 1 # Samples this fraction of edges WITH replacement
 
 # Number of runs for timing stability
 N_RUNS = 1
@@ -135,7 +135,7 @@ def load_ground_truth(dataset_name):
 # Sparsification Methods
 # =============================================================================
 
-def dspar_sparsify(edges, n_nodes, keep_ratio, seed=42):
+def dspar_sparsify(edges, n_nodes, sample_ratio, seed=42):
     """DSpar sparsification with replacement sampling."""
     from collections import Counter
 
@@ -161,7 +161,7 @@ def dspar_sparsify(edges, n_nodes, keep_ratio, seed=42):
     probs = np.array(probs)
     probs = probs / probs.sum()
 
-    Q = int(len(edge_list) * keep_ratio)
+    Q = int(len(edge_list) * sample_ratio)
     if Q == 0:
         Q = 1
 
@@ -220,16 +220,17 @@ def cm_refine(G, community_nodes, depth=0, max_depth=50):
         refined_communities: list of sets (final communities)
         mincut_calls: number of min-cut computations
         wcc_count: number of communities that satisfied WCC condition
+        wcc_sizes: list of sizes of WCC communities
     """
     n = len(community_nodes)
 
     # Base case: too small to split
     if n <= 2:
-        return [set(community_nodes)], 0, 0
+        return [set(community_nodes)], 0, 0, []
 
     # Prevent infinite recursion
     if depth > max_depth:
-        return [set(community_nodes)], 0, 0
+        return [set(community_nodes)], 0, 0, []
 
     # Extract subgraph
     subgraph = G.subgraph(community_nodes).copy()
@@ -241,12 +242,14 @@ def cm_refine(G, community_nodes, depth=0, max_depth=50):
         all_refined = []
         total_calls = 0
         total_wcc = 0
+        all_wcc_sizes = []
         for comp in components:
-            refined, calls, wcc = cm_refine(G, comp, depth + 1, max_depth)
+            refined, calls, wcc, wcc_sizes = cm_refine(G, comp, depth + 1, max_depth)
             all_refined.extend(refined)
             total_calls += calls
             total_wcc += wcc
-        return all_refined, total_calls, total_wcc
+            all_wcc_sizes.extend(wcc_sizes)
+        return all_refined, total_calls, total_wcc, all_wcc_sizes
 
     # Compute min-cut using Stoer-Wagner
     try:
@@ -254,23 +257,23 @@ def cm_refine(G, community_nodes, depth=0, max_depth=50):
         mincut_calls = 1
     except Exception as e:
         # If min-cut fails, return as-is
-        return [set(community_nodes)], 0, 0
+        return [set(community_nodes)], 0, 0, []
 
     # WCC condition: min-cut > log(n)
     wcc_threshold = math.log(n)
 
     if min_cut_value > wcc_threshold:
         # Well-Connected Community, stop recursion
-        return [set(community_nodes)], mincut_calls, 1
+        return [set(community_nodes)], mincut_calls, 1, [n]
     else:
         # Not WCC: split and recurse
         part1, part2 = partition
 
         # Recurse on both parts
-        refined1, calls1, wcc1 = cm_refine(G, part1, depth + 1, max_depth)
-        refined2, calls2, wcc2 = cm_refine(G, part2, depth + 1, max_depth)
+        refined1, calls1, wcc1, wcc_sizes1 = cm_refine(G, part1, depth + 1, max_depth)
+        refined2, calls2, wcc2, wcc_sizes2 = cm_refine(G, part2, depth + 1, max_depth)
 
-        return refined1 + refined2, mincut_calls + calls1 + calls2, wcc1 + wcc2
+        return refined1 + refined2, mincut_calls + calls1 + calls2, wcc1 + wcc2, wcc_sizes1 + wcc_sizes2
 
 
 def run_cm_refinement(G, initial_communities):
@@ -281,6 +284,7 @@ def run_cm_refinement(G, initial_communities):
         final_communities: list of sets
         total_mincut_calls: total number of min-cut computations
         total_wcc_count: number of WCC communities
+        wcc_sizes: list of sizes of WCC communities
         elapsed_time: time for CM refinement
     """
     start = time.time()
@@ -288,20 +292,22 @@ def run_cm_refinement(G, initial_communities):
     final_communities = []
     total_mincut_calls = 0
     total_wcc_count = 0
+    all_wcc_sizes = []
 
     for comm in initial_communities:
         if len(comm) <= 2:
             final_communities.append(comm)
             continue
 
-        refined, calls, wcc = cm_refine(G, comm)
+        refined, calls, wcc, wcc_sizes = cm_refine(G, comm)
         final_communities.extend(refined)
         total_mincut_calls += calls
         total_wcc_count += wcc
+        all_wcc_sizes.extend(wcc_sizes)
 
     elapsed = time.time() - start
 
-    return final_communities, total_mincut_calls, total_wcc_count, elapsed
+    return final_communities, total_mincut_calls, total_wcc_count, all_wcc_sizes, elapsed
 
 
 # =============================================================================
@@ -337,7 +343,7 @@ def cm_pipeline(edges, n_nodes, sparsify_method=None, seed=42):
         work_edges = sparse_edges
     elif sparsify_method == 'dspar':
         start = time.time()
-        work_edges = dspar_sparsify(edges, n_nodes, DSPAR_KEEP_RATIO, seed)
+        work_edges = dspar_sparsify(edges, n_nodes, DSPAR_SAMPLE_RATIO, seed)
         timings['sparsify'] = time.time() - start
     else:
         timings['sparsify'] = 0.0
@@ -359,7 +365,7 @@ def cm_pipeline(edges, n_nodes, sparsify_method=None, seed=42):
     stats['initial_communities'] = len(initial_communities)
 
     # Step 2: CM refinement
-    final_communities, mincut_calls, wcc_count, cm_time = run_cm_refinement(G, initial_communities)
+    final_communities, mincut_calls, wcc_count, wcc_sizes, cm_time = run_cm_refinement(G, initial_communities)
     timings['cm_refine'] = cm_time
 
     # End-to-end time (captures everything)
@@ -372,6 +378,7 @@ def cm_pipeline(edges, n_nodes, sparsify_method=None, seed=42):
     stats['final_communities'] = len(final_communities)
     stats['mincut_calls'] = mincut_calls
     stats['wcc_count'] = wcc_count
+    stats['wcc_sizes'] = wcc_sizes
     stats['modularity'] = modularity
     stats['avg_calls_per_comm'] = mincut_calls / len(initial_communities) if initial_communities else 0
 
@@ -422,7 +429,7 @@ def run_e9_experiment():
     print("=" * 70)
     print("EXPERIMENT E9: CM Pipeline Speedup Evaluation")
     print("=" * 70)
-    print(f"Parameters: Spectral ε={SPECTRAL_EPSILON}, DSpar keep={DSPAR_KEEP_RATIO}")
+    print(f"Parameters: Spectral ε={SPECTRAL_EPSILON}, DSpar sample={DSPAR_SAMPLE_RATIO}")
     print(f"Runs per pipeline: {N_RUNS}")
 
     E9_RESULTS_DIR.mkdir(parents=True, exist_ok=True)
@@ -497,9 +504,26 @@ def run_e9_experiment():
                 # Calculate edge retention percentage
                 edges_retained_pct = (final_stats['edges_used'] / n_edges * 100) if n_edges > 0 else 100
 
+                # Calculate community size stats
+                comm_sizes = [len(c) for c in final_communities]
+                min_size = min(comm_sizes) if comm_sizes else 0
+                max_size = max(comm_sizes) if comm_sizes else 0
+                mean_size = np.mean(comm_sizes) if comm_sizes else 0
+
+                # Calculate WCC size stats
+                wcc_sizes = final_stats.get('wcc_sizes', [])
+                if wcc_sizes:
+                    wcc_min = min(wcc_sizes)
+                    wcc_max = max(wcc_sizes)
+                    wcc_mean = np.mean(wcc_sizes)
+                else:
+                    wcc_min = wcc_max = wcc_mean = 0
+
                 print(f"    End-to-End: {avg_timings['end_to_end']:.4f}s | Edges: {final_stats['edges_used']}/{n_edges} ({edges_retained_pct:.1f}%)")
                 print(f"    Breakdown: Sparsify={avg_timings['sparsify']:.4f}s, GraphBuild={avg_timings['graph_build']:.4f}s, Leiden={avg_timings['leiden']:.4f}s, CM={avg_timings['cm_refine']:.4f}s")
                 print(f"    Communities: {final_stats['initial_communities']} → {final_stats['final_communities']}, Min-cut calls: {final_stats['mincut_calls']}, WCC: {final_stats['wcc_count']}")
+                print(f"    All clusters: min={min_size}, max={max_size}, mean={mean_size:.1f}")
+                print(f"    WCC clusters: min={wcc_min}, max={wcc_max}, mean={wcc_mean:.1f}")
 
             # Compute speedups (using end-to-end time)
             orig_e2e = pipeline_results['Original']['timings']['end_to_end']
@@ -608,6 +632,19 @@ def run_e9_experiment():
                 'Quality Preserved?': 'Yes' if mod_preserved else 'No',
                 'Recommendation': recommendation
             })
+
+            # Print summary for this dataset
+            print(f"\n  === {dataset_name} Summary ===")
+            print(f"  | Pipeline  | Edges     | E2E Time  | Speedup | Modularity |")
+            print(f"  |-----------|-----------|-----------|---------|------------|")
+            for pname in ['Original', 'Spectral', 'DSpar']:
+                pres = pipeline_results[pname]
+                e2e = pres['timings']['end_to_end']
+                spd = orig_e2e / e2e if e2e > 0 else 0
+                edges_pct = pres['stats']['edges_used'] / n_edges * 100
+                mod = pres['modularity']
+                print(f"  | {pname:9} | {edges_pct:6.1f}%   | {e2e:7.2f}s | {spd:5.2f}x  | {mod:.4f}     |")
+            print(f"  Recommendation: {recommendation}")
 
         except Exception as e:
             print(f"  Error: {e}")
