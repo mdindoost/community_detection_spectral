@@ -71,22 +71,48 @@ from experiments.dspar import dspar_sparsify
 G_sparse = dspar_sparsify(G, retention=0.5, method="paper")
 ```
 
-### `experiments/utils.py` - Julia Spectral Sparsification
+### `experiments/utils.py` - Utilities & Dataset Management
 
-Wrapper for Julia's `Laplacians.jl` implementing Spielman-Srivastava spectral sparsification.
+Comprehensive utility module (~1,450 lines) handling datasets, sparsification, and analysis.
 
-**Key Function:**
+**Dataset Loading** (100+ datasets):
+```python
+from experiments.utils import load_snap_dataset, SNAP_DATASETS
+
+# Load any supported dataset (auto-downloads if needed)
+edges, n_nodes, ground_truth = load_snap_dataset('cit-HepPh')
+
+# Available: SNAP, citation (cora, citeseer, cit-HepPh, cit-HepTh),
+# PPI (yeast, human), Facebook100, classic benchmarks (karate, dolphins, etc.)
+print(list(SNAP_DATASETS.keys()))
+```
+
+**Spectral Sparsification** (Julia Laplacians.jl):
 ```python
 from experiments.utils import spectral_sparsify_direct
 
 sparsified_edges, elapsed = spectral_sparsify_direct(edges, n_nodes, epsilon)
 ```
 
-**Effective Resistance Formula:**
+**Edge Preservation Analysis**:
+```python
+from experiments.utils import analyze_edge_preservation, analyze_ground_truth_edge_preservation
+
+# Analyze intra vs inter community edge preservation
+stats = analyze_edge_preservation(original_edges, sparsified_edges, community_labels)
 ```
-R(u,v) = L+[u,u] + L+[v,v] - 2*L+[u,v]
+
+**LFR Benchmark Generation**:
+```python
+from experiments.utils import generate_lfr
+
+edges, n_nodes, ground_truth = generate_lfr(
+    n=1000, tau1=2.5, tau2=1.5, mu=0.3,
+    average_degree=15, min_community=20, max_community=100, seed=42
+)
 ```
-Where L+ is the Laplacian pseudoinverse. Higher ER = fewer alternate paths = more important edge.
+
+**Other utilities**: `edges_to_adjacency()`, `adjacency_to_igraph()`, `random_sparsify()`, `add_noise_edges()`
 
 ### `experiments/dspar_demo.py` - Comparison Demo
 
