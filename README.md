@@ -102,6 +102,31 @@ python experiments/dspar_demo.py
 
 Output: `experiments/dspar_vs_spectral.png`
 
+### `experiments/cit_hepph_experiment.py` - Citation Network Experiment
+
+Comprehensive comparison of DSpar vs Spectral on citation networks.
+
+```bash
+# Run on different datasets
+python experiments/cit_hepph_experiment.py cit-HepPh
+python experiments/cit_hepph_experiment.py cit-HepTh
+python experiments/cit_hepph_experiment.py citeseer
+```
+
+**Metrics:**
+- Edges kept (count and percentage)
+- Connected components (CC)
+- Communities found by Leiden
+- Modularity (clustering quality)
+- NMI/ARI (similarity to original clustering)
+- Sparsification and Leiden timing
+- CPM resolution analysis (0.1, 0.01, 0.001)
+
+**Output columns:**
+```
+Method    Param    Edges    %    CC    Comm    Mod    NMI    ARI    Spar(s)    Leid(s)
+```
+
 ## Parameters
 
 ### DSpar: `retention`
