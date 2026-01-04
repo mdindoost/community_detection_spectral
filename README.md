@@ -203,6 +203,75 @@ python experiments/test_networks.py
 - Two stars with 3 bridges (tests parallel path behavior)
 - K4 with tail (tests clique vs chain ER differences)
 
+## DSpar: Degree-Based Graph Sparsification
+
+DSpar is an alternative sparsification method based on edge degree scores rather than effective resistance.
+
+### DSpar Score Formula
+
+```
+s(e) = 1/d_u + 1/d_v
+```
+
+- **Higher score** = edge connects low-degree nodes (more important to keep)
+- **Lower score** = edge connects high-degree hubs (less important)
+
+### Three Methods Available
+
+| Method | Sampling | Output | Retention Meaning | Edges Kept |
+|--------|----------|--------|-------------------|------------|
+| `"paper"` | WITH replacement | Weighted | Samples to draw | < retention% |
+| `"probabilistic_no_replace"` | WITHOUT replacement | Unweighted | Expected fraction | ≈ retention% |
+| `"deterministic"` | Top-k selection | Unweighted | Exact fraction | = retention% |
+
+### Usage
+
+```python
+from experiments.dspar import dspar_sparsify
+
+# Original paper method (best for spectral properties)
+G_sparse = dspar_sparsify(G, retention=0.75, method="paper")
+
+# Probabilistic without replacement
+G_sparse = dspar_sparsify(G, retention=0.75, method="probabilistic_no_replace")
+
+# Deterministic top-k (reproducible)
+G_sparse = dspar_sparsify(G, retention=0.75, method="deterministic")
+```
+
+### Method Comparison Results
+
+Tested on Karate Club graph (34 nodes, 78 edges) with `retention=0.75`:
+
+**Single Run (target: 59 edges)**
+
+| Method | Edges Kept | Percentage | Notes |
+|--------|------------|------------|-------|
+| Paper | 42 | 53.8% | Weighted, duplicates merged |
+| Probabilistic | 60 | 76.9% | Unweighted |
+| Deterministic | 59 | 75.6% | Exactly as specified |
+
+**Variability (20 runs)**
+
+| Method | Mean | Std | Min | Max |
+|--------|------|-----|-----|-----|
+| Paper (WITH replace) | 40.6 | 2.4 | 36 | 44 |
+| Probabilistic (NO replace) | 57.6 | 3.2 | 52 | 66 |
+| Deterministic | 59.0 | 0.0 | 59 | 59 |
+
+**Key Observations:**
+
+1. **Paper method** keeps fewer edges due to sampling with replacement (duplicates get merged into higher weights)
+2. **Probabilistic** varies around the target retention
+3. **Deterministic** is exactly reproducible with zero variance
+4. All methods share ~34 core high-score edges
+
+### When to Use Each Method
+
+- **Paper**: Theoretical guarantees, spectral property preservation
+- **Probabilistic**: Balance of randomness and target size
+- **Deterministic**: Reproducibility, benchmarking
+
 ## Metrics
 
 | Metric | Description |

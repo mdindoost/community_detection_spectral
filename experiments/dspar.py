@@ -5,16 +5,47 @@ This module implements DSpar sparsification matching the original paper:
 - Probabilistic sampling WITH replacement
 - Edge reweighting to preserve spectral properties
 
-Two methods available:
-1. "paper" - Original paper method (probabilistic, with replacement, reweighted)
-2. "deterministic" - Simplified method (top-k by score, no reweighting)
+DSpar Score Formula:
+    s(e) = 1/d_u + 1/d_v
+
+    Higher score = edge connects low-degree nodes (more important to keep)
+    Lower score = edge connects high-degree hubs (less important)
+
+Three methods available:
+
+1. "paper" - Original DSpar paper method
+   - Sampling: WITH replacement (same edge can be sampled multiple times)
+   - Output: Weighted graph (weight = count / (q * probability))
+   - retention parameter: Number of SAMPLES to draw = ceil(retention * m)
+   - Actual edges kept: LESS than retention (duplicates merged into weights)
+   - Theory: Preserves spectral properties, unbiased graph estimation
+   - Example: retention=0.75, m=100 edges -> draw 75 samples -> ~50-60 unique edges
+
+2. "probabilistic_no_replace" - Probabilistic WITHOUT replacement
+   - Sampling: Each edge sampled independently with probability ~ score
+   - Output: Unweighted graph
+   - retention parameter: EXPECTED fraction of edges to keep
+   - Actual edges kept: Approximately retention (varies each run)
+   - Theory: Biased toward high-score edges, no spectral guarantees
+   - Example: retention=0.75, m=100 edges -> ~70-80 edges (varies)
+
+3. "deterministic" - Top-k by score (no randomness)
+   - Sampling: Sort edges by score, keep top-k
+   - Output: Unweighted graph
+   - retention parameter: EXACT fraction of edges to keep
+   - Actual edges kept: Exactly ceil(retention * m)
+   - Theory: No spectral guarantees, but reproducible
+   - Example: retention=0.75, m=100 edges -> exactly 75 edges
 
 Usage:
-    from dspar_correct import dspar_sparsify
-    
+    from dspar import dspar_sparsify
+
     # Original paper method (recommended for theory)
     G_sparse = dspar_sparsify(G, retention=0.75, method="paper")
-    
+
+    # Probabilistic without replacement
+    G_sparse = dspar_sparsify(G, retention=0.75, method="probabilistic_no_replace")
+
     # Simplified deterministic (for reproducibility)
     G_sparse = dspar_sparsify(G, retention=0.75, method="deterministic")
 """
