@@ -153,6 +153,35 @@ python experiments/cit_hepph_experiment.py citeseer
 Method    Param    Edges    %    CC    Comm    Mod    NMI    ARI    Spar(s)    Leid(s)
 ```
 
+## Testing
+
+Comprehensive test suite with 67 tests covering functional correctness and mathematical verification.
+
+```bash
+# Run all tests
+pytest tests/test_dspar.py -v
+
+# Quick sanity check
+python tests/test_dspar.py --quick
+
+# Verbose correctness checks
+python tests/test_dspar.py --verbose
+```
+
+**Test Coverage:**
+
+| Category | Tests | What it Verifies |
+|----------|-------|------------------|
+| Score Computation | 7 | Formula `s(e) = 1/d_u + 1/d_v` |
+| Basic Properties | 14 | Nodes preserved, no new edges, edge counts |
+| Method-Specific | 13 | Paper/deterministic/probabilistic behavior |
+| Edge Cases | 10 | Small graphs, invalid inputs |
+| Exact Verification | 6 | Hand-computed values on tiny graphs |
+| Weight Formula | 2 | `w = count / (q * p)` reconstruction |
+| Spectral Properties | 4 | λ₂ preservation, effective resistance correlation |
+| Statistical Rigor | 2 | Sampling distribution, chi-squared tests |
+| Invariants | 2 | `sum(w * p) = 1`, score ordering |
+
 ## Parameters
 
 ### DSpar: `retention`
