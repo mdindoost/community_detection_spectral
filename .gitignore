@@ -16,8 +16,8 @@ logs/
 temp_lfr/
 
 # Julia
-julia-*/
-julia_depot/
+julia-*
+julia_depot
 *.jl.cov
 *.jl.mem
 
