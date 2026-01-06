@@ -48,6 +48,17 @@ Usage:
 
     # Simplified deterministic (for reproducibility)
     G_sparse = dspar_sparsify(G, retention=0.75, method="deterministic")
+    
+    
+    NOTE: "Probabilistic without replacement" is different from sampling without replacement 
+    (which would be np.random.choice(..., replace=False)). What we have is:
+
+    Each edge independently kept with probability ∝ score
+    Expected edges ≈ n_keep, but variance can be high
+    Some edges with prob > 1 after scaling get clipped
+
+    This might actually be fine for our community detection use case, 
+    but the name is misleading. I should consider calling it "bernoulli".
 """
 
 import numpy as np
