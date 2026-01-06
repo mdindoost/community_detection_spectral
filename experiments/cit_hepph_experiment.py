@@ -27,7 +27,7 @@ from dspar import dspar_sparsify
 from utils import spectral_sparsify_direct
 
 # Parameters
-EPSILON_VALUES = [0.25, 0.5, 0.75, 1.0]
+EPSILON_VALUES = [0.75, 1.0, 1.5]
 RETENTION_VALUES = [0.90, 0.75, 0.50]
 DSPAR_METHODS = ["paper", "probabilistic_no_replace", "deterministic"]
 CPM_RESOLUTIONS = [0.1, 0.01, 0.001]
