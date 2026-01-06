@@ -7,6 +7,7 @@ Measures:
 - Sparsification time
 - Leiden clustering time (original and sparsified)
 - NMI/ARI comparing Leiden(original) vs Leiden(sparsified)
+- Edge preservation ratio: Inter% / Intra% (< 1 means inter removed faster)
 
 Run: python experiments/cit_hepph_experiment.py [dataset]
 
@@ -139,6 +140,51 @@ def compute_metrics(G_original, G_sparse, membership_original, membership_sparse
     return nmi, ari
 
 
+def calculate_ratio(G, G_sparse, membership):
+    """
+    Calculate edge preservation ratio.
+
+    Ratio = inter_rate / intra_rate
+    Ratio < 1 means inter-community edges removed faster (desired)
+    """
+    # Classify original edges
+    total_intra = 0
+    total_inter = 0
+
+    for u, v in G.edges():
+        if membership[u] == membership[v]:
+            total_intra += 1
+        else:
+            total_inter += 1
+
+    # Count preserved edges
+    preserved_intra = 0
+    preserved_inter = 0
+    sparse_edges = set((min(u, v), max(u, v)) for u, v in G_sparse.edges())
+
+    for u, v in G.edges():
+        if (min(u, v), max(u, v)) in sparse_edges:
+            if membership[u] == membership[v]:
+                preserved_intra += 1
+            else:
+                preserved_inter += 1
+
+    # Calculate rates and ratio
+    intra_rate = preserved_intra / total_intra if total_intra > 0 else 1.0
+    inter_rate = preserved_inter / total_inter if total_inter > 0 else 1.0
+    ratio = inter_rate / intra_rate if intra_rate > 0 else float('inf')
+
+    return {
+        'total_intra': total_intra,
+        'total_inter': total_inter,
+        'preserved_intra': preserved_intra,
+        'preserved_inter': preserved_inter,
+        'intra_rate': intra_rate,
+        'inter_rate': inter_rate,
+        'ratio': ratio
+    }
+
+
 def main():
     # Get dataset name from command line
     dataset = sys.argv[1] if len(sys.argv) > 1 else "cit-HepPh"
@@ -164,18 +210,23 @@ def main():
     # Results storage
     results = []
 
+    # Count original intra/inter edges
+    total_intra = sum(1 for u, v in G.edges() if mem_original[u] == mem_original[v])
+    total_inter = n_edges - total_intra
+
     # Header
-    print("\n" + "=" * 100)
-    print(f"{'Method':<35} {'Param':<8} {'Edges':<12} {'%':<8} {'CC':<6} {'Comm':<6} {'Mod':<8} {'NMI':<8} {'ARI':<8} {'Spar(s)':<8} {'Leid(s)':<8}")
-    print("-" * 100)
-    print(f"{'Original':<35} {'-':<8} {n_edges:<12,} {'100%':<8} {n_cc:<6} {n_comm_original:<6} {mod_original:<8.4f} {'-':<8} {'-':<8} {'-':<8} {leiden_time_original:<8.2f}")
-    print("-" * 100)
+    print("\n" + "=" * 130)
+    print(f"{'Method':<35} {'Param':<8} {'Edges':<12} {'%':<8} {'CC':<6} {'Comm':<6} {'Mod':<8} {'NMI':<8} {'ARI':<8} {'Intra%':<8} {'Inter%':<8} {'Ratio':<8} {'Spar(s)':<8} {'Leid(s)':<8}")
+    print("-" * 130)
+    print(f"{'Original':<35} {'-':<8} {n_edges:<12,} {'100%':<8} {n_cc:<6} {n_comm_original:<6} {mod_original:<8.4f} {'-':<8} {'-':<8} {'100.0':<8} {'100.0':<8} {'1.000':<8} {'-':<8} {leiden_time_original:<8.2f}")
+    print(f"  (Intra: {total_intra:,} edges, Inter: {total_inter:,} edges)")
+    print("-" * 130)
 
     # =========================================================================
     # SPECTRAL SPARSIFICATION
     # =========================================================================
     print("\n>>> SPECTRAL (Julia Laplacians.jl)")
-    print("-" * 100)
+    print("-" * 130)
 
     for epsilon in EPSILON_VALUES:
         try:
@@ -191,7 +242,13 @@ def main():
             # Compute NMI/ARI
             nmi, ari = compute_metrics(G, G_sparse, mem_original, mem_sparse)
 
-            print(f"{'Spectral':<35} {'ε='+str(epsilon):<8} {n_edges_sparse:<12,} {edge_pct:<8.1f} {n_cc_sparse:<6} {n_comm_sparse:<6} {mod_sparse:<8.4f} {nmi:<8.4f} {ari:<8.4f} {spar_time:<8.2f} {leiden_time_sparse:<8.2f}")
+            # Compute edge preservation ratio
+            ratio_stats = calculate_ratio(G, G_sparse, mem_original)
+            intra_pct = ratio_stats['intra_rate'] * 100
+            inter_pct = ratio_stats['inter_rate'] * 100
+            ratio = ratio_stats['ratio']
+
+            print(f"{'Spectral':<35} {'ε='+str(epsilon):<8} {n_edges_sparse:<12,} {edge_pct:<8.1f} {n_cc_sparse:<6} {n_comm_sparse:<6} {mod_sparse:<8.4f} {nmi:<8.4f} {ari:<8.4f} {intra_pct:<8.1f} {inter_pct:<8.1f} {ratio:<8.3f} {spar_time:<8.2f} {leiden_time_sparse:<8.2f}")
 
             results.append({
                 'method': 'Spectral',
@@ -203,6 +260,9 @@ def main():
                 'modularity': mod_sparse,
                 'nmi': nmi,
                 'ari': ari,
+                'intra_pct': intra_pct,
+                'inter_pct': inter_pct,
+                'ratio': ratio,
                 'spar_time': spar_time,
                 'leiden_time': leiden_time_sparse
             })
@@ -215,7 +275,7 @@ def main():
     # =========================================================================
     for method in DSPAR_METHODS:
         print(f"\n>>> DSPAR ({method})")
-        print("-" * 100)
+        print("-" * 130)
 
         for retention in RETENTION_VALUES:
             try:
@@ -231,8 +291,14 @@ def main():
                 # Compute NMI/ARI
                 nmi, ari = compute_metrics(G, G_sparse, mem_original, mem_sparse)
 
+                # Compute edge preservation ratio
+                ratio_stats = calculate_ratio(G, G_sparse, mem_original)
+                intra_pct = ratio_stats['intra_rate'] * 100
+                inter_pct = ratio_stats['inter_rate'] * 100
+                ratio = ratio_stats['ratio']
+
                 method_name = f"DSpar ({method})"
-                print(f"{method_name:<35} {'r='+str(retention):<8} {n_edges_sparse:<12,} {edge_pct:<8.1f} {n_cc_sparse:<6} {n_comm_sparse:<6} {mod_sparse:<8.4f} {nmi:<8.4f} {ari:<8.4f} {spar_time:<8.2f} {leiden_time_sparse:<8.2f}")
+                print(f"{method_name:<35} {'r='+str(retention):<8} {n_edges_sparse:<12,} {edge_pct:<8.1f} {n_cc_sparse:<6} {n_comm_sparse:<6} {mod_sparse:<8.4f} {nmi:<8.4f} {ari:<8.4f} {intra_pct:<8.1f} {inter_pct:<8.1f} {ratio:<8.3f} {spar_time:<8.2f} {leiden_time_sparse:<8.2f}")
 
                 results.append({
                     'method': method_name,
@@ -244,6 +310,9 @@ def main():
                     'modularity': mod_sparse,
                     'nmi': nmi,
                     'ari': ari,
+                    'intra_pct': intra_pct,
+                    'inter_pct': inter_pct,
+                    'ratio': ratio,
                     'spar_time': spar_time,
                     'leiden_time': leiden_time_sparse
                 })
@@ -265,11 +334,13 @@ def main():
         best_nmi = max(results, key=lambda x: x['nmi'])
         best_ari = max(results, key=lambda x: x['ari'])
         best_mod = max(results, key=lambda x: x['modularity'])
+        best_ratio = min(results, key=lambda x: x['ratio'])  # Lower is better
         fastest_spar = min(results, key=lambda x: x['spar_time'])
 
         print(f"\nBest NMI: {best_nmi['method']} {best_nmi['param']} -> NMI={best_nmi['nmi']:.4f}")
         print(f"Best ARI: {best_ari['method']} {best_ari['param']} -> ARI={best_ari['ari']:.4f}")
         print(f"Best Modularity: {best_mod['method']} {best_mod['param']} -> Mod={best_mod['modularity']:.4f} (original={mod_original:.4f})")
+        print(f"Best Ratio: {best_ratio['method']} {best_ratio['param']} -> Ratio={best_ratio['ratio']:.3f} (< 1 means inter removed faster)")
         print(f"Fastest sparsification: {fastest_spar['method']} {fastest_spar['param']} -> {fastest_spar['spar_time']:.2f}s")
 
     # =========================================================================
@@ -311,22 +382,26 @@ def main():
 
             print(f"{res:<12} {n_comm_orig_cpm:<15} {mod_orig_cpm:<15.4f} {n_comm_sparse_cpm:<15} {mod_sparse_cpm:<15.4f}")
 
-    print("\n" + "=" * 100)
+    print("\n" + "=" * 130)
     print("INTERPRETATION")
-    print("=" * 100)
+    print("=" * 130)
     print("""
 METRICS:
 - Mod (Modularity): Quality of clustering on that graph (higher = better separated communities)
 - NMI/ARI: Similarity to original clustering (higher = more consistent with original)
+- Intra%: Percentage of intra-community edges preserved
+- Inter%: Percentage of inter-community edges preserved
+- Ratio: Inter% / Intra% (< 1 means inter-community edges removed faster = DESIRED)
 - CPM Resolution: Controls community granularity (lower = larger communities)
 
 KEY INSIGHTS:
+- Ratio < 1: Inter-community edges removed faster (good for denoising hypothesis)
+- Ratio = 1: No preference between edge types (like random sparsification)
+- Ratio > 1: Intra-community edges removed faster (bad - losing community structure)
 - Modularity can INCREASE after sparsification if noise edges are removed
 - High NMI/ARI + similar Modularity = sparsification preserves structure well
-- High Modularity but low NMI/ARI = found different but valid communities
 - Spectral preserves connectivity (keeps bridge edges)
 - DSpar is faster but may disconnect graph (removes hub edges)
-- CPM at different resolutions shows if sparsification affects multi-scale structure
 """)
 
 
