@@ -49,6 +49,31 @@ SNAP_DATASETS = {
         False,
         None
     ),
+    'ca-HepTh': (
+        'https://snap.stanford.edu/data/ca-HepTh.txt.gz',
+        False,
+        None
+    ),
+    'ca-AstroPh': (
+        'https://snap.stanford.edu/data/ca-AstroPh.txt.gz',
+        False,
+        None
+    ),
+    'ca-CondMat': (
+        'https://snap.stanford.edu/data/ca-CondMat.txt.gz',
+        False,
+        None
+    ),
+    'ca-GrQc': (
+        'https://snap.stanford.edu/data/ca-GrQc.txt.gz',
+        False,
+        None
+    ),
+    'ego-Facebook': (
+        'https://snap.stanford.edu/data/facebook_combined.txt.gz',
+        False,
+        None
+    ),
     'soc-Epinions1': (
         'https://snap.stanford.edu/data/soc-Epinions1.txt.gz',
         False,
