@@ -665,11 +665,14 @@ def run_dataset_experiments(G: nx.Graph, dataset_info: dict,
 
 def run_all_experiments(datasets: list, methods: list, alphas: list,
                         n_replicates: int, max_edges: int = None,
-                        spectral_timeout_multiplier: float = 10.0) -> pd.DataFrame:
+                        spectral_timeout_multiplier: float = 10.0,
+                        output_file: Path = None) -> pd.DataFrame:
     """
     Run experiments on all datasets.
+    Saves results incrementally after each dataset to protect against crashes.
     """
     all_results = []
+    first_write = True
 
     for dataset_name in datasets:
         print(f"\n{'='*80}")
@@ -685,6 +688,16 @@ def run_all_experiments(datasets: list, methods: list, alphas: list,
         results = run_dataset_experiments(G, info, methods, alphas, n_replicates,
                                           spectral_timeout_multiplier=spectral_timeout_multiplier)
         all_results.extend(results)
+
+        # Save incrementally after each dataset
+        if output_file and len(results) > 0:
+            df_dataset = pd.DataFrame(results)
+            if first_write:
+                df_dataset.to_csv(output_file, index=False, mode='w')
+                first_write = False
+            else:
+                df_dataset.to_csv(output_file, index=False, mode='a', header=False)
+            print(f"\n  [SAVED] Results appended to {output_file}")
 
     return pd.DataFrame(all_results)
 
@@ -1183,24 +1196,25 @@ def main():
         print("\n[DRY RUN] Exiting without running experiments.")
         return
 
-    # Run experiments
+    # Define output file for incremental saving
+    raw_file = OUTPUT_DIR / "scalability_raw.csv"
+
+    # Run experiments (saves incrementally after each dataset)
     df = run_all_experiments(
         datasets=datasets,
         methods=methods,
         alphas=ALPHAS,
         n_replicates=n_replicates,
         max_edges=args.max_edges,
-        spectral_timeout_multiplier=args.spectral_multiplier
+        spectral_timeout_multiplier=args.spectral_multiplier,
+        output_file=raw_file
     )
 
     if len(df) == 0:
         print("\nERROR: No experiments completed successfully!")
         return
 
-    # Save raw results
-    raw_file = OUTPUT_DIR / "scalability_raw.csv"
-    df.to_csv(raw_file, index=False)
-    print(f"\nSaved raw results: {raw_file}")
+    print(f"\nRaw results saved to: {raw_file}")
 
     # Generate summary
     summary = generate_summary(df)
