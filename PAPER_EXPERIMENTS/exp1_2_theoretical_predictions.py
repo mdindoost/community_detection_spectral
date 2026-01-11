@@ -249,13 +249,18 @@ def run_single_trial(G, membership_fixed, Q_fixed_original, retention, seed):
     if retention == 1.0:
         G_sparse = G.copy()
     else:
-        G_sparse = dspar_sparsify(
-            G, retention=retention, method="probabilistic_no_replace", seed=seed
+        G_sparse_weighted = dspar_sparsify(
+            G, retention=retention, method="paper", seed=seed
         )
+        # Convert to unweighted graph for Leiden (keep only topology)
+        G_sparse = nx.Graph()
+        G_sparse.add_nodes_from(G_sparse_weighted.nodes())
+        G_sparse.add_edges_from(G_sparse_weighted.edges())
 
     obs_fixed = compute_observed_fixed_membership(G, G_sparse, membership_fixed)
 
     # Downstream: re-run Leiden on sparse graph (PIPELINE METRIC)
+    # Note: Leiden runs on unweighted graph
     membership_sparse, Q_leiden_sparse = leiden_partition(G_sparse)
 
     out = {

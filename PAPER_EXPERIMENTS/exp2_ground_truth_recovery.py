@@ -423,10 +423,14 @@ def run_single_experiment(G, ground_truth, dataset_name, alpha, replicate, seed)
     ari_orig = compute_ari(partition_orig, ground_truth, nodes)
     n_communities_orig = len(set(partition_orig.values()))
 
-    # Apply DSpar sparsification
-    G_sparse = dspar_sparsify(G, retention=alpha, method='probabilistic_no_replace', seed=seed)
+    # Apply DSpar sparsification (paper method)
+    G_sparse_weighted = dspar_sparsify(G, retention=alpha, method='paper', seed=seed)
+    # Convert to unweighted graph (keep only topology)
+    G_sparse = nx.Graph()
+    G_sparse.add_nodes_from(G_sparse_weighted.nodes())
+    G_sparse.add_edges_from(G_sparse_weighted.edges())
 
-    # Run Leiden on sparsified graph
+    # Run Leiden on sparsified graph (unweighted)
     partition_sparse, Q_sparse = run_leiden(G_sparse)
 
     # Compute metrics for sparsified

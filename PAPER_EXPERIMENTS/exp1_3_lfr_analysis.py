@@ -424,8 +424,12 @@ def run_single_experiment(network_type, n_nodes, mu, hub_strength, retention, re
     # Original graph with FIXED partition
     Q_orig_fixed, F_orig, G_orig = compute_modularity_fixed(G, labels)
 
-    # Sparsify using experiments.dspar
-    G_sparse = dspar_sparsify(G, retention=retention, method='probabilistic_no_replace', seed=seed+2000)
+    # Sparsify using experiments.dspar (paper method)
+    G_sparse_weighted = dspar_sparsify(G, retention=retention, method='paper', seed=seed+2000)
+    # Convert to unweighted graph (keep only topology)
+    G_sparse = nx.Graph()
+    G_sparse.add_nodes_from(G_sparse_weighted.nodes())
+    G_sparse.add_edges_from(G_sparse_weighted.edges())
 
     # Sparsified graph with FIXED partition (same ground-truth labels)
     Q_sparse_fixed, F_sparse, G_sparse_term = compute_modularity_fixed(G_sparse, labels)
