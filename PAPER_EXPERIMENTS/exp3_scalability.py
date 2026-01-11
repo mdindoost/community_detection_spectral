@@ -56,6 +56,14 @@ import matplotlib.pyplot as plt
 from experiments.dspar import dspar_sparsify
 from experiments.utils import load_snap_dataset, SNAP_DATASETS
 
+# Try to import spectral sparsification (requires Julia)
+try:
+    from experiments.utils import spectral_sparsify_direct
+    SPECTRAL_AVAILABLE = True
+except ImportError:
+    SPECTRAL_AVAILABLE = False
+    print("WARNING: Spectral sparsification not available (Julia not configured)")
+
 # =============================================================================
 # CONFIGURATION
 # =============================================================================
@@ -73,6 +81,23 @@ N_REPLICATES = 3
 
 # Sparsification methods
 METHODS = ['dspar', 'uniform_random', 'degree_sampling']
+
+# Spectral is included by default (excluded via --no_spectral flag)
+INCLUDE_SPECTRAL = True  # Set via CLI argument
+
+# Spectral epsilon values corresponding to approximate retention levels
+# Smaller epsilon = more edges retained (better approximation)
+# These are rough mappings: epsilon -> ~retention
+SPECTRAL_EPSILON_MAP = {
+    0.2: 3.0,   # Very aggressive sparsification
+    0.4: 1.5,   # Aggressive
+    0.6: 0.8,   # Moderate
+    0.8: 0.3,   # Conservative
+    1.0: 0.0,   # No sparsification (will skip)
+}
+
+# Maximum time (seconds) to wait for spectral sparsification per graph
+SPECTRAL_TIMEOUT = 300  # 5 minutes
 
 # Default datasets (large real-world graphs)
 # Note: web-Google and cit-Patents not in current registry
@@ -306,9 +331,79 @@ def sparsify_degree_sampling(G: nx.Graph, alpha: float, seed: int) -> nx.Graph:
     return G_sparse
 
 
+def sparsify_spectral(G: nx.Graph, alpha: float, seed: int) -> nx.Graph:
+    """
+    Spectral sparsification using Julia's Laplacians.jl.
+
+    Uses effective resistance sampling (Spielman-Srivastava algorithm).
+    Maps alpha (retention) to epsilon (approximation quality).
+
+    Returns:
+        Sparsified graph, or None if spectral sparsification fails/times out
+    """
+    if not SPECTRAL_AVAILABLE:
+        raise RuntimeError("Spectral sparsification not available (Julia not configured)")
+
+    # Get epsilon for this alpha level
+    epsilon = SPECTRAL_EPSILON_MAP.get(alpha)
+    if epsilon is None or epsilon <= 0:
+        # For alpha=1.0 or unknown, return copy
+        return G.copy()
+
+    # Convert to edge list
+    edges = list(G.edges())
+    n_nodes = G.number_of_nodes()
+
+    # Need to map node labels to 0-indexed if not already
+    node_list = list(G.nodes())
+    node_to_idx = {n: i for i, n in enumerate(node_list)}
+    idx_to_node = {i: n for i, n in enumerate(node_list)}
+
+    edges_indexed = [(node_to_idx[u], node_to_idx[v]) for u, v in edges]
+
+    try:
+        # Run spectral sparsification with timeout
+        import signal
+
+        def timeout_handler(signum, frame):
+            raise TimeoutError(f"Spectral sparsification timed out after {SPECTRAL_TIMEOUT}s")
+
+        # Set timeout (Unix only)
+        old_handler = signal.signal(signal.SIGALRM, timeout_handler)
+        signal.alarm(SPECTRAL_TIMEOUT)
+
+        try:
+            sparsified_edges, elapsed = spectral_sparsify_direct(edges_indexed, n_nodes, epsilon)
+        finally:
+            signal.alarm(0)  # Cancel alarm
+            signal.signal(signal.SIGALRM, old_handler)
+
+        # Build sparsified graph
+        G_sparse = nx.Graph()
+        G_sparse.add_nodes_from(G.nodes())
+
+        # Convert back to original node labels
+        for u_idx, v_idx in sparsified_edges:
+            u = idx_to_node[u_idx]
+            v = idx_to_node[v_idx]
+            G_sparse.add_edge(u, v)
+
+        return G_sparse
+
+    except TimeoutError as e:
+        print(f"\n    [SPECTRAL TIMEOUT] {e}")
+        return None
+    except Exception as e:
+        print(f"\n    [SPECTRAL ERROR] {e}")
+        return None
+
+
 def sparsify(G: nx.Graph, method: str, alpha: float, seed: int) -> nx.Graph:
     """
     Dispatch to appropriate sparsification method.
+
+    Returns:
+        Sparsified graph, or None if method fails (e.g., spectral timeout)
     """
     if method == 'dspar':
         return sparsify_dspar(G, alpha, seed)
@@ -316,6 +411,8 @@ def sparsify(G: nx.Graph, method: str, alpha: float, seed: int) -> nx.Graph:
         return sparsify_uniform_random(G, alpha, seed)
     elif method == 'degree_sampling':
         return sparsify_degree_sampling(G, alpha, seed)
+    elif method == 'spectral':
+        return sparsify_spectral(G, alpha, seed)
     else:
         raise ValueError(f"Unknown method: {method}")
 
@@ -405,6 +502,10 @@ def run_single_trial(G: nx.Graph, baseline_partition: dict, Q0: float,
         G_sparse = sparsify(G, method, alpha, seed)
         T_sparsify = time.perf_counter() - start
 
+    # Handle failed sparsification (e.g., spectral timeout)
+    if G_sparse is None:
+        return None
+
     m_sparse = G_sparse.number_of_edges()
     retention_actual = m_sparse / m_edges if m_edges > 0 else 1.0
 
@@ -459,10 +560,18 @@ def run_single_trial(G: nx.Graph, baseline_partition: dict, Q0: float,
 
 def run_dataset_experiments(G: nx.Graph, dataset_info: dict,
                             methods: list, alphas: list,
-                            n_replicates: int) -> list:
+                            n_replicates: int,
+                            spectral_timeout_multiplier: float = 10.0) -> list:
     """
     Run all experiments for a single dataset.
+
+    Strategy for spectral:
+      1. Run DSpar first to measure baseline sparsification time
+      2. Set spectral timeout = spectral_timeout_multiplier × max(DSpar time)
+      3. Run spectral with dynamic timeout
     """
+    global SPECTRAL_TIMEOUT
+
     results = []
 
     n_nodes = G.number_of_nodes()
@@ -476,34 +585,87 @@ def run_dataset_experiments(G: nx.Graph, dataset_info: dict,
     print(f"    Baseline communities = {n_communities_orig}")
     print(f"    Baseline Leiden time = {T_leiden_orig:.3f}s")
 
-    # Total experiments for this dataset
-    total_trials = len(methods) * len(alphas) * n_replicates
+    # Separate methods: run non-spectral first, then spectral
+    non_spectral_methods = [m for m in methods if m != 'spectral']
+    has_spectral = 'spectral' in methods
+
+    # Track DSpar times to set spectral timeout
+    dspar_times = []
+
+    # Phase 1: Run non-spectral methods (including DSpar)
+    total_non_spectral = len(non_spectral_methods) * len(alphas) * n_replicates
     trial_count = 0
 
-    for method in methods:
+    print(f"\n  Phase 1: Running non-spectral methods...")
+
+    for method in non_spectral_methods:
         for alpha in alphas:
             for rep in range(n_replicates):
                 trial_count += 1
 
-                # Generate seed
                 seed = SEED_BASE + hash((dataset_info['name'], method, alpha, rep)) % (2**20)
 
-                print(f"\r    [{trial_count}/{total_trials}] {method}, α={alpha:.1f}, rep={rep+1}",
+                print(f"\r    [{trial_count}/{total_non_spectral}] {method}, α={alpha:.1f}, rep={rep+1}",
                       end='', flush=True)
 
                 result = run_single_trial(
                     G, baseline_partition, Q0, T_leiden_orig,
                     method, alpha, rep, seed, dataset_info
                 )
-                results.append(result)
+                if result is not None:
+                    results.append(result)
+                    # Track DSpar times
+                    if method == 'dspar' and alpha < 1.0:
+                        dspar_times.append(result['T_sparsify_sec'])
+                else:
+                    print(f" [SKIPPED]", end='')
 
-    print()  # Newline after progress
+    print()
+
+    # Phase 2: Run spectral with dynamic timeout based on DSpar
+    if has_spectral and len(dspar_times) > 0:
+        max_dspar_time = max(dspar_times)
+        dynamic_timeout = int(max_dspar_time * spectral_timeout_multiplier)
+        dynamic_timeout = max(dynamic_timeout, 30)  # At least 30 seconds
+
+        print(f"\n  Phase 2: Running spectral sparsification...")
+        print(f"    Max DSpar time: {max_dspar_time:.2f}s")
+        print(f"    Spectral timeout: {dynamic_timeout}s ({spectral_timeout_multiplier}× DSpar)")
+
+        SPECTRAL_TIMEOUT = dynamic_timeout
+
+        total_spectral = len(alphas) * n_replicates
+        trial_count = 0
+
+        for alpha in alphas:
+            for rep in range(n_replicates):
+                trial_count += 1
+
+                seed = SEED_BASE + hash((dataset_info['name'], 'spectral', alpha, rep)) % (2**20)
+
+                print(f"\r    [{trial_count}/{total_spectral}] spectral, α={alpha:.1f}, rep={rep+1}",
+                      end='', flush=True)
+
+                result = run_single_trial(
+                    G, baseline_partition, Q0, T_leiden_orig,
+                    'spectral', alpha, rep, seed, dataset_info
+                )
+                if result is not None:
+                    results.append(result)
+                else:
+                    print(f" [SKIPPED]", end='')
+
+        print()
+
+    elif has_spectral:
+        print(f"\n  [WARNING] No DSpar times recorded, skipping spectral")
 
     return results
 
 
 def run_all_experiments(datasets: list, methods: list, alphas: list,
-                        n_replicates: int, max_edges: int = None) -> pd.DataFrame:
+                        n_replicates: int, max_edges: int = None,
+                        spectral_timeout_multiplier: float = 10.0) -> pd.DataFrame:
     """
     Run experiments on all datasets.
     """
@@ -520,7 +682,8 @@ def run_all_experiments(datasets: list, methods: list, alphas: list,
             print(f"  [SKIP] Could not load {dataset_name}")
             continue
 
-        results = run_dataset_experiments(G, info, methods, alphas, n_replicates)
+        results = run_dataset_experiments(G, info, methods, alphas, n_replicates,
+                                          spectral_timeout_multiplier=spectral_timeout_multiplier)
         all_results.extend(results)
 
     return pd.DataFrame(all_results)
@@ -665,7 +828,10 @@ def plot_scaling_sparsify_time(df: pd.DataFrame, output_dir: Path):
     # Use alpha=0.8 data
     df_plot = df[np.isclose(df['alpha'], 0.8)]
 
-    for method in METHODS:
+    # Get methods from data
+    methods_in_data = df_plot['method'].unique()
+
+    for method in methods_in_data:
         df_m = df_plot[df_plot['method'] == method]
 
         if len(df_m) == 0:
@@ -681,8 +847,8 @@ def plot_scaling_sparsify_time(df: pd.DataFrame, output_dir: Path):
 
         ax.errorbar(
             agg['m_edges'], agg['T_mean'], yerr=agg['T_std'],
-            fmt=MARKERS[method] + LINESTYLES[method],
-            color=COLORS[method],
+            fmt=MARKERS.get(method, 'o') + LINESTYLES.get(method, '-'),
+            color=COLORS.get(method, '#666666'),
             label=method.replace('_', ' ').title(),
             capsize=2, markersize=5
         )
@@ -709,7 +875,10 @@ def plot_scaling_pipeline_time(df: pd.DataFrame, output_dir: Path):
     # Use alpha=0.8 data
     df_plot = df[np.isclose(df['alpha'], 0.8)]
 
-    for method in METHODS:
+    # Get methods from data
+    methods_in_data = df_plot['method'].unique()
+
+    for method in methods_in_data:
         df_m = df_plot[df_plot['method'] == method]
 
         if len(df_m) == 0:
@@ -724,8 +893,8 @@ def plot_scaling_pipeline_time(df: pd.DataFrame, output_dir: Path):
 
         ax.errorbar(
             agg['m_edges'], agg['T_mean'], yerr=agg['T_std'],
-            fmt=MARKERS[method] + LINESTYLES[method],
-            color=COLORS[method],
+            fmt=MARKERS.get(method, 'o') + LINESTYLES.get(method, '-'),
+            color=COLORS.get(method, '#666666'),
             label=method.replace('_', ' ').title(),
             capsize=2, markersize=5
         )
@@ -762,7 +931,10 @@ def plot_quality_vs_alpha(df: pd.DataFrame, output_dir: Path):
 
         fig, ax = plt.subplots(figsize=(5, 4))
 
-        for method in METHODS:
+        # Get methods from data
+        methods_in_data = df_d['method'].unique()
+
+        for method in methods_in_data:
             df_m = df_d[df_d['method'] == method]
 
             if len(df_m) == 0:
@@ -775,8 +947,8 @@ def plot_quality_vs_alpha(df: pd.DataFrame, output_dir: Path):
 
             ax.errorbar(
                 agg['alpha'], agg['dQ_mean'], yerr=agg['dQ_std'],
-                fmt=MARKERS[method] + LINESTYLES[method],
-                color=COLORS[method],
+                fmt=MARKERS.get(method, 'o') + LINESTYLES.get(method, '-'),
+                color=COLORS.get(method, '#666666'),
                 label=method.replace('_', ' ').title(),
                 capsize=2, markersize=5
             )
@@ -803,7 +975,10 @@ def plot_speedup_vs_quality(df: pd.DataFrame, output_dir: Path):
 
         fig, ax = plt.subplots(figsize=(5, 4))
 
-        for method in METHODS:
+        # Get methods from data
+        methods_in_data = df_d['method'].unique()
+
+        for method in methods_in_data:
             df_m = df_d[df_d['method'] == method]
 
             if len(df_m) == 0:
@@ -817,8 +992,8 @@ def plot_speedup_vs_quality(df: pd.DataFrame, output_dir: Path):
             # Plot as connected points (each point is an alpha level)
             ax.plot(
                 agg['speedup'], agg['dQ_leiden'],
-                marker=MARKERS[method], linestyle=LINESTYLES[method],
-                color=COLORS[method],
+                marker=MARKERS.get(method, 'o'), linestyle=LINESTYLES.get(method, '-'),
+                color=COLORS.get(method, '#666666'),
                 label=method.replace('_', ' ').title(),
                 markersize=5
             )
@@ -885,11 +1060,14 @@ def print_key_results(df: pd.DataFrame, alpha: float = 0.8):
           f"{'Speedup':<10} {'dQ_fixed':<12} {'dQ_Leiden':<12}")
     print("-" * 100)
 
+    # Get methods from data
+    methods_in_data = df_alpha['method'].unique()
+
     for dataset in df_alpha['dataset'].unique():
         df_d = df_alpha[df_alpha['dataset'] == dataset]
         T_orig = df_d['T_leiden_orig_sec'].iloc[0]
 
-        for method in METHODS:
+        for method in methods_in_data:
             df_m = df_d[df_d['method'] == method]
 
             if len(df_m) == 0:
@@ -914,6 +1092,8 @@ def print_key_results(df: pd.DataFrame, alpha: float = 0.8):
 # =============================================================================
 
 def main():
+    global SPECTRAL_TIMEOUT  # Declare at start of function
+
     parser = argparse.ArgumentParser(
         description="Experiment 3: Scalability and Large-Graph Tradeoffs"
     )
@@ -940,6 +1120,23 @@ def main():
         default=N_REPLICATES,
         help=f"Number of replicates per configuration (default: {N_REPLICATES})"
     )
+    parser.add_argument(
+        "--no_spectral",
+        action="store_true",
+        help="Exclude spectral sparsification (spectral is included by default)"
+    )
+    parser.add_argument(
+        "--spectral_timeout",
+        type=int,
+        default=SPECTRAL_TIMEOUT,
+        help=f"Initial timeout in seconds for spectral (default: {SPECTRAL_TIMEOUT}), overridden by dynamic timeout"
+    )
+    parser.add_argument(
+        "--spectral_multiplier",
+        type=float,
+        default=10.0,
+        help="Spectral timeout = multiplier × max(DSpar time). Default: 10.0"
+    )
 
     args = parser.parse_args()
 
@@ -951,6 +1148,17 @@ def main():
 
     n_replicates = args.replicates
 
+    # Determine methods (spectral included by default unless --no_spectral)
+    methods = METHODS.copy()
+    if not args.no_spectral:
+        if SPECTRAL_AVAILABLE:
+            methods.append('spectral')
+            SPECTRAL_TIMEOUT = args.spectral_timeout
+        else:
+            print("WARNING: Spectral sparsification not available (Julia not configured), skipping")
+    else:
+        print("NOTE: Spectral sparsification excluded (--no_spectral flag)")
+
     print("=" * 100)
     print("EXPERIMENT 3: SCALABILITY AND LARGE-GRAPH TRADEOFFS")
     print("=" * 100)
@@ -958,15 +1166,18 @@ def main():
     print(f"\nConfiguration:")
     print(f"  Datasets: {datasets}")
     print(f"  Alphas: {ALPHAS}")
-    print(f"  Methods: {METHODS}")
+    print(f"  Methods: {methods}")
     print(f"  Replicates: {n_replicates}")
     print(f"  Max edges: {args.max_edges if args.max_edges else 'unlimited'}")
     print(f"  Output directory: {OUTPUT_DIR}")
 
-    # Note about spectral sparsification
-    print(f"\n  NOTE: Spectral sparsification is skipped because scalable")
-    print(f"        implementations are computationally infeasible at this scale.")
-    print(f"        (Requires O(m log n) space and O(m log^2 n / eps^2) time)")
+    if 'spectral' in methods:
+        print(f"\n  NOTE: Spectral sparsification enabled")
+        print(f"        Dynamic timeout: {args.spectral_multiplier}× max(DSpar time) per dataset")
+        print(f"        May fail/timeout on large graphs (O(m log n) space, O(m log^2 n / eps^2) time)")
+    else:
+        print(f"\n  NOTE: Spectral sparsification not included.")
+        print(f"        Remove --no_spectral flag to enable (requires Julia, may timeout on large graphs)")
 
     if args.dry_run:
         print("\n[DRY RUN] Exiting without running experiments.")
@@ -975,10 +1186,11 @@ def main():
     # Run experiments
     df = run_all_experiments(
         datasets=datasets,
-        methods=METHODS,
+        methods=methods,
         alphas=ALPHAS,
         n_replicates=n_replicates,
-        max_edges=args.max_edges
+        max_edges=args.max_edges,
+        spectral_timeout_multiplier=args.spectral_multiplier
     )
 
     if len(df) == 0:
@@ -1022,12 +1234,15 @@ def main():
     print("SUMMARY STATISTICS")
     print(f"{'='*100}")
 
+    # Get methods from data
+    methods_in_data = df['method'].unique()
+
     for dataset in df['dataset'].unique():
         df_d = df[(df['dataset'] == dataset) & np.isclose(df['alpha'], 0.8)]
 
         print(f"\n{dataset}:")
 
-        for method in METHODS:
+        for method in methods_in_data:
             df_m = df_d[df_d['method'] == method]
             if len(df_m) == 0:
                 continue
