@@ -9,7 +9,8 @@ import igraph as ig
 def run_leiden(
     g: ig.Graph,
     objective: str = "modularity",
-    resolution: Optional[float] = None
+    resolution: float = 1.0,
+    n_iterations: int = 2
 ) -> Tuple[List[int], float, int]:
     """
     Run Leiden clustering using igraph's built-in method.
@@ -20,8 +21,10 @@ def run_leiden(
         Input graph
     objective : str
         Objective function: "modularity" or "CPM"
-    resolution : float, optional
-        Resolution parameter for CPM. Ignored if objective="modularity".
+    resolution : float
+        Resolution parameter. Default 1.0 to match paper experiments.
+    n_iterations : int
+        Number of iterations. Default 2 to match paper experiments.
         
     Returns
     -------
@@ -33,11 +36,16 @@ def run_leiden(
         Number of communities found
     """
     if objective == "modularity":
-        partition = g.community_leiden(objective_function="modularity")
+        partition = g.community_leiden(
+            objective_function="modularity",
+            resolution=resolution,
+            n_iterations=n_iterations
+        )
     else:
         partition = g.community_leiden(
             objective_function="CPM",
-            resolution=resolution
+            resolution=resolution,
+            n_iterations=n_iterations
         )
     
     membership = partition.membership
@@ -50,7 +58,8 @@ def run_leiden(
 def run_leiden_timed(
     g: ig.Graph,
     objective: str = "modularity",
-    resolution: Optional[float] = None
+    resolution: float = 1.0,
+    n_iterations: int = 2
 ) -> Tuple[List[int], float, int, float]:
     """
     Run Leiden clustering with timing.
@@ -61,8 +70,10 @@ def run_leiden_timed(
         Input graph
     objective : str
         Objective function: "modularity" or "CPM"
-    resolution : float, optional
-        Resolution parameter for CPM
+    resolution : float
+        Resolution parameter. Default 1.0 to match paper experiments.
+    n_iterations : int
+        Number of iterations. Default 2 to match paper experiments.
         
     Returns
     -------
@@ -76,7 +87,7 @@ def run_leiden_timed(
         Time in seconds
     """
     start = time.perf_counter()
-    membership, modularity, n_communities = run_leiden(g, objective, resolution)
+    membership, modularity, n_communities = run_leiden(g, objective, resolution, n_iterations)
     elapsed = time.perf_counter() - start
     
     return membership, modularity, n_communities, elapsed

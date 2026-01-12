@@ -1,333 +1,496 @@
+#!/usr/bin/env python3
 """
-Main experiment runner: DSpar vs Spectral sparsification on citation networks.
+Experiment 3: Scalability and Large-Graph Tradeoffs
 
-Replicates functionality of experiments/cit_hepph_experiment.py using modular code.
+Evaluates DSpar, baseline sparsifiers (uniform random, degree sampling), 
+and optionally spectral sparsification on large graphs.
 
-Run: python src/main.py [dataset]
-Datasets: cit-HepPh, cit-HepTh, citeseer, soc-LiveJournal1
+Clean modular implementation - all functionality in dedicated modules.
+Uses parallel processing for speedup while maintaining ordered results.
+
+Run: python -m src.main
+     python -m src.main --datasets com-DBLP
+     python -m src.main --datasets com-DBLP,com-Amazon --dry_run
+     python -m src.main --max_edges 1000000
+     python -m src.main --workers 8
 """
 import sys
+import argparse
+import os
 from pathlib import Path
+from concurrent.futures import ProcessPoolExecutor, as_completed
+from dataclasses import dataclass
+from typing import Optional, List, Tuple, Dict, Any
 
 # Setup path for absolute imports when running as script
 if __name__ == "__main__":
     sys.path.insert(0, str(Path(__file__).parent.parent))
 
-import time
 import numpy as np
-import igraph as ig
+import pandas as pd
 
+# Import from dedicated modules - each module does ONE thing
 from src.config import (
-    EPSILON_VALUES, RETENTION_VALUES, DSPAR_METHODS, CPM_RESOLUTIONS
+    ALPHAS, METHODS, N_REPLICATES, SEED_BASE,
+    DEFAULT_DATASETS, RESULTS_DIR,
+    SPECTRAL_EPSILON_MAP, SPECTRAL_TIMEOUT
 )
-from src.data import load_edges, load_graph
-from src.clustering import run_leiden, run_leiden_timed
-from src.clustering.leiden_cache import run_leiden_cached
-from src.sparsifiers import dspar_sparsify, spectral_sparsify
-from src.sparsifiers.dspar import dspar_sparsify_timed
-from src.sparsifiers.spectral import spectral_sparsify_timed
-from src.eval.metrics import compute_nmi_ari, calculate_edge_preservation_ratio, count_intra_inter_edges
-from src.io import ResultsManager
+from src.data import load_large_dataset
+from src.clustering import run_leiden_timed
+from src.eval.metrics import compute_nmi, compute_modularity_fixed
+from src.sparsifiers import sparsify_timed, SPECTRAL_AVAILABLE
+from src.io.results_manager import generate_summary, print_key_results, get_next_run_folder
 
+
+# =============================================================================
+# PARALLEL TRIAL EXECUTION
+# =============================================================================
+
+@dataclass
+class TrialConfig:
+    """Configuration for a single trial - picklable for multiprocessing."""
+    trial_idx: int  # For ordering results
+    method: str
+    alpha: float
+    replicate: int
+    seed: int
+    dataset_name: str
+
+
+def run_single_trial_worker(
+    trial_config: TrialConfig,
+    G_edges: np.ndarray,
+    n_nodes: int,
+    baseline_membership: List[int],
+    Q0: float,
+    T_leiden_orig: float,
+    epsilon_map: dict
+) -> Tuple[int, Optional[Dict[str, Any]]]:
+    """
+    Worker function for parallel trial execution.
+    
+    Returns (trial_idx, result_dict) to maintain ordering.
+    """
+    import igraph as ig
+    from src.sparsifiers import sparsify_timed
+    from src.clustering import run_leiden_timed
+    from src.eval.metrics import compute_nmi, compute_modularity_fixed
+    
+    # Reconstruct graph from edges (can't pickle igraph objects)
+    G = ig.Graph(n=n_nodes, edges=G_edges.tolist(), directed=False)
+    
+    m_edges = G.ecount()
+    method = trial_config.method
+    alpha = trial_config.alpha
+    seed = trial_config.seed
+    
+    # Handle alpha = 1.0 (no sparsification)
+    if alpha >= 1.0:
+        G_sparse = G.copy()
+        T_sparsify = 0.0
+    else:
+        G_sparse, T_sparsify = sparsify_timed(G, method, alpha, seed, epsilon_map=epsilon_map)
+    
+    # Handle failed sparsification
+    if G_sparse is None:
+        return (trial_config.trial_idx, None)
+    
+    m_sparse = G_sparse.ecount()
+    retention_actual = m_sparse / m_edges if m_edges > 0 else 1.0
+    
+    # Compute Q_sparse_fixed
+    Q_sparse_fixed = compute_modularity_fixed(G_sparse, baseline_membership)
+    dQ_fixed = Q_sparse_fixed - Q0
+    
+    # Run Leiden on sparsified graph
+    membership_sparse, Q_sparse_leiden, n_comm_sparse, T_leiden_sparse = run_leiden_timed(G_sparse)
+    dQ_leiden = Q_sparse_leiden - Q0
+    
+    # Pipeline time and speedup
+    T_pipeline = T_sparsify + T_leiden_sparse
+    speedup = T_leiden_orig / T_pipeline if T_pipeline > 0 else 1.0
+    
+    # NMI between baseline and sparse partitions
+    nmi_P0_Palpha = compute_nmi(baseline_membership, membership_sparse)
+    
+    result = {
+        'dataset': trial_config.dataset_name,
+        'method': method,
+        'alpha': alpha,
+        'replicate': trial_config.replicate,
+        'seed': seed,
+        
+        'n_nodes': n_nodes,
+        'm_edges': m_edges,
+        'm_sparse': m_sparse,
+        'retention_actual': retention_actual,
+        
+        'T_sparsify_sec': T_sparsify,
+        'T_leiden_orig_sec': T_leiden_orig,
+        'T_leiden_sparse_sec': T_leiden_sparse,
+        'T_pipeline_sec': T_pipeline,
+        'speedup': speedup,
+        
+        'Q0': Q0,
+        'Q_sparse_fixed': Q_sparse_fixed,
+        'dQ_fixed': dQ_fixed,
+        'Q_sparse_leiden': Q_sparse_leiden,
+        'dQ_leiden': dQ_leiden,
+        
+        'n_communities_orig': len(set(baseline_membership)),
+        'n_communities_sparse': n_comm_sparse,
+        'nmi_P0_Palpha': nmi_P0_Palpha,
+    }
+    
+    return (trial_config.trial_idx, result)
+
+
+def run_dataset_experiments(
+    G, 
+    dataset_info: dict,
+    methods: list, 
+    alphas: list,
+    n_replicates: int,
+    n_workers: int = None,
+    spectral_timeout_multiplier: float = 10.0
+) -> list:
+    """
+    Run all experiments for a single dataset using parallel processing.
+    Results are returned in deterministic order (method, alpha, replicate).
+    """
+    # Default to number of CPUs
+    if n_workers is None:
+        n_workers = max(1, os.cpu_count() - 1)
+    
+    print(f"\n  Running Leiden on original graph...")
+    baseline_membership, Q0, n_communities_orig, T_leiden_orig = run_leiden_timed(G)
+    
+    print(f"    Baseline modularity Q0 = {Q0:.6f}")
+    print(f"    Baseline communities = {n_communities_orig}")
+    print(f"    Baseline Leiden time = {T_leiden_orig:.3f}s")
+    
+    # Prepare graph data for workers (can't pickle igraph objects)
+    G_edges = np.array(G.get_edgelist())
+    n_nodes = G.vcount()
+    baseline_membership_list = list(baseline_membership)
+    
+    # Separate methods: run non-spectral first, then spectral
+    non_spectral_methods = [m for m in methods if m != 'spectral']
+    has_spectral = 'spectral' in methods
+    
+    results = []
+    dspar_times = []
+    
+    # Phase 1: Run non-spectral methods in parallel
+    print(f"\n  Phase 1: Running non-spectral methods (parallel, {n_workers} workers)...")
+    
+    # Create all trial configs with indices for ordering
+    trial_configs = []
+    trial_idx = 0
+    for method in non_spectral_methods:
+        for alpha in alphas:
+            for rep in range(n_replicates):
+                seed = SEED_BASE + hash((dataset_info['name'], method, alpha, rep)) % (2**20)
+                trial_configs.append(TrialConfig(
+                    trial_idx=trial_idx,
+                    method=method,
+                    alpha=alpha,
+                    replicate=rep,
+                    seed=seed,
+                    dataset_name=dataset_info['name']
+                ))
+                trial_idx += 1
+    
+    total_trials = len(trial_configs)
+    completed = 0
+    indexed_results = {}
+    
+    # Run trials in parallel
+    with ProcessPoolExecutor(max_workers=n_workers) as executor:
+        # Submit all tasks
+        futures = {
+            executor.submit(
+                run_single_trial_worker,
+                config,
+                G_edges,
+                n_nodes,
+                baseline_membership_list,
+                Q0,
+                T_leiden_orig,
+                SPECTRAL_EPSILON_MAP
+            ): config for config in trial_configs
+        }
+        
+        # Collect results as they complete
+        for future in as_completed(futures):
+            config = futures[future]
+            completed += 1
+            
+            try:
+                idx, result = future.result()
+                if result is not None:
+                    indexed_results[idx] = result
+                    # Track DSpar times for spectral timeout
+                    if result['method'] == 'dspar' and result['alpha'] < 1.0:
+                        dspar_times.append(result['T_sparsify_sec'])
+                    status = "✓"
+                else:
+                    status = "SKIP"
+            except Exception as e:
+                status = f"ERR: {e}"
+            
+            print(f"\r    [{completed}/{total_trials}] {config.method}, α={config.alpha:.1f}, rep={config.replicate+1} {status}",
+                  end='', flush=True)
+    
+    print()
+    
+    # Sort results by trial index to maintain order
+    for idx in sorted(indexed_results.keys()):
+        results.append(indexed_results[idx])
+    
+    # Phase 2: Run spectral with dynamic timeout (SEQUENTIAL to avoid memory issues)
+    if has_spectral and SPECTRAL_AVAILABLE and len(dspar_times) > 0:
+        max_dspar_time = max(dspar_times)
+        dynamic_timeout = int(max_dspar_time * spectral_timeout_multiplier)
+        dynamic_timeout = max(dynamic_timeout, 30)
+        
+        print(f"\n  Phase 2: Running spectral sparsification (SEQUENTIAL - memory intensive)...")
+        print(f"    Max DSpar time: {max_dspar_time:.2f}s")
+        print(f"    Spectral timeout: {dynamic_timeout}s ({spectral_timeout_multiplier}× DSpar)")
+        
+        # Create spectral trial configs
+        spectral_configs = []
+        trial_idx = 0
+        for alpha in alphas:
+            for rep in range(n_replicates):
+                seed = SEED_BASE + hash((dataset_info['name'], 'spectral', alpha, rep)) % (2**20)
+                spectral_configs.append(TrialConfig(
+                    trial_idx=trial_idx,
+                    method='spectral',
+                    alpha=alpha,
+                    replicate=rep,
+                    seed=seed,
+                    dataset_name=dataset_info['name']
+                ))
+                trial_idx += 1
+        
+        total_spectral = len(spectral_configs)
+        
+        # Run spectral trials SEQUENTIALLY (Julia is memory-intensive)
+        for i, config in enumerate(spectral_configs):
+            try:
+                idx, result = run_single_trial_worker(
+                    config,
+                    G_edges,
+                    n_nodes,
+                    baseline_membership_list,
+                    Q0,
+                    T_leiden_orig,
+                    SPECTRAL_EPSILON_MAP
+                )
+                if result is not None:
+                    results.append(result)
+                    status = "✓"
+                else:
+                    status = "SKIP"
+            except Exception as e:
+                status = f"ERR: {e}"
+            
+            print(f"    [{i+1}/{total_spectral}] spectral, α={config.alpha:.1f}, rep={config.replicate+1} {status}")
+    
+    elif has_spectral:
+        print(f"\n  [WARNING] No DSpar times recorded, skipping spectral")
+    
+    return results
+
+
+def run_all_experiments(
+    datasets: list, 
+    methods: list, 
+    alphas: list,
+    n_replicates: int, 
+    max_edges: int = None,
+    n_workers: int = None,
+    spectral_timeout_multiplier: float = 10.0,
+    output_file: Path = None
+) -> pd.DataFrame:
+    """Run experiments on all datasets with incremental saving."""
+    all_results = []
+    first_write = True
+    
+    for dataset_name in datasets:
+        print(f"\n{'='*80}")
+        print(f"DATASET: {dataset_name}")
+        print(f"{'='*80}")
+        
+        G, info = load_large_dataset(dataset_name, max_edges=max_edges)
+        
+        if G is None:
+            print(f"  [SKIP] Could not load {dataset_name}")
+            continue
+        
+        results = run_dataset_experiments(
+            G, info, methods, alphas, n_replicates,
+            n_workers=n_workers,
+            spectral_timeout_multiplier=spectral_timeout_multiplier
+        )
+        all_results.extend(results)
+        
+        # Save incrementally
+        if output_file and len(results) > 0:
+            df_dataset = pd.DataFrame(results)
+            if first_write:
+                df_dataset.to_csv(output_file, index=False, mode='w')
+                first_write = False
+            else:
+                df_dataset.to_csv(output_file, index=False, mode='a', header=False)
+            print(f"\n  [SAVED] Results appended to {output_file}")
+    
+    return pd.DataFrame(all_results)
+
+
+# =============================================================================
+# MAIN
+# =============================================================================
 
 def main():
-    # Get dataset name from command line
-    dataset_name = sys.argv[1] if len(sys.argv) > 1 else "cit-HepPh"
-    
-    print("=" * 90)
-    print(f"{dataset_name.upper()} EXPERIMENT: DSpar vs Spectral Sparsification")
-    print("=" * 90)
-    
-    # Initialize results manager
-    results_mgr = ResultsManager()
-    
-    # Load dataset
-    print(f"\nLoading {dataset_name} dataset...")
-    edges = load_edges(dataset_name)
-    G = ig.Graph(edges=edges.tolist(), directed=False)
-    G.simplify()
-    
-    n_nodes = G.vcount()
-    n_edges = G.ecount()
-    n_cc = len(G.components())
-    
-    print(f"Original graph: {n_nodes:,} nodes, {n_edges:,} edges, {n_cc} connected components")
-    
-    # Store dataset info
-    results_mgr.set_dataset_info(dataset_name, n_nodes, n_edges, n_cc)
-    
-    # Run Leiden on original (with caching)
-    print("\nRunning Leiden on original graph...")
-    mem_original, mod_original, n_comm_original, leiden_time_original, from_cache = run_leiden_cached(
-        G, dataset_name, objective="modularity"
+    parser = argparse.ArgumentParser(
+        description="Experiment 3: Scalability and Large-Graph Tradeoffs"
     )
-    if from_cache:
-        print(f"  Communities: {n_comm_original}, Modularity: {mod_original:.4f} (loaded from cache)")
-    else:
-        print(f"  Communities: {n_comm_original}, Modularity: {mod_original:.4f}, Time: {leiden_time_original:.2f}s")
-    
-    # Count intra/inter edges (vectorized)
-    total_intra, total_inter = count_intra_inter_edges(edges, mem_original)
-    
-    # Store original results
-    results_mgr.add_original_result(
-        membership=mem_original,
-        modularity=mod_original,
-        n_communities=n_comm_original,
-        leiden_time=leiden_time_original,
-        total_intra=total_intra,
-        total_inter=total_inter
+    parser.add_argument(
+        "--datasets", type=str, default=None,
+        help="Comma-separated list of datasets (default: all DEFAULT_DATASETS)"
+    )
+    parser.add_argument(
+        "--max_edges", type=int, default=None,
+        help="Maximum edges to keep per dataset (for testing)"
+    )
+    parser.add_argument(
+        "--dry_run", action="store_true",
+        help="Print configuration and exit without running"
+    )
+    parser.add_argument(
+        "--replicates", type=int, default=N_REPLICATES,
+        help=f"Number of replicates per configuration (default: {N_REPLICATES})"
+    )
+    parser.add_argument(
+        "--no_spectral", action="store_true",
+        help="Exclude spectral sparsification"
+    )
+    parser.add_argument(
+        "--spectral_timeout", type=int, default=SPECTRAL_TIMEOUT,
+        help=f"Initial timeout for spectral (default: {SPECTRAL_TIMEOUT})"
+    )
+    parser.add_argument(
+        "--spectral_multiplier", type=float, default=10.0,
+        help="Spectral timeout = multiplier × max(DSpar time). Default: 10.0"
+    )
+    parser.add_argument(
+        "--workers", type=int, default=None,
+        help="Number of parallel workers (default: CPU count - 1)"
     )
     
-    # Results storage for summary
-    results = []
+    args = parser.parse_args()
     
-    # Header
-    print("\n" + "=" * 130)
-    print(f"{'Method':<35} {'Param':<8} {'Edges':<12} {'%':<8} {'CC':<6} {'Comm':<6} {'Mod':<8} {'NMI':<8} {'ARI':<8} {'Intra%':<8} {'Inter%':<8} {'Ratio':<8} {'Spar(s)':<8} {'Leid(s)':<8}")
-    print("-" * 130)
-    print(f"{'Original':<35} {'-':<8} {n_edges:<12,} {'100%':<8} {n_cc:<6} {n_comm_original:<6} {mod_original:<8.4f} {'-':<8} {'-':<8} {'100.0':<8} {'100.0':<8} {'1.000':<8} {'-':<8} {leiden_time_original:<8.2f}")
-    print(f"  (Intra: {total_intra:,} edges, Inter: {total_inter:,} edges)")
-    print("-" * 130)
+    # Determine datasets
+    datasets = [d.strip() for d in args.datasets.split(",")] if args.datasets else DEFAULT_DATASETS
+    n_replicates = args.replicates
     
-    # =========================================================================
-    # SPECTRAL SPARSIFICATION
-    # =========================================================================
-    print("\n>>> SPECTRAL (Julia Laplacians.jl)")
-    print("-" * 130)
-    
-    for epsilon in EPSILON_VALUES:
-        try:
-            G_sparse, spar_time = spectral_sparsify_timed(G, epsilon)
-            
-            n_edges_sparse = G_sparse.ecount()
-            edge_pct = 100.0 * n_edges_sparse / n_edges
-            n_cc_sparse = len(G_sparse.components())
-            
-            # Run Leiden on sparsified
-            mem_sparse, mod_sparse, n_comm_sparse, leiden_time_sparse = run_leiden_timed(G_sparse)
-            
-            # Compute NMI/ARI
-            nmi, ari = compute_nmi_ari(mem_original, mem_sparse)
-            
-            # Compute edge preservation ratio
-            ratio_stats = calculate_edge_preservation_ratio(G, G_sparse, mem_original)
-            intra_pct = ratio_stats['intra_rate'] * 100
-            inter_pct = ratio_stats['inter_rate'] * 100
-            ratio = ratio_stats['ratio']
-            
-            print(f"{'Spectral':<35} {'ε='+str(epsilon):<8} {n_edges_sparse:<12,} {edge_pct:<8.1f} {n_cc_sparse:<6} {n_comm_sparse:<6} {mod_sparse:<8.4f} {nmi:<8.4f} {ari:<8.4f} {intra_pct:<8.1f} {inter_pct:<8.1f} {ratio:<8.3f} {spar_time:<8.2f} {leiden_time_sparse:<8.2f}")
-            
-            # Store result
-            results_mgr.add_experiment_result(
-                method='Spectral',
-                param=f'ε={epsilon}',
-                n_edges_sparse=n_edges_sparse,
-                edge_pct=edge_pct,
-                n_components=n_cc_sparse,
-                n_communities=n_comm_sparse,
-                modularity=mod_sparse,
-                nmi=nmi,
-                ari=ari,
-                intra_pct=intra_pct,
-                inter_pct=inter_pct,
-                ratio=ratio,
-                sparsify_time=spar_time,
-                leiden_time=leiden_time_sparse,
-                membership=mem_sparse
-            )
-            
-            results.append({
-                'method': 'Spectral',
-                'param': f'ε={epsilon}',
-                'edges': n_edges_sparse,
-                'edge_pct': edge_pct,
-                'cc': n_cc_sparse,
-                'communities': n_comm_sparse,
-                'modularity': mod_sparse,
-                'nmi': nmi,
-                'ari': ari,
-                'intra_pct': intra_pct,
-                'inter_pct': inter_pct,
-                'ratio': ratio,
-                'spar_time': spar_time,
-                'leiden_time': leiden_time_sparse
-            })
-            
-        except Exception as e:
-            print(f"{'Spectral':<35} {'ε='+str(epsilon):<8} ERROR: {e}")
-    
-    # =========================================================================
-    # DSPAR SPARSIFICATION
-    # =========================================================================
-    for method in DSPAR_METHODS:
-        print(f"\n>>> DSPAR ({method})")
-        print("-" * 130)
-        
-        for retention in RETENTION_VALUES:
-            try:
-                G_sparse, spar_time = dspar_sparsify_timed(G, retention, method, seed=42)
-                
-                n_edges_sparse = G_sparse.ecount()
-                edge_pct = 100.0 * n_edges_sparse / n_edges
-                n_cc_sparse = len(G_sparse.components())
-                
-                # Run Leiden on sparsified
-                mem_sparse, mod_sparse, n_comm_sparse, leiden_time_sparse = run_leiden_timed(G_sparse)
-                
-                # Compute NMI/ARI
-                nmi, ari = compute_nmi_ari(mem_original, mem_sparse)
-                
-                # Compute edge preservation ratio
-                ratio_stats = calculate_edge_preservation_ratio(G, G_sparse, mem_original)
-                intra_pct = ratio_stats['intra_rate'] * 100
-                inter_pct = ratio_stats['inter_rate'] * 100
-                ratio = ratio_stats['ratio']
-                
-                method_name = f"DSpar ({method})"
-                print(f"{method_name:<35} {'r='+str(retention):<8} {n_edges_sparse:<12,} {edge_pct:<8.1f} {n_cc_sparse:<6} {n_comm_sparse:<6} {mod_sparse:<8.4f} {nmi:<8.4f} {ari:<8.4f} {intra_pct:<8.1f} {inter_pct:<8.1f} {ratio:<8.3f} {spar_time:<8.2f} {leiden_time_sparse:<8.2f}")
-                
-                # Store result
-                results_mgr.add_experiment_result(
-                    method=method_name,
-                    param=f'r={retention}',
-                    n_edges_sparse=n_edges_sparse,
-                    edge_pct=edge_pct,
-                    n_components=n_cc_sparse,
-                    n_communities=n_comm_sparse,
-                    modularity=mod_sparse,
-                    nmi=nmi,
-                    ari=ari,
-                    intra_pct=intra_pct,
-                    inter_pct=inter_pct,
-                    ratio=ratio,
-                    sparsify_time=spar_time,
-                    leiden_time=leiden_time_sparse,
-                    membership=mem_sparse
-                )
-                
-                results.append({
-                    'method': method_name,
-                    'param': f'r={retention}',
-                    'edges': n_edges_sparse,
-                    'edge_pct': edge_pct,
-                    'cc': n_cc_sparse,
-                    'communities': n_comm_sparse,
-                    'modularity': mod_sparse,
-                    'nmi': nmi,
-                    'ari': ari,
-                    'intra_pct': intra_pct,
-                    'inter_pct': inter_pct,
-                    'ratio': ratio,
-                    'spar_time': spar_time,
-                    'leiden_time': leiden_time_sparse
-                })
-                
-            except Exception as e:
-                print(f"{'DSpar ('+method+')':<35} {'r='+str(retention):<8} ERROR: {e}")
-    
-    # =========================================================================
-    # SUMMARY
-    # =========================================================================
-    print("\n" + "=" * 100)
-    print("SUMMARY")
-    print("=" * 100)
-    
-    print(f"\nOriginal: {n_nodes:,} nodes, {n_edges:,} edges, {n_cc} CC, {n_comm_original} communities, Modularity={mod_original:.4f}")
-    print(f"Leiden time on original: {leiden_time_original:.2f}s")
-    
-    if results:
-        best_nmi = max(results, key=lambda x: x['nmi'])
-        best_ari = max(results, key=lambda x: x['ari'])
-        best_mod = max(results, key=lambda x: x['modularity'])
-        best_ratio = min(results, key=lambda x: x['ratio'])  # Lower is better
-        fastest_spar = min(results, key=lambda x: x['spar_time'])
-        
-        print(f"\nBest NMI: {best_nmi['method']} {best_nmi['param']} -> NMI={best_nmi['nmi']:.4f}")
-        print(f"Best ARI: {best_ari['method']} {best_ari['param']} -> ARI={best_ari['ari']:.4f}")
-        print(f"Best Modularity: {best_mod['method']} {best_mod['param']} -> Mod={best_mod['modularity']:.4f} (original={mod_original:.4f})")
-        print(f"Best Ratio: {best_ratio['method']} {best_ratio['param']} -> Ratio={best_ratio['ratio']:.3f} (< 1 means inter removed faster)")
-        print(f"Fastest sparsification: {fastest_spar['method']} {fastest_spar['param']} -> {fastest_spar['spar_time']:.2f}s")
-    
-    # =========================================================================
-    # CPM RESOLUTION ANALYSIS
-    # =========================================================================
-    print("\n" + "=" * 100)
-    print("CPM RESOLUTION ANALYSIS (Constant Potts Model)")
-    print("=" * 100)
-    print("\nComparing community detection at different resolutions on original vs best sparsified graph")
-    print("Lower resolution = larger communities, Higher resolution = smaller communities\n")
-    
-    cpm_results = []
-    
-    if results:
-        best_result = max(results, key=lambda x: x['modularity'])
-        best_method = best_result['method']
-        best_param = best_result['param']
-        
-        # Re-run the best sparsification to get the graph
-        if 'Spectral' in best_method:
-            epsilon = float(best_param.split('=')[1])
-            G_best_sparse, _ = spectral_sparsify_timed(G, epsilon)
+    # Determine methods
+    methods = METHODS.copy()
+    if not args.no_spectral:
+        if SPECTRAL_AVAILABLE:
+            methods.append('spectral')
         else:
-            retention = float(best_param.split('=')[1])
-            method = best_method.split('(')[1].split(')')[0]
-            G_best_sparse, _ = dspar_sparsify_timed(G, retention, method)
-        
-        print(f"Best sparsification: {best_method} {best_param} (Mod={best_result['modularity']:.4f})")
-        print(f"Edges: {G_best_sparse.ecount():,} ({100*G_best_sparse.ecount()/n_edges:.1f}%)\n")
-        
-        print(f"{'Resolution':<12} {'Original Comm':<15} {'Original Mod':<15} {'Sparse Comm':<15} {'Sparse Mod':<15}")
-        print("-" * 75)
-        
-        for res in CPM_RESOLUTIONS:
-            # Run on original (with caching)
-            mem_orig_cpm, mod_orig_cpm, n_comm_orig_cpm, _, _ = run_leiden_cached(
-                G, dataset_name, objective="CPM", resolution=res
-            )
-            
-            # Run on best sparsified (no caching for sparsified graphs)
-            mem_sparse_cpm, mod_sparse_cpm, n_comm_sparse_cpm = run_leiden(G_best_sparse, objective="CPM", resolution=res)
-            
-            print(f"{res:<12} {n_comm_orig_cpm:<15} {mod_orig_cpm:<15.4f} {n_comm_sparse_cpm:<15} {mod_sparse_cpm:<15.4f}")
-            
-            cpm_results.append({
-                'resolution': res,
-                'original_communities': n_comm_orig_cpm,
-                'original_modularity': mod_orig_cpm,
-                'sparse_communities': n_comm_sparse_cpm,
-                'sparse_modularity': mod_sparse_cpm
-            })
-        
-        results_mgr.add_cpm_results(cpm_results)
+            print("WARNING: Spectral not available, skipping")
+    else:
+        print("NOTE: Spectral excluded (--no_spectral flag)")
     
-    print("\n" + "=" * 130)
-    print("INTERPRETATION")
-    print("=" * 130)
-    print("""
-METRICS:
-- Mod (Modularity): Quality of clustering on that graph (higher = better separated communities)
-- NMI/ARI: Similarity to original clustering (higher = more consistent with original)
-- Intra%: Percentage of intra-community edges preserved
-- Inter%: Percentage of inter-community edges preserved
-- Ratio: Inter% / Intra% (< 1 means inter-community edges removed faster = DESIRED)
-- CPM Resolution: Controls community granularity (lower = larger communities)
-
-KEY INSIGHTS:
-- Ratio < 1: Inter-community edges removed faster (good for denoising hypothesis)
-- Ratio = 1: No preference between edge types (like random sparsification)
-- Ratio > 1: Intra-community edges removed faster (bad - losing community structure)
-- Modularity can INCREASE after sparsification if noise edges are removed
-- High NMI/ARI + similar Modularity = sparsification preserves structure well
-- Spectral preserves connectivity (keeps bridge edges)
-- DSpar is faster but may disconnect graph (removes hub edges)
-""")
+    print("=" * 100)
+    print("EXPERIMENT 3: SCALABILITY AND LARGE-GRAPH TRADEOFFS")
+    print("=" * 100)
     
-    # Finalize results
-    run_folder = results_mgr.finalize()
-    print(f"\nResults saved to: {run_folder}")
+    # Create numbered output directory (consecutive: 1, 2, 3, ...)
+    OUTPUT_DIR = get_next_run_folder(RESULTS_DIR)
+    
+    print(f"\nConfiguration:")
+    print(f"  Datasets: {datasets}")
+    print(f"  Alphas: {ALPHAS}")
+    print(f"  Methods: {methods}")
+    print(f"  Replicates: {n_replicates}")
+    print(f"  Max edges: {args.max_edges if args.max_edges else 'unlimited'}")
+    print(f"  Workers: {args.workers if args.workers else 'auto (CPU-1)'}")
+    print(f"  Output directory: {OUTPUT_DIR}")
+    
+    if 'spectral' in methods:
+        print(f"\n  NOTE: Spectral sparsification enabled (runs SEQUENTIALLY)")
+        print(f"        Dynamic timeout: {args.spectral_multiplier}× max(DSpar time)")
+    
+    if args.dry_run:
+        print("\n[DRY RUN] Exiting without running experiments.")
+        return
+    
+    # Run experiments
+    raw_file = OUTPUT_DIR / "scalability_raw.csv"
+    
+    df = run_all_experiments(
+        datasets=datasets,
+        methods=methods,
+        alphas=ALPHAS,
+        n_replicates=n_replicates,
+        max_edges=args.max_edges,
+        n_workers=args.workers,
+        spectral_timeout_multiplier=args.spectral_multiplier,
+        output_file=raw_file
+    )
+    
+    if len(df) == 0:
+        print("\nERROR: No experiments completed successfully!")
+        return
+    
+    print(f"\nRaw results saved to: {raw_file}")
+    
+    # Generate summary
+    summary = generate_summary(df)
+    summary_file = OUTPUT_DIR / "scalability_summary.csv"
+    summary.to_csv(summary_file, index=False)
+    print(f"Saved summary: {summary_file}")
+    
+    # Print key results
+    print_key_results(df, alpha=0.8)
+    
+    # Final summary
+    print(f"\n{'='*100}")
+    print("EXPERIMENT 3 COMPLETE")
+    print(f"{'='*100}")
+    print(f"\nOutput files:")
+    print(f"  Raw CSV: {raw_file}")
+    print(f"  Summary CSV: {summary_file}")
+    
+    # Summary statistics
+    print(f"\n{'='*100}")
+    print("SUMMARY STATISTICS")
+    print(f"{'='*100}")
+    
+    for dataset in df['dataset'].unique():
+        df_d = df[(df['dataset'] == dataset) & np.isclose(df['alpha'], 0.8)]
+        print(f"\n{dataset}:")
+        
+        for method in df['method'].unique():
+            df_m = df_d[df_d['method'] == method]
+            if len(df_m) == 0:
+                continue
+            
+            speedup = df_m['speedup'].mean()
+            dQ = df_m['dQ_leiden'].mean()
+            quality_note = "improved" if dQ > 0 else ("degraded" if dQ < -0.01 else "maintained")
+            print(f"  {method}: {speedup:.2f}x speedup, quality {quality_note} (ΔQ={dQ:+.4f})")
+    
+    print(f"\n{'='*100}")
 
 
 if __name__ == "__main__":
     main()
+
+
 

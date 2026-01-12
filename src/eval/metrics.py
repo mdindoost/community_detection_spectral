@@ -34,6 +34,37 @@ def compute_nmi_ari(
     return nmi, ari
 
 
+def compute_nmi(
+    partition1: List[int],
+    partition2: List[int]
+) -> float:
+    """Compute NMI between two partitions."""
+    return normalized_mutual_info_score(partition1, partition2)
+
+
+def compute_modularity_fixed(
+    G: ig.Graph,
+    membership: List[int]
+) -> float:
+    """
+    Compute modularity for a FIXED partition on graph G.
+    Uses igraph's modularity function.
+    
+    Parameters
+    ----------
+    G : ig.Graph
+        Graph to compute modularity on
+    membership : list
+        Community membership for each node
+        
+    Returns
+    -------
+    modularity : float
+        Modularity score of the partition on G
+    """
+    return G.modularity(membership)
+
+
 def calculate_edge_preservation_ratio(
     G: ig.Graph,
     G_sparse: ig.Graph,

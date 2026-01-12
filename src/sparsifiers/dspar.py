@@ -122,16 +122,15 @@ def dspar_sparsify(
     
     elif method == "deterministic":
         # ============================================================
-        # DETERMINISTIC: Top-k by score (fully vectorized)
+        # DETERMINISTIC: Top-k by score (matches original paper code)
         # ============================================================
         
         n_keep = int(np.ceil(retention * m))
         
-        # Get top-k indices using argpartition for efficiency
-        if n_keep < m:
-            keep_indices = np.argpartition(score_values, -n_keep)[-n_keep:]
-        else:
-            keep_indices = np.arange(m)
+        # Sort by score (highest first) - use argsort for exact reproducibility
+        # (argpartition is faster but doesn't preserve order among top-k)
+        sorted_indices = np.argsort(score_values)[::-1]
+        keep_indices = sorted_indices[:n_keep]
         
         # Build graph
         edge_list = np.column_stack([sources[keep_indices], targets[keep_indices]]).tolist()

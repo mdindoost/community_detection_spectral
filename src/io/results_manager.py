@@ -281,3 +281,98 @@ class ResultsManager:
         self.meta['end_time'] = datetime.now().isoformat()
         self._save_meta()
         return self.run_folder
+
+
+# =============================================================================
+# RESULT ANALYSIS AND EXPORT FUNCTIONS
+# =============================================================================
+
+def generate_summary(df) -> Any:
+    """
+    Generate summary statistics grouped by dataset, method, alpha.
+    
+    Parameters
+    ----------
+    df : pd.DataFrame
+        Raw experimental results
+        
+    Returns
+    -------
+    summary : pd.DataFrame
+        Aggregated summary statistics
+    """
+    import pandas as pd
+    
+    agg_cols = [
+        'dQ_fixed', 'dQ_leiden',
+        'T_sparsify_sec', 'T_leiden_sparse_sec', 'T_pipeline_sec',
+        'speedup', 'nmi_P0_Palpha', 'retention_actual'
+    ]
+    
+    summary = df.groupby(['dataset', 'method', 'alpha'])[agg_cols].agg(['mean', 'std'])
+    summary.columns = ['_'.join(col).strip() for col in summary.columns]
+    summary = summary.reset_index()
+    
+    # Add baseline Leiden time
+    baseline_times = df.groupby('dataset')['T_leiden_orig_sec'].first().reset_index()
+    baseline_times.columns = ['dataset', 'T_leiden_orig_sec']
+    summary = summary.merge(baseline_times, on='dataset')
+    
+    # Add baseline Q0
+    baseline_Q = df.groupby('dataset')['Q0'].first().reset_index()
+    summary = summary.merge(baseline_Q, on='dataset')
+    
+    return summary
+
+
+def print_key_results(df, alpha: float = 0.8):
+    """
+    Print key results table for a specific alpha.
+    
+    Parameters
+    ----------
+    df : pd.DataFrame
+        Raw experimental results
+    alpha : float
+        Alpha value to filter results
+    """
+    import numpy as np
+    
+    print(f"\n{'='*100}")
+    print(f"KEY RESULTS AT alpha = {alpha}")
+    print(f"{'='*100}")
+    
+    df_alpha = df[np.isclose(df['alpha'], alpha)]
+    
+    if len(df_alpha) == 0:
+        print("No data available.")
+        return
+    
+    print(f"\n{'Dataset':<15} {'Method':<18} {'T_spar(s)':<12} {'T_pipe(s)':<12} "
+          f"{'Speedup':<10} {'dQ_fixed':<12} {'dQ_Leiden':<12}")
+    print("-" * 100)
+    
+    methods_in_data = df_alpha['method'].unique()
+    
+    for dataset in df_alpha['dataset'].unique():
+        df_d = df_alpha[df_alpha['dataset'] == dataset]
+        T_orig = df_d['T_leiden_orig_sec'].iloc[0]
+        
+        for method in methods_in_data:
+            df_m = df_d[df_d['method'] == method]
+            
+            if len(df_m) == 0:
+                continue
+            
+            T_spar = df_m['T_sparsify_sec'].mean()
+            T_pipe = df_m['T_pipeline_sec'].mean()
+            speedup = df_m['speedup'].mean()
+            dQ_fixed = df_m['dQ_fixed'].mean()
+            dQ_leiden = df_m['dQ_leiden'].mean()
+            
+            print(f"{dataset:<15} {method:<18} {T_spar:<12.4f} {T_pipe:<12.4f} "
+                  f"{speedup:<10.2f} {dQ_fixed:<+12.6f} {dQ_leiden:<+12.6f}")
+        
+        print(f"{'':<15} {'(baseline)':<18} {'':<12} {T_orig:<12.4f} "
+              f"{'1.00':<10} {'0.0':<12} {'0.0':<12}")
+        print("-" * 100)
