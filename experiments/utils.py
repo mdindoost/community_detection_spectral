@@ -132,6 +132,22 @@ SNAP_DATASETS = {
         False,
         None
     ),
+    'cit-Patents': (
+        'https://snap.stanford.edu/data/cit-Patents.txt.gz',
+        False,
+        None
+    ),
+    # ----- Wikipedia networks -----
+    'wiki-Talk': (
+        'https://snap.stanford.edu/data/wiki-Talk.txt.gz',
+        False,
+        None
+    ),
+    'wiki-topcats': (
+        'https://snap.stanford.edu/data/wiki-topcats.txt.gz',
+        True,
+        'https://snap.stanford.edu/data/wiki-topcats-categories.txt.gz'
+    ),
     # ----- PPI networks -----
     'yeast-ppi': (
         'http://nrvis.com/download/data/bio/bio-yeast.zip',

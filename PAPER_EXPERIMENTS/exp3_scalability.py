@@ -99,13 +99,16 @@ SPECTRAL_EPSILON_MAP = {
 # Maximum time (seconds) to wait for spectral sparsification per graph
 SPECTRAL_TIMEOUT = 300  # 5 minutes
 
-# Default datasets (large real-world graphs)
-# Note: web-Google and cit-Patents not in current registry
+# Default datasets (large real-world graphs, ordered by approximate edge count)
 DEFAULT_DATASETS = [
-    'com-DBLP',
-    'com-Amazon',
-    'com-Youtube',
-    'com-LiveJournal',
+    'com-DBLP',          # ~317K nodes, ~1M edges
+    'com-Amazon',        # ~335K nodes, ~926K edges
+    'com-Youtube',       # ~1.1M nodes, ~3M edges
+    'wiki-Talk',         # ~2.4M nodes, ~5M edges
+    'cit-Patents',       # ~3.8M nodes, ~17M edges
+    'wiki-topcats',      # ~1.8M nodes, ~28M edges
+    'com-LiveJournal',   # ~4M nodes, ~35M edges
+    'com-Orkut',         # ~3M nodes, ~117M edges
 ]
 
 # Seed base for reproducibility

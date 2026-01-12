@@ -1,27 +1,37 @@
 #!/usr/bin/env python3
 """
-Generate outputs (summary CSV, LaTeX table, plots) from raw experiment data.
+Generate outputs (summary CSV, LaTeX tables, plots) from raw experiment data.
 
 Usage:
     python generate_outputs_exp3.py
     python generate_outputs_exp3.py --input results/exp3_scalability/scalability_raw.csv
-    python generate_outputs_exp3.py --alpha 0.6  # Generate table for different alpha
+    python generate_outputs_exp3.py --alpha 0.6  # Generate tables for different alpha
 
 This script reads the raw CSV from experiment 3 and generates:
-  - scalability_summary.csv (includes speedup_leiden = T_orig / T_leiden_sparse)
-  - scalability_table_alpha{X}.tex (includes both Speedup_pipe and Speedup_Leiden)
-  - All plots (plot1-5)
 
-Metrics:
+CSVs:
+  - scalability_summary.csv: Full summary with mean/std for all metrics
+  - scalability_table_alpha{X}.csv: Filtered CSV for specific alpha (for LaTeX)
+
+LaTeX Tables:
+  - scalability_table_alpha{X}.tex: Main table (m, m_α, T_orig, T_Leiden, Speedup_L, ΔQ, NMI)
+  - scalability_table_appendix_alpha{X}.tex: Appendix table (pipeline overhead details)
+
+Derived Metrics:
   - speedup (pipeline): T_leiden_orig / (T_sparsify + T_leiden_sparse)
   - speedup_leiden:     T_leiden_orig / T_leiden_sparse (pure Leiden speedup)
+  - sparsify_frac:      T_sparsify / T_pipeline (sparsification time fraction)
 
-Plots:
-  - Plot 1: scaling_sparsify_time
-  - Plot 2: scaling_pipeline_time
-  - Plot 3: quality_vs_alpha (per dataset)
-  - Plot 4: speedup_vs_quality (per dataset) - pipeline speedup
-  - Plot 5: speedup_leiden_vs_quality (per dataset) - pure Leiden speedup
+Main Plots:
+  - Plot 1: scaling_sparsify_time - Sparsification time vs graph size
+  - Plot 2: scaling_pipeline_time - Pipeline time vs graph size
+  - Plot 3: quality_vs_alpha (per dataset) - ΔQ_leiden vs retention α
+  - Plot 4: speedup_vs_quality (per dataset) - Pipeline speedup vs ΔQ_leiden
+  - Plot 5: speedup_leiden_vs_quality (per dataset) - Leiden speedup vs ΔQ_leiden
+
+Appendix Plots:
+  - Plot D: scaling_leiden_time - Leiden time vs graph size (with baseline)
+  - Plot E: nmi_vs_alpha (per dataset) - NMI(P0, Pα) vs retention α
 
 Useful for:
   - Regenerating outputs from partial results (if experiment crashed)
@@ -93,14 +103,22 @@ LINESTYLES = {
 def generate_summary(df: pd.DataFrame) -> pd.DataFrame:
     """Generate summary statistics grouped by dataset, method, alpha."""
 
-    # Calculate speedup_leiden from existing columns
+    # Calculate derived columns from existing columns
     df = df.copy()
     df['speedup_leiden'] = df['T_leiden_orig_sec'] / df['T_leiden_sparse_sec']
+    df['sparsify_frac'] = df['T_sparsify_sec'] / df['T_pipeline_sec']
 
     agg_cols = [
-        'dQ_fixed', 'dQ_leiden',
-        'T_sparsify_sec', 'T_leiden_sparse_sec', 'T_pipeline_sec',
-        'speedup', 'speedup_leiden', 'nmi_P0_Palpha', 'retention_actual'
+        # Timing
+        'T_sparsify_sec', 'T_leiden_sparse_sec', 'T_leiden_orig_sec', 'T_pipeline_sec',
+        # Speedups
+        'speedup', 'speedup_leiden', 'sparsify_frac',
+        # Quality
+        'dQ_fixed', 'dQ_leiden', 'Q_sparse_leiden',
+        # Structure
+        'nmi_P0_Palpha', 'n_communities_sparse',
+        # Compression
+        'm_sparse', 'retention_actual',
     ]
 
     # Filter to columns that exist
@@ -110,21 +128,62 @@ def generate_summary(df: pd.DataFrame) -> pd.DataFrame:
     summary.columns = ['_'.join(col).strip() for col in summary.columns]
     summary = summary.reset_index()
 
-    # Add baseline Leiden time (single value per dataset)
-    baseline_times = df.groupby('dataset')['T_leiden_orig_sec'].first().reset_index()
-    baseline_times.columns = ['dataset', 'T_leiden_orig_sec']
-    summary = summary.merge(baseline_times, on='dataset')
-
-    # Add baseline Q0
+    # Add baseline Q0 (single value per dataset)
     baseline_Q = df.groupby('dataset')['Q0'].first().reset_index()
     summary = summary.merge(baseline_Q, on='dataset')
+
+    # Add graph size info (single value per dataset)
+    graph_info = df.groupby('dataset').agg({
+        'n_nodes': 'first',
+        'm_edges': 'first'
+    }).reset_index()
+    summary = summary.merge(graph_info, on='dataset')
 
     return summary
 
 
+def generate_filtered_csv(df: pd.DataFrame, output_dir: Path, alpha: float = 0.8) -> Path:
+    """
+    Generate filtered CSV for a specific alpha value (for easy LaTeX table creation).
+    """
+    df_alpha = df[np.isclose(df['alpha'], alpha)]
+
+    if len(df_alpha) == 0:
+        print(f"  [WARNING] No data for alpha={alpha}")
+        return None
+
+    # Calculate derived columns
+    df_alpha = df_alpha.copy()
+    df_alpha['speedup_leiden'] = df_alpha['T_leiden_orig_sec'] / df_alpha['T_leiden_sparse_sec']
+
+    # Aggregate by dataset and method
+    agg = df_alpha.groupby(['dataset', 'method']).agg({
+        'n_nodes': 'first',
+        'm_edges': 'first',
+        'm_sparse': ['mean', 'std'],
+        'T_leiden_orig_sec': 'first',
+        'T_sparsify_sec': ['mean', 'std'],
+        'T_leiden_sparse_sec': ['mean', 'std'],
+        'T_pipeline_sec': ['mean', 'std'],
+        'speedup': ['mean', 'std'],
+        'speedup_leiden': ['mean', 'std'],
+        'dQ_fixed': ['mean', 'std'],
+        'dQ_leiden': ['mean', 'std'],
+        'nmi_P0_Palpha': ['mean', 'std'],
+    })
+    agg.columns = ['_'.join(col).strip('_') for col in agg.columns]
+    agg = agg.reset_index()
+
+    output_path = output_dir / f"scalability_table_alpha{alpha}.csv"
+    agg.to_csv(output_path, index=False)
+
+    return output_path
+
+
 def generate_latex_table(df: pd.DataFrame, output_dir: Path, alpha: float = 0.8) -> Path:
     """
-    Generate LaTeX table for a specific alpha value.
+    Generate LaTeX table for a specific alpha value (main text table).
+    Columns: Dataset, Method, m, m_α, T_leiden_orig, T_leiden_sparse, Speedup_Leiden, ΔQ_fixed, ΔQ_leiden, NMI
     """
     df_alpha = df[np.isclose(df['alpha'], alpha)]
 
@@ -138,24 +197,141 @@ def generate_latex_table(df: pd.DataFrame, output_dir: Path, alpha: float = 0.8)
 
     # Aggregate by dataset and method
     agg = df_alpha.groupby(['dataset', 'method']).agg({
-        'n_nodes': 'first',
         'm_edges': 'first',
-        'T_sparsify_sec': ['mean', 'std'],
+        'm_sparse': ['mean', 'std'],
+        'T_leiden_orig_sec': 'first',
         'T_leiden_sparse_sec': ['mean', 'std'],
-        'speedup': ['mean', 'std'],
         'speedup_leiden': ['mean', 'std'],
         'dQ_fixed': ['mean', 'std'],
         'dQ_leiden': ['mean', 'std'],
+        'nmi_P0_Palpha': ['mean', 'std'],
     })
     agg.columns = ['_'.join(col).strip('_') for col in agg.columns]
     agg = agg.reset_index()
 
     def fmt_val(mean, std, decimals=3):
-        if std > 0:
-            return f"${mean:.{decimals}f} \\pm {std:.{decimals}f}$"
-        return f"${mean:.{decimals}f}$"
+        if pd.isna(std) or std == 0:
+            return f"${mean:.{decimals}f}$"
+        return f"${mean:.{decimals}f} \\pm {std:.{decimals}f}$"
+
+    def fmt_time(mean, std=None):
+        if std is None or pd.isna(std):
+            if mean < 1:
+                return f"${mean*1000:.0f}$ ms"
+            return f"${mean:.2f}$ s"
+        if mean < 1:
+            return f"${mean*1000:.0f} \\pm {std*1000:.0f}$ ms"
+        return f"${mean:.2f} \\pm {std:.2f}$ s"
+
+    def fmt_int(val, with_std=None):
+        if with_std is None or pd.isna(with_std):
+            return f"{int(val):,}"
+        return f"${int(val):,} \\pm {int(with_std):,}$"
+
+    def escape_latex(s):
+        return s.replace("_", "\\_").replace("-", "-")
+
+    method_names = {
+        'dspar': 'DSpar',
+        'uniform_random': 'Uniform',
+        'degree_sampling': 'Degree',
+        'spectral': 'Spectral',
+    }
+
+    lines = [
+        r"\begin{table}[htbp]",
+        r"\centering",
+        r"\small",
+        f"\\caption{{Scalability results at $\\alpha = {alpha}$.}}",
+        r"\label{tab:exp3_scalability}",
+        r"\begin{tabular}{llrrrrrrrrr}",
+        r"\toprule",
+        r"Dataset & Method & $m$ & $m_\alpha$ & $T_{\mathrm{orig}}$ & $T_{\mathrm{Leiden}}$ & Speedup$_{\mathrm{L}}$ & $\Delta Q_{\mathrm{fix}}$ & $\Delta Q_{\mathrm{L}}$ & NMI \\",
+        r"\midrule",
+    ]
+
+    for dataset in agg['dataset'].unique():
+        df_d = agg[agg['dataset'] == dataset]
+        first_row = True
+
+        for _, row in df_d.iterrows():
+            if first_row:
+                ds_str = escape_latex(dataset)
+                m_str = f"{int(row['m_edges_first']):,}"
+                t_orig = fmt_time(row['T_leiden_orig_sec_first'])
+                first_row = False
+            else:
+                ds_str = ""
+                m_str = ""
+                t_orig = ""
+
+            method_str = method_names.get(row['method'], row['method'])
+            m_sparse_str = fmt_int(row['m_sparse_mean'], row['m_sparse_std'])
+            t_leiden = fmt_time(row['T_leiden_sparse_sec_mean'], row['T_leiden_sparse_sec_std'])
+            speedup_leiden_str = fmt_val(row['speedup_leiden_mean'], row['speedup_leiden_std'], 2)
+            dQ_fixed = fmt_val(row['dQ_fixed_mean'], row['dQ_fixed_std'], 4)
+            dQ_leiden = fmt_val(row['dQ_leiden_mean'], row['dQ_leiden_std'], 4)
+            nmi_str = fmt_val(row['nmi_P0_Palpha_mean'], row['nmi_P0_Palpha_std'], 3)
+
+            lines.append(
+                f"{ds_str} & {method_str} & {m_str} & {m_sparse_str} & "
+                f"{t_orig} & {t_leiden} & {speedup_leiden_str} & {dQ_fixed} & {dQ_leiden} & {nmi_str} \\\\"
+            )
+
+        lines.append(r"\midrule")
+
+    # Remove last midrule
+    lines[-1] = r"\bottomrule"
+
+    lines.extend([
+        r"\end{tabular}",
+        r"\end{table}",
+    ])
+
+    output_path = output_dir / f"scalability_table_alpha{alpha}.tex"
+    with open(output_path, 'w') as f:
+        f.write('\n'.join(lines))
+
+    return output_path
+
+
+def generate_latex_table_appendix(df: pd.DataFrame, output_dir: Path, alpha: float = 0.8) -> Path:
+    """
+    Generate LaTeX table for appendix (pipeline overhead details).
+    Includes: T_sparsify, T_pipeline, Speedup_pipeline
+    """
+    df_alpha = df[np.isclose(df['alpha'], alpha)]
+
+    if len(df_alpha) == 0:
+        print(f"  [WARNING] No data for alpha={alpha}")
+        return None
+
+    # Calculate derived columns
+    df_alpha = df_alpha.copy()
+    df_alpha['speedup_leiden'] = df_alpha['T_leiden_orig_sec'] / df_alpha['T_leiden_sparse_sec']
+    df_alpha['sparsify_frac'] = df_alpha['T_sparsify_sec'] / df_alpha['T_pipeline_sec']
+
+    # Aggregate by dataset and method
+    agg = df_alpha.groupby(['dataset', 'method']).agg({
+        'm_edges': 'first',
+        'T_sparsify_sec': ['mean', 'std'],
+        'T_leiden_sparse_sec': ['mean', 'std'],
+        'T_pipeline_sec': ['mean', 'std'],
+        'speedup': ['mean', 'std'],
+        'speedup_leiden': ['mean', 'std'],
+        'sparsify_frac': ['mean', 'std'],
+    })
+    agg.columns = ['_'.join(col).strip('_') for col in agg.columns]
+    agg = agg.reset_index()
+
+    def fmt_val(mean, std, decimals=3):
+        if pd.isna(std) or std == 0:
+            return f"${mean:.{decimals}f}$"
+        return f"${mean:.{decimals}f} \\pm {std:.{decimals}f}$"
 
     def fmt_time(mean, std):
+        if pd.isna(std):
+            std = 0
         if mean < 1:
             return f"${mean*1000:.0f} \\pm {std*1000:.0f}$ ms"
         return f"${mean:.2f} \\pm {std:.2f}$ s"
@@ -174,11 +350,11 @@ def generate_latex_table(df: pd.DataFrame, output_dir: Path, alpha: float = 0.8)
         r"\begin{table}[htbp]",
         r"\centering",
         r"\small",
-        f"\\caption{{Scalability results at $\\alpha = {alpha}$.}}",
-        r"\label{tab:exp3_scalability}",
-        r"\begin{tabular}{llrrrrrrrr}",
+        f"\\caption{{Pipeline overhead details at $\\alpha = {alpha}$.}}",
+        r"\label{tab:exp3_pipeline_overhead}",
+        r"\begin{tabular}{llrrrrrr}",
         r"\toprule",
-        r"Dataset & Method & $n$ & $m$ & $T_{\mathrm{spar}}$ & $T_{\mathrm{Leiden}}$ & Speedup$_{\mathrm{pipe}}$ & Speedup$_{\mathrm{Leiden}}$ & $\Delta Q_{\mathrm{fixed}}$ & $\Delta Q_{\mathrm{Leiden}}$ \\",
+        r"Dataset & Method & $T_{\mathrm{spar}}$ & $T_{\mathrm{Leiden}}$ & $T_{\mathrm{pipe}}$ & Speedup$_{\mathrm{pipe}}$ & Speedup$_{\mathrm{L}}$ & Spar\% \\",
         r"\midrule",
     ]
 
@@ -189,25 +365,21 @@ def generate_latex_table(df: pd.DataFrame, output_dir: Path, alpha: float = 0.8)
         for _, row in df_d.iterrows():
             if first_row:
                 ds_str = escape_latex(dataset)
-                n_str = f"{int(row['n_nodes_first']):,}"
-                m_str = f"{int(row['m_edges_first']):,}"
                 first_row = False
             else:
                 ds_str = ""
-                n_str = ""
-                m_str = ""
 
             method_str = method_names.get(row['method'], row['method'])
             t_spar = fmt_time(row['T_sparsify_sec_mean'], row['T_sparsify_sec_std'])
             t_leiden = fmt_time(row['T_leiden_sparse_sec_mean'], row['T_leiden_sparse_sec_std'])
-            speedup_str = fmt_val(row['speedup_mean'], row['speedup_std'], 2)
+            t_pipe = fmt_time(row['T_pipeline_sec_mean'], row['T_pipeline_sec_std'])
+            speedup_pipe_str = fmt_val(row['speedup_mean'], row['speedup_std'], 2)
             speedup_leiden_str = fmt_val(row['speedup_leiden_mean'], row['speedup_leiden_std'], 2)
-            dQ_fixed = fmt_val(row['dQ_fixed_mean'], row['dQ_fixed_std'], 4)
-            dQ_leiden = fmt_val(row['dQ_leiden_mean'], row['dQ_leiden_std'], 4)
+            spar_frac_str = fmt_val(row['sparsify_frac_mean'] * 100, row['sparsify_frac_std'] * 100, 1)
 
             lines.append(
-                f"{ds_str} & {method_str} & {n_str} & {m_str} & "
-                f"{t_spar} & {t_leiden} & {speedup_str} & {speedup_leiden_str} & {dQ_fixed} & {dQ_leiden} \\\\"
+                f"{ds_str} & {method_str} & {t_spar} & {t_leiden} & "
+                f"{t_pipe} & {speedup_pipe_str} & {speedup_leiden_str} & {spar_frac_str} \\\\"
             )
 
         lines.append(r"\midrule")
@@ -220,7 +392,7 @@ def generate_latex_table(df: pd.DataFrame, output_dir: Path, alpha: float = 0.8)
         r"\end{table}",
     ])
 
-    output_path = output_dir / f"scalability_table_alpha{alpha}.tex"
+    output_path = output_dir / f"scalability_table_appendix_alpha{alpha}.tex"
     with open(output_path, 'w') as f:
         f.write('\n'.join(lines))
 
@@ -497,10 +669,113 @@ def plot_speedup_leiden_vs_quality(df: pd.DataFrame, output_dir: Path):
         plt.close(fig)
 
 
+def plot_scaling_leiden_time(df: pd.DataFrame, output_dir: Path):
+    """
+    Plot D (appendix): Leiden time scaling with graph size.
+    Shows T_leiden_sparse vs m_edges with baseline T_leiden_orig reference.
+    """
+    fig, ax = plt.subplots(figsize=(6, 4.5))
+
+    # Use alpha=0.8 data
+    df_plot = df[np.isclose(df['alpha'], 0.8)]
+
+    # Get methods from data
+    methods_in_data = df_plot['method'].unique()
+
+    for method in methods_in_data:
+        df_m = df_plot[df_plot['method'] == method]
+
+        if len(df_m) == 0:
+            continue
+
+        agg = df_m.groupby('dataset').agg({
+            'm_edges': 'first',
+            'T_leiden_sparse_sec': ['mean', 'std']
+        }).reset_index()
+        agg.columns = ['dataset', 'm_edges', 'T_mean', 'T_std']
+        agg = agg.sort_values('m_edges')
+
+        ax.errorbar(
+            agg['m_edges'], agg['T_mean'], yerr=agg['T_std'],
+            fmt=MARKERS.get(method, 'o') + LINESTYLES.get(method, '-'),
+            color=COLORS.get(method, '#666666'),
+            label=method.replace('_', ' ').title(),
+            capsize=3, markersize=6
+        )
+
+    # Also plot baseline Leiden time on original graph
+    baseline = df_plot.groupby('dataset').agg({
+        'm_edges': 'first',
+        'T_leiden_orig_sec': 'first'
+    }).reset_index()
+    baseline = baseline.sort_values('m_edges')
+
+    ax.plot(baseline['m_edges'], baseline['T_leiden_orig_sec'],
+            'k--', linewidth=1.5, label='Leiden (original)', alpha=0.7)
+
+    ax.set_xscale('log')
+    ax.set_yscale('log')
+    ax.set_xlabel(r'Number of edges $m$')
+    ax.set_ylabel(r'Leiden time $T_{\mathrm{Leiden}}$ (s)')
+    ax.legend(loc='best', framealpha=0.9)
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+
+    fig.savefig(output_dir / 'plot_scaling_leiden_time.pdf', format='pdf')
+    fig.savefig(output_dir / 'plot_scaling_leiden_time.png', format='png')
+    plt.close(fig)
+
+
+def plot_nmi_vs_alpha(df: pd.DataFrame, output_dir: Path):
+    """
+    Plot E (appendix): NMI(P0, Pα) vs retention alpha, per dataset.
+    Shows how partition stability changes with sparsification.
+    """
+    for dataset in df['dataset'].unique():
+        df_d = df[df['dataset'] == dataset]
+
+        fig, ax = plt.subplots(figsize=(6, 4.5))
+
+        # Get methods from data
+        methods_in_data = df_d['method'].unique()
+
+        for method in methods_in_data:
+            df_m = df_d[df_d['method'] == method]
+
+            if len(df_m) == 0:
+                continue
+
+            agg = df_m.groupby('alpha').agg({
+                'nmi_P0_Palpha': ['mean', 'std']
+            }).reset_index()
+            agg.columns = ['alpha', 'nmi_mean', 'nmi_std']
+
+            ax.errorbar(
+                agg['alpha'], agg['nmi_mean'], yerr=agg['nmi_std'],
+                fmt=MARKERS.get(method, 'o') + LINESTYLES.get(method, '-'),
+                color=COLORS.get(method, '#666666'),
+                label=method.replace('_', ' ').title(),
+                capsize=3, markersize=6
+            )
+
+        ax.set_xlabel(r'Retention $\alpha$')
+        ax.set_ylabel(r'NMI$(P_0, P_\alpha)$')
+        ax.set_ylim(0, 1.05)
+        ax.legend(loc='best', framealpha=0.9)
+        ax.spines['top'].set_visible(False)
+        ax.spines['right'].set_visible(False)
+
+        safe_name = dataset.replace('-', '_').replace('.', '_')
+        fig.savefig(output_dir / f'plot_nmi_vs_alpha_{safe_name}.pdf', format='pdf')
+        fig.savefig(output_dir / f'plot_nmi_vs_alpha_{safe_name}.png', format='png')
+        plt.close(fig)
+
+
 def generate_all_plots(df: pd.DataFrame, output_dir: Path):
     """Generate all publication plots."""
     print("\nGenerating plots...")
 
+    # Main plots
     plot_scaling_sparsify_time(df, output_dir)
     print("  Plot 1: scaling_sparsify_time")
 
@@ -515,6 +790,13 @@ def generate_all_plots(df: pd.DataFrame, output_dir: Path):
 
     plot_speedup_leiden_vs_quality(df, output_dir)
     print(f"  Plot 5: speedup_leiden_vs_quality (per dataset)")
+
+    # Appendix plots
+    plot_scaling_leiden_time(df, output_dir)
+    print("  Plot D: scaling_leiden_time (appendix)")
+
+    plot_nmi_vs_alpha(df, output_dir)
+    print(f"  Plot E: nmi_vs_alpha (per dataset, appendix)")
 
 
 def print_key_results(df: pd.DataFrame, alpha: float = 0.8):
@@ -633,18 +915,31 @@ def main():
     print(f"  Alphas: {sorted(df['alpha'].unique().tolist())}")
 
     # Generate summary
-    print(f"\nGenerating summary...")
+    print(f"\nGenerating summary CSV...")
     summary = generate_summary(df)
     summary_file = output_dir / "scalability_summary.csv"
     summary.to_csv(summary_file, index=False)
     print(f"  Saved: {summary_file}")
 
-    # Generate LaTeX table
+    # Generate filtered CSV for specific alpha
+    print(f"\nGenerating filtered CSV (alpha={args.alpha})...")
+    filtered_csv = generate_filtered_csv(df, output_dir, alpha=args.alpha)
+    if filtered_csv:
+        print(f"  Saved: {filtered_csv}")
+
+    # Generate LaTeX tables
     if not args.no_table:
-        print(f"\nGenerating LaTeX table (alpha={args.alpha})...")
+        print(f"\nGenerating LaTeX tables (alpha={args.alpha})...")
+
+        # Main table
         latex_file = generate_latex_table(df, output_dir, alpha=args.alpha)
         if latex_file:
             print(f"  Saved: {latex_file}")
+
+        # Appendix table (pipeline overhead)
+        latex_appendix = generate_latex_table_appendix(df, output_dir, alpha=args.alpha)
+        if latex_appendix:
+            print(f"  Saved: {latex_appendix}")
 
     # Generate plots
     if not args.no_plots:
