@@ -8,9 +8,20 @@ Usage:
     python generate_outputs_exp3.py --alpha 0.6  # Generate table for different alpha
 
 This script reads the raw CSV from experiment 3 and generates:
-  - scalability_summary.csv
-  - scalability_table_alpha{X}.tex
-  - All plots (plot1-4)
+  - scalability_summary.csv (includes speedup_leiden = T_orig / T_leiden_sparse)
+  - scalability_table_alpha{X}.tex (includes both Speedup_pipe and Speedup_Leiden)
+  - All plots (plot1-5)
+
+Metrics:
+  - speedup (pipeline): T_leiden_orig / (T_sparsify + T_leiden_sparse)
+  - speedup_leiden:     T_leiden_orig / T_leiden_sparse (pure Leiden speedup)
+
+Plots:
+  - Plot 1: scaling_sparsify_time
+  - Plot 2: scaling_pipeline_time
+  - Plot 3: quality_vs_alpha (per dataset)
+  - Plot 4: speedup_vs_quality (per dataset) - pipeline speedup
+  - Plot 5: speedup_leiden_vs_quality (per dataset) - pure Leiden speedup
 
 Useful for:
   - Regenerating outputs from partial results (if experiment crashed)
@@ -33,27 +44,23 @@ import matplotlib.pyplot as plt
 DEFAULT_INPUT = Path(__file__).parent / "results" / "exp3_scalability" / "scalability_raw.csv"
 DEFAULT_OUTPUT_DIR = Path(__file__).parent / "results" / "exp3_scalability"
 
-# Publication plot settings (matching exp3_scalability.py exactly)
+# Publication plot settings (matching exp1_3_lfr_analysis.py style)
 plt.rcParams.update({
     'font.family': 'serif',
     'font.size': 10,
     'axes.labelsize': 11,
     'axes.titlesize': 11,
-    'legend.fontsize': 9,
+    'legend.fontsize': 8,
     'xtick.labelsize': 9,
     'ytick.labelsize': 9,
-    'figure.figsize': (5, 4),
     'figure.dpi': 150,
     'savefig.dpi': 300,
     'savefig.bbox': 'tight',
-    'savefig.pad_inches': 0.05,
     'axes.linewidth': 0.8,
     'lines.linewidth': 1.5,
     'lines.markersize': 5,
-    'errorbar.capsize': 2,
     'axes.grid': True,
     'grid.alpha': 0.3,
-    'grid.linewidth': 0.5,
 })
 
 # Colorblind-friendly palette
@@ -85,10 +92,15 @@ LINESTYLES = {
 
 def generate_summary(df: pd.DataFrame) -> pd.DataFrame:
     """Generate summary statistics grouped by dataset, method, alpha."""
+
+    # Calculate speedup_leiden from existing columns
+    df = df.copy()
+    df['speedup_leiden'] = df['T_leiden_orig_sec'] / df['T_leiden_sparse_sec']
+
     agg_cols = [
         'dQ_fixed', 'dQ_leiden',
         'T_sparsify_sec', 'T_leiden_sparse_sec', 'T_pipeline_sec',
-        'speedup', 'nmi_P0_Palpha', 'retention_actual'
+        'speedup', 'speedup_leiden', 'nmi_P0_Palpha', 'retention_actual'
     ]
 
     # Filter to columns that exist
@@ -120,6 +132,10 @@ def generate_latex_table(df: pd.DataFrame, output_dir: Path, alpha: float = 0.8)
         print(f"  [WARNING] No data for alpha={alpha}")
         return None
 
+    # Calculate speedup_leiden from existing columns
+    df_alpha = df_alpha.copy()
+    df_alpha['speedup_leiden'] = df_alpha['T_leiden_orig_sec'] / df_alpha['T_leiden_sparse_sec']
+
     # Aggregate by dataset and method
     agg = df_alpha.groupby(['dataset', 'method']).agg({
         'n_nodes': 'first',
@@ -127,6 +143,7 @@ def generate_latex_table(df: pd.DataFrame, output_dir: Path, alpha: float = 0.8)
         'T_sparsify_sec': ['mean', 'std'],
         'T_leiden_sparse_sec': ['mean', 'std'],
         'speedup': ['mean', 'std'],
+        'speedup_leiden': ['mean', 'std'],
         'dQ_fixed': ['mean', 'std'],
         'dQ_leiden': ['mean', 'std'],
     })
@@ -159,9 +176,9 @@ def generate_latex_table(df: pd.DataFrame, output_dir: Path, alpha: float = 0.8)
         r"\small",
         f"\\caption{{Scalability results at $\\alpha = {alpha}$.}}",
         r"\label{tab:exp3_scalability}",
-        r"\begin{tabular}{llrrrrrrr}",
+        r"\begin{tabular}{llrrrrrrrr}",
         r"\toprule",
-        r"Dataset & Method & $n$ & $m$ & $T_{\mathrm{spar}}$ & $T_{\mathrm{Leiden}}$ & Speedup & $\Delta Q_{\mathrm{fixed}}$ & $\Delta Q_{\mathrm{Leiden}}$ \\",
+        r"Dataset & Method & $n$ & $m$ & $T_{\mathrm{spar}}$ & $T_{\mathrm{Leiden}}$ & Speedup$_{\mathrm{pipe}}$ & Speedup$_{\mathrm{Leiden}}$ & $\Delta Q_{\mathrm{fixed}}$ & $\Delta Q_{\mathrm{Leiden}}$ \\",
         r"\midrule",
     ]
 
@@ -184,12 +201,13 @@ def generate_latex_table(df: pd.DataFrame, output_dir: Path, alpha: float = 0.8)
             t_spar = fmt_time(row['T_sparsify_sec_mean'], row['T_sparsify_sec_std'])
             t_leiden = fmt_time(row['T_leiden_sparse_sec_mean'], row['T_leiden_sparse_sec_std'])
             speedup_str = fmt_val(row['speedup_mean'], row['speedup_std'], 2)
+            speedup_leiden_str = fmt_val(row['speedup_leiden_mean'], row['speedup_leiden_std'], 2)
             dQ_fixed = fmt_val(row['dQ_fixed_mean'], row['dQ_fixed_std'], 4)
             dQ_leiden = fmt_val(row['dQ_leiden_mean'], row['dQ_leiden_std'], 4)
 
             lines.append(
                 f"{ds_str} & {method_str} & {n_str} & {m_str} & "
-                f"{t_spar} & {t_leiden} & {speedup_str} & {dQ_fixed} & {dQ_leiden} \\\\"
+                f"{t_spar} & {t_leiden} & {speedup_str} & {speedup_leiden_str} & {dQ_fixed} & {dQ_leiden} \\\\"
             )
 
         lines.append(r"\midrule")
@@ -217,7 +235,7 @@ def plot_scaling_sparsify_time(df: pd.DataFrame, output_dir: Path):
     """
     Plot 1: Sparsification runtime scaling with graph size.
     """
-    fig, ax = plt.subplots(figsize=(5, 4))
+    fig, ax = plt.subplots(figsize=(6, 4.5))
 
     # Use alpha=0.8 data
     df_plot = df[np.isclose(df['alpha'], 0.8)]
@@ -244,7 +262,7 @@ def plot_scaling_sparsify_time(df: pd.DataFrame, output_dir: Path):
             fmt=MARKERS.get(method, 'o') + LINESTYLES.get(method, '-'),
             color=COLORS.get(method, '#666666'),
             label=method.replace('_', ' ').title(),
-            capsize=2, markersize=5
+            capsize=3, markersize=6
         )
 
     ax.set_xscale('log')
@@ -264,7 +282,7 @@ def plot_scaling_pipeline_time(df: pd.DataFrame, output_dir: Path):
     """
     Plot 2: End-to-end pipeline time scaling.
     """
-    fig, ax = plt.subplots(figsize=(5, 4))
+    fig, ax = plt.subplots(figsize=(6, 4.5))
 
     # Use alpha=0.8 data
     df_plot = df[np.isclose(df['alpha'], 0.8)]
@@ -290,7 +308,7 @@ def plot_scaling_pipeline_time(df: pd.DataFrame, output_dir: Path):
             fmt=MARKERS.get(method, 'o') + LINESTYLES.get(method, '-'),
             color=COLORS.get(method, '#666666'),
             label=method.replace('_', ' ').title(),
-            capsize=2, markersize=5
+            capsize=3, markersize=6
         )
 
     # Also plot baseline Leiden time
@@ -323,7 +341,7 @@ def plot_quality_vs_alpha(df: pd.DataFrame, output_dir: Path):
     for dataset in df['dataset'].unique():
         df_d = df[df['dataset'] == dataset]
 
-        fig, ax = plt.subplots(figsize=(5, 4))
+        fig, ax = plt.subplots(figsize=(6, 4.5))
 
         # Get methods from data
         methods_in_data = df_d['method'].unique()
@@ -344,7 +362,7 @@ def plot_quality_vs_alpha(df: pd.DataFrame, output_dir: Path):
                 fmt=MARKERS.get(method, 'o') + LINESTYLES.get(method, '-'),
                 color=COLORS.get(method, '#666666'),
                 label=method.replace('_', ' ').title(),
-                capsize=2, markersize=5
+                capsize=3, markersize=6
             )
 
         ax.axhline(0, color='gray', linestyle=':', linewidth=0.8, alpha=0.7)
@@ -367,7 +385,7 @@ def plot_speedup_vs_quality(df: pd.DataFrame, output_dir: Path):
     for dataset in df['dataset'].unique():
         df_d = df[df['dataset'] == dataset]
 
-        fig, ax = plt.subplots(figsize=(5, 4))
+        fig, ax = plt.subplots(figsize=(6, 4.5))
 
         # Get methods from data
         methods_in_data = df_d['method'].unique()
@@ -417,6 +435,68 @@ def plot_speedup_vs_quality(df: pd.DataFrame, output_dir: Path):
         plt.close(fig)
 
 
+def plot_speedup_leiden_vs_quality(df: pd.DataFrame, output_dir: Path):
+    """
+    Plot 5: Speedup_leiden (T_orig/T_leiden_sparse) vs quality tradeoff, per dataset.
+    This shows the pure Leiden speedup ignoring sparsification cost.
+    """
+    # Calculate speedup_leiden from existing columns
+    df = df.copy()
+    df['speedup_leiden'] = df['T_leiden_orig_sec'] / df['T_leiden_sparse_sec']
+
+    for dataset in df['dataset'].unique():
+        df_d = df[df['dataset'] == dataset]
+
+        fig, ax = plt.subplots(figsize=(6, 4.5))
+
+        # Get methods from data
+        methods_in_data = df_d['method'].unique()
+
+        for method in methods_in_data:
+            df_m = df_d[df_d['method'] == method]
+
+            if len(df_m) == 0:
+                continue
+
+            agg = df_m.groupby('alpha').agg({
+                'speedup_leiden': 'mean',
+                'dQ_leiden': 'mean'
+            }).reset_index()
+
+            # Plot as connected points (each point is an alpha level)
+            ax.plot(
+                agg['speedup_leiden'], agg['dQ_leiden'],
+                marker=MARKERS.get(method, 'o'), linestyle=LINESTYLES.get(method, '-'),
+                color=COLORS.get(method, '#666666'),
+                label=method.replace('_', ' ').title(),
+                markersize=5
+            )
+
+            # Annotate alpha values on DSpar line
+            if method == 'dspar':
+                for _, row in agg.iterrows():
+                    if row['alpha'] < 1.0:
+                        ax.annotate(
+                            f"$\\alpha$={row['alpha']:.1f}",
+                            (row['speedup_leiden'], row['dQ_leiden']),
+                            xytext=(5, 5), textcoords='offset points',
+                            fontsize=7, alpha=0.7
+                        )
+
+        ax.axhline(0, color='gray', linestyle=':', linewidth=0.8, alpha=0.7)
+        ax.axvline(1, color='gray', linestyle=':', linewidth=0.8, alpha=0.7)
+        ax.set_xlabel(r'Speedup$_{\mathrm{Leiden}}$ ($T_{\mathrm{orig}} / T_{\mathrm{Leiden,sparse}}$)')
+        ax.set_ylabel(r'$\Delta Q_{\mathrm{Leiden}}$')
+        ax.legend(loc='best', framealpha=0.9)
+        ax.spines['top'].set_visible(False)
+        ax.spines['right'].set_visible(False)
+
+        safe_name = dataset.replace('-', '_').replace('.', '_')
+        fig.savefig(output_dir / f'plot5_speedup_leiden_vs_quality_{safe_name}.pdf', format='pdf')
+        fig.savefig(output_dir / f'plot5_speedup_leiden_vs_quality_{safe_name}.png', format='png')
+        plt.close(fig)
+
+
 def generate_all_plots(df: pd.DataFrame, output_dir: Path):
     """Generate all publication plots."""
     print("\nGenerating plots...")
@@ -433,22 +513,28 @@ def generate_all_plots(df: pd.DataFrame, output_dir: Path):
     plot_speedup_vs_quality(df, output_dir)
     print(f"  Plot 4: speedup_vs_quality (per dataset)")
 
+    plot_speedup_leiden_vs_quality(df, output_dir)
+    print(f"  Plot 5: speedup_leiden_vs_quality (per dataset)")
+
 
 def print_key_results(df: pd.DataFrame, alpha: float = 0.8):
     """Print key results table for a specific alpha."""
-    print(f"\n{'='*100}")
+    print(f"\n{'='*120}")
     print(f"KEY RESULTS AT alpha = {alpha}")
-    print(f"{'='*100}")
+    print(f"{'='*120}")
 
-    df_alpha = df[np.isclose(df['alpha'], alpha)]
+    df_alpha = df[np.isclose(df['alpha'], alpha)].copy()
 
     if len(df_alpha) == 0:
         print("No data available.")
         return
 
+    # Calculate speedup_leiden from existing columns
+    df_alpha['speedup_leiden'] = df_alpha['T_leiden_orig_sec'] / df_alpha['T_leiden_sparse_sec']
+
     print(f"\n{'Dataset':<15} {'Method':<18} {'T_spar(s)':<12} {'T_pipe(s)':<12} "
-          f"{'Speedup':<10} {'dQ_fixed':<12} {'dQ_Leiden':<12}")
-    print("-" * 100)
+          f"{'Speedup_pipe':<14} {'Speedup_Leiden':<16} {'dQ_fixed':<12} {'dQ_Leiden':<12}")
+    print("-" * 120)
 
     # Get methods from data
     methods_in_data = df_alpha['method'].unique()
@@ -466,15 +552,16 @@ def print_key_results(df: pd.DataFrame, alpha: float = 0.8):
             T_spar = df_m['T_sparsify_sec'].mean()
             T_pipe = df_m['T_pipeline_sec'].mean()
             speedup = df_m['speedup'].mean()
+            speedup_leiden = df_m['speedup_leiden'].mean()
             dQ_fixed = df_m['dQ_fixed'].mean()
             dQ_leiden = df_m['dQ_leiden'].mean()
 
             print(f"{dataset:<15} {method:<18} {T_spar:<12.4f} {T_pipe:<12.4f} "
-                  f"{speedup:<10.2f} {dQ_fixed:<+12.6f} {dQ_leiden:<+12.6f}")
+                  f"{speedup:<14.2f} {speedup_leiden:<16.2f} {dQ_fixed:<+12.6f} {dQ_leiden:<+12.6f}")
 
         print(f"{'':<15} {'(baseline)':<18} {'':<12} {T_orig:<12.4f} "
-              f"{'1.00':<10} {'0.0':<12} {'0.0':<12}")
-        print("-" * 100)
+              f"{'1.00':<14} {'1.00':<16} {'0.0':<12} {'0.0':<12}")
+        print("-" * 120)
 
 
 # =============================================================================

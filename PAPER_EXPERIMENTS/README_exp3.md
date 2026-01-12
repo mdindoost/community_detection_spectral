@@ -27,6 +27,7 @@ This experiment evaluates runtime scalability, end-to-end speedup, and community
 ```
 PAPER_EXPERIMENTS/
 ├── exp3_scalability.py              # Main experiment script
+├── generate_outputs_exp3.py         # Regenerate outputs from raw CSV
 ├── README_exp3.md                   # This file
 └── results/
     └── exp3_scalability/
@@ -37,7 +38,8 @@ PAPER_EXPERIMENTS/
             ├── plot1_scaling_sparsify_time.pdf/png
             ├── plot2_scaling_pipeline_time.pdf/png
             ├── plot3_quality_vs_alpha_{dataset}.pdf/png
-            └── plot4_speedup_vs_quality_{dataset}.pdf/png
+            ├── plot4_speedup_vs_quality_{dataset}.pdf/png
+            └── plot5_speedup_leiden_vs_quality_{dataset}.pdf/png
 ```
 
 ---
@@ -71,7 +73,59 @@ python exp3_scalability.py --dry_run
 
 ---
 
-## CLI Arguments
+## Regenerating Outputs (`generate_outputs_exp3.py`)
+
+This standalone script regenerates all outputs (summary CSV, LaTeX table, plots) from the raw CSV data **without re-running experiments**.
+
+### When to Use
+
+- Experiment crashed but `scalability_raw.csv` has partial results
+- You modified plot styles and want to regenerate figures
+- You want a LaTeX table for a different α value
+- You want to add new derived metrics (like `speedup_leiden`)
+
+### Basic Usage
+
+```bash
+# Regenerate all outputs from default raw CSV
+python generate_outputs_exp3.py
+
+# Use custom input file
+python generate_outputs_exp3.py --input path/to/my_results.csv
+
+# Generate table for α=0.6 instead of 0.8
+python generate_outputs_exp3.py --alpha 0.6
+
+# Skip plots (only generate CSV and table)
+python generate_outputs_exp3.py --no_plots
+
+# Skip LaTeX table
+python generate_outputs_exp3.py --no_table
+```
+
+### CLI Arguments
+
+| Argument | Default | Description |
+|----------|---------|-------------|
+| `--input` | `results/exp3_scalability/scalability_raw.csv` | Path to raw CSV |
+| `--output_dir` | `results/exp3_scalability/` | Output directory |
+| `--alpha` | 0.8 | Alpha value for LaTeX table |
+| `--no_plots` | False | Skip plot generation |
+| `--no_table` | False | Skip LaTeX table generation |
+
+### Derived Metrics
+
+The script computes additional metrics from raw timing columns:
+
+```python
+speedup_leiden = T_leiden_orig_sec / T_leiden_sparse_sec
+```
+
+This metric shows the pure Leiden speedup, ignoring sparsification cost.
+
+---
+
+## CLI Arguments (exp3_scalability.py)
 
 | Argument | Default | Description |
 |----------|---------|-------------|
@@ -112,7 +166,15 @@ Add to `experiments/utils.py` in `SNAP_DATASETS`, then add to `DEFAULT_DATASETS`
 | `T_leiden_orig_sec` | Leiden time on original graph |
 | `T_leiden_sparse_sec` | Leiden time on sparsified graph |
 | `T_pipeline_sec` | T_sparsify + T_leiden_sparse |
-| `speedup` | T_leiden_orig / T_pipeline |
+
+### Speedup Metrics
+
+| Metric | Formula | Description |
+|--------|---------|-------------|
+| `speedup` | T_leiden_orig / T_pipeline | Full pipeline speedup (includes sparsification cost) |
+| `speedup_leiden` | T_leiden_orig / T_leiden_sparse | Pure Leiden speedup (ignores sparsification cost) |
+
+**Note**: `speedup_leiden` is computed by `generate_outputs_exp3.py` from the raw timing columns. It shows the theoretical maximum speedup if sparsification were free.
 
 ### Quality Metrics
 
@@ -178,6 +240,7 @@ T_sparsify_sec_mean, T_sparsify_sec_std,
 T_leiden_sparse_sec_mean, T_leiden_sparse_sec_std,
 T_pipeline_sec_mean, T_pipeline_sec_std,
 speedup_mean, speedup_std,
+speedup_leiden_mean, speedup_leiden_std,
 T_leiden_orig_sec, Q0
 ```
 
@@ -185,8 +248,8 @@ T_leiden_orig_sec, Q0
 
 Results at α = 0.8:
 
-| Dataset | Method | n | m | T_spar | T_Leiden | Speedup | ΔQ_fixed | ΔQ_Leiden |
-|---------|--------|---|---|--------|----------|---------|----------|-----------|
+| Dataset | Method | n | m | T_spar | T_Leiden | Speedup_pipe | Speedup_Leiden | ΔQ_fixed | ΔQ_Leiden |
+|---------|--------|---|---|--------|----------|--------------|----------------|----------|-----------|
 
 ---
 
@@ -213,12 +276,20 @@ Results at α = 0.8:
 - **Curves**: One per method
 - **File**: `plot3_quality_vs_alpha_{dataset}.pdf/png`
 
-### Plot 4: Speedup vs Quality (Per Dataset)
+### Plot 4: Pipeline Speedup vs Quality (Per Dataset)
 
-- **X-axis**: Speedup
+- **X-axis**: Speedup (T_orig / T_pipeline)
 - **Y-axis**: ΔQ_leiden
 - **Points**: Each α level, connected per method
 - **File**: `plot4_speedup_vs_quality_{dataset}.pdf/png`
+
+### Plot 5: Leiden Speedup vs Quality (Per Dataset)
+
+- **X-axis**: Speedup_Leiden (T_orig / T_leiden_sparse)
+- **Y-axis**: ΔQ_leiden
+- **Points**: Each α level, connected per method
+- **Purpose**: Shows pure Leiden speedup ignoring sparsification cost
+- **File**: `plot5_speedup_leiden_vs_quality_{dataset}.pdf/png`
 
 ---
 
@@ -380,23 +451,33 @@ python exp3_scalability.py
 
 ## Interpretation Guide
 
-### What does speedup > 1 mean?
+### What do the speedup metrics mean?
 
-The sparsify + Leiden(sparse) pipeline is faster than Leiden(original).
+| Metric | Speedup > 1 means... |
+|--------|----------------------|
+| `speedup` (pipeline) | Sparsify + Leiden(sparse) is faster than Leiden(original) |
+| `speedup_leiden` | Leiden(sparse) alone is faster than Leiden(original) |
+
+**Note**: `speedup_leiden` ≥ `speedup` always, since it ignores sparsification cost.
 
 ### When is DSpar beneficial?
 
 DSpar is beneficial when:
-- **Speedup > 1**: Pipeline is faster
+- **Speedup > 1**: Pipeline is faster than baseline
 - **ΔQ_leiden ≥ 0**: Quality maintained or improved
 
 ### Why might ΔQ_leiden < 0?
 
 Removing too many edges (low α) can fragment the community structure, leading to worse Leiden results.
 
-### What does Plot 4 show?
+### What do Plots 4 and 5 show?
 
-The speedup-vs-quality Pareto frontier. Points in the upper-right (high speedup, positive ΔQ) are best. DSpar should dominate baselines in this region.
+Both show the speedup-vs-quality Pareto frontier. Points in the upper-right (high speedup, positive ΔQ) are best.
+
+- **Plot 4**: Uses pipeline speedup (includes sparsification cost) — realistic end-to-end performance
+- **Plot 5**: Uses Leiden speedup (ignores sparsification cost) — shows theoretical maximum benefit
+
+DSpar should dominate baselines in the upper-right region of both plots.
 
 ---
 
