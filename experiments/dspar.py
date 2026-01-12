@@ -134,10 +134,13 @@ def dspar_sparsify(
     
     if not 0.0 < retention <= 1.0:
         raise ValueError(f"retention must be in (0, 1], got {retention}")
-    
+
+    if G.is_directed():
+        raise ValueError("DSpar requires an undirected graph. Use G.to_undirected() first.")
+
     if seed is not None:
         np.random.seed(seed)
-    
+
     # Compute DSpar scores
     scores = compute_dspar_scores(G)
     edges = list(scores.keys())

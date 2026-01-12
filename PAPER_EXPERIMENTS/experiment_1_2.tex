@@ -1,0 +1,113 @@
+% Experiment 1.2: Theoretical Predictions Validation
+% Include this file with: \input{experiment_1_2.tex}
+
+\subsection{Experiment 1.2: Theoretical Predictions on Real Networks}
+\label{sec:exp1_2}
+
+Having validated DSpar's behavior on synthetic networks with planted community structure (Section~\ref{sec:exp1_1}), we now examine whether the theoretical predictions hold on real-world networks where community structure emerges organically.
+
+\paragraph{Experimental Setup.}
+We evaluate DSpar on \num{12} real-world networks from the SNAP repository~\cite{snapnets}, spanning collaboration networks (ca-AstroPh, ca-CondMat, ca-GrQc, ca-HepPh, ca-HepTh), citation networks (cit-HepPh, cit-HepTh), email communication (email-Enron, email-Eu-core), social networks (facebook-combined, ego-Facebook), and voting networks (wiki-Vote).
+For each network, we apply DSpar sparsification at retention levels $\alpha \in \{0.5, 0.6, 0.7, 0.8, 0.9\}$, with 10 independent trials per retention level.
+
+We measure modularity change under two evaluation protocols:
+\begin{enumerate}
+    \item \textbf{Fixed-membership} ($\Delta Q_{\mathrm{fixed}}$): Compute modularity on the sparsified graph using the community assignment from the original graph. This isolates the mechanism predicted by theory.
+    \item \textbf{Leiden-reoptimized} ($\Delta Q_{\mathrm{Leiden}}$): Apply Leiden community detection~\cite{traag2019leiden} to the sparsified graph and compute modularity with the new partition. This measures downstream pipeline performance.
+\end{enumerate}
+
+\paragraph{Theoretical Identity.}
+Modularity decomposes as $Q = F - G$, where $F = \frac{1}{2m}\sum_c e_c$ captures intra-community edge density and $G = \frac{1}{4m^2}\sum_c \mathrm{vol}_c^2$ is the null-model penalty.
+The change under sparsification satisfies:
+\begin{equation}
+    \Delta Q_{\mathrm{fixed}} = \Delta F_{\mathrm{obs}} - \Delta G_{\mathrm{obs}}
+    \label{eq:decomposition}
+\end{equation}
+where $\Delta F_{\mathrm{obs}}$ reflects changes in intra-community edge fraction and $\Delta G_{\mathrm{obs}}$ reflects changes in the null-model penalty term.
+
+% === RESULTS ===
+
+\paragraph{Results.}
+Table~\ref{tab:exp1_2_modularity} summarizes the modularity changes at $\alpha = 0.8$ across all datasets.
+% TODO: Summarize key findings from the table here.
+% Example: "DSpar consistently improves fixed-membership modularity across X/12 datasets..."
+
+\input{results/exp1_2_theoretical/tables/table1_modularity_changes.tex}
+
+% === DECOMPOSITION VERIFICATION ===
+
+\paragraph{Decomposition Verification.}
+Table~\ref{tab:exp1_2_decomposition} verifies the identity in Equation~\eqref{eq:decomposition}.
+The reconstruction error $|\epsilon| = |\Delta Q_{\mathrm{fixed}} - (\Delta F_{\mathrm{obs}} - \Delta G_{\mathrm{obs}})|$ is at machine precision for all datasets, confirming our theoretical analysis.
+
+\input{results/exp1_2_theoretical/tables/table2_decomposition.tex}
+
+% === FIGURES ===
+
+\paragraph{Modularity vs.\ Retention.}
+Figure~\ref{fig:exp1_2_modularity} shows the relationship between retention $\alpha$ and modularity change for representative datasets.
+% TODO: Select 2-4 representative datasets for the main figure.
+% TODO: Move remaining datasets to supplementary material if needed.
+
+\begin{figure}[htbp]
+    \centering
+    % TODO: Replace with actual figure paths from plot_exp1_2.py output
+    % \includegraphics[width=0.48\textwidth]{results/exp1_2_theoretical/figures/ca-AstroPh_figure_A_modularity.pdf}
+    % \includegraphics[width=0.48\textwidth]{results/exp1_2_theoretical/figures/email-Enron_figure_A_modularity.pdf}
+    \caption{
+        Modularity change vs.\ retention for representative datasets.
+        \textbf{Blue circles}: $\Delta Q_{\mathrm{fixed}}$ (theory-aligned, fixed membership).
+        \textbf{Orange squares}: $\Delta Q_{\mathrm{Leiden}}$ (downstream pipeline performance).
+        Error bars indicate standard deviation over 10 trials.
+        % TODO: Add interpretation of the trend.
+    }
+    \label{fig:exp1_2_modularity}
+\end{figure}
+
+\paragraph{Modularity Decomposition.}
+Figure~\ref{fig:exp1_2_decomposition} illustrates the decomposition $\Delta Q = \Delta F - \Delta G$ for selected datasets.
+The positive contribution $-\Delta G$ (null-model relief) demonstrates that DSpar preferentially removes edges that inflate the degree-based penalty term.
+
+\begin{figure}[htbp]
+    \centering
+    % TODO: Replace with actual figure paths
+    % \includegraphics[width=0.48\textwidth]{results/exp1_2_theoretical/figures/ca-AstroPh_figure_B_decomposition.pdf}
+    % \includegraphics[width=0.48\textwidth]{results/exp1_2_theoretical/figures/email-Enron_figure_B_decomposition.pdf}
+    \caption{
+        Modularity decomposition for representative datasets.
+        \textbf{Blue circles}: $\Delta Q_{\mathrm{fixed}}$ (total change).
+        \textbf{Green triangles}: $-\Delta G$ (null-model relief, shown as positive contribution).
+        The identity $\Delta Q = \Delta F - \Delta G$ holds to machine precision.
+    }
+    \label{fig:exp1_2_decomposition}
+\end{figure}
+
+% === SUMMARY STATISTICS ===
+
+\paragraph{Summary.}
+Table~\ref{tab:exp1_2_summary} provides aggregate statistics across all datasets.
+% TODO: Discuss the overall success rate and any outliers.
+
+\input{results/exp1_2_theoretical/tables/table3_summary.tex}
+
+% === DISCUSSION ===
+
+\paragraph{Discussion.}
+% TODO: Add discussion points:
+% 1. Compare fixed-membership vs Leiden results
+% 2. Explain any datasets where modularity decreased
+% 3. Relate findings back to the theoretical predictions
+% 4. Discuss practical implications for community detection pipelines
+
+% === OPTIONAL: COMBINED FIGURE FOR SUPPLEMENTARY ===
+
+% If using the combined multi-panel figure:
+% \begin{figure*}[htbp]
+%     \centering
+%     \includegraphics[width=\textwidth]{results/exp1_2_theoretical/figures/all_datasets_modularity_combined.pdf}
+%     \caption{
+%         Modularity change vs.\ retention for all 12 datasets.
+%         Blue: $\Delta Q_{\mathrm{fixed}}$, Orange: $\Delta Q_{\mathrm{Leiden}}$.
+%     }
+%     \label{fig:exp1_2_all}
+% \end{figure*}
