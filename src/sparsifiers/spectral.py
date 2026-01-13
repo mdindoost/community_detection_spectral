@@ -16,9 +16,17 @@ import igraph as ig
 # Support both package and script imports
 if __name__ == "__main__" or not __package__:
     sys.path.insert(0, str(Path(__file__).parent.parent.parent))
-    from src.config import JULIA_PROJECT, JULIA_DEPOT, SPARSIFY_SCRIPT, TEMP_DIR, PROJECT_ROOT, JULIA_VERSION
+    from src.config import (
+        JULIA_PROJECT, JULIA_DEPOT, SPARSIFY_SCRIPT, TEMP_DIR, PROJECT_ROOT, JULIA_VERSION,
+        JULIA_NUM_THREADS, JULIA_OPTIMIZE, JULIA_CHECK_BOUNDS, JULIA_MATH_MODE,
+        JULIA_STARTUP_FILE, JULIA_HISTORY_FILE, JULIA_COMPILE
+    )
 else:
-    from ..config import JULIA_PROJECT, JULIA_DEPOT, SPARSIFY_SCRIPT, TEMP_DIR, PROJECT_ROOT, JULIA_VERSION
+    from ..config import (
+        JULIA_PROJECT, JULIA_DEPOT, SPARSIFY_SCRIPT, TEMP_DIR, PROJECT_ROOT, JULIA_VERSION,
+        JULIA_NUM_THREADS, JULIA_OPTIMIZE, JULIA_CHECK_BOUNDS, JULIA_MATH_MODE,
+        JULIA_STARTUP_FILE, JULIA_HISTORY_FILE, JULIA_COMPILE
+    )
 
 
 def get_julia_path() -> str:
@@ -119,50 +127,70 @@ def _run_julia_sparsify(edges: np.ndarray, n_nodes: int, epsilon: float) -> np.n
     # Create temp directory if needed
     TEMP_DIR.mkdir(parents=True, exist_ok=True)
     
-    # Create temporary file for edges
-    with tempfile.NamedTemporaryFile(mode='w', suffix='.txt', dir=TEMP_DIR, delete=False) as f:
-        edges_file = Path(f.name)
-        # Write edges efficiently using numpy
-        np.savetxt(f, edges, fmt='%d %d')
+    # Create unique temporary files to avoid race conditions in parallel execution
+    import uuid
+    unique_id = uuid.uuid4().hex[:8]
+    edges_file = TEMP_DIR / f"edges_input_{unique_id}.txt"
+    output_file = TEMP_DIR / f"edges_output_{unique_id}.txt"
+    
+    # print(f"    [Julia] Starting spectral sparsification: {len(edges)//2} edges, ε={epsilon}")
     
     try:
+        # Write edges efficiently using numpy
+        np.savetxt(edges_file, edges, fmt='%d %d')
+        
         julia_path = get_julia_path()
         
+        # Set up environment from config (loaded from .env)
         env = os.environ.copy()
         env['JULIA_DEPOT_PATH'] = str(JULIA_DEPOT)
         
+        if JULIA_NUM_THREADS:
+            env['JULIA_NUM_THREADS'] = JULIA_NUM_THREADS
+        
+        # Build command with all optimization flags from config
         cmd = [
             julia_path,
+            f"--optimize={JULIA_OPTIMIZE}",
+            f"--check-bounds={JULIA_CHECK_BOUNDS}",
+            f"--math-mode={JULIA_MATH_MODE}",
+            f"--startup-file={JULIA_STARTUP_FILE}",
+            f"--history-file={JULIA_HISTORY_FILE}",
+            f"--compile={JULIA_COMPILE}",
             f"--project={JULIA_PROJECT}",
             str(SPARSIFY_SCRIPT),
             str(edges_file),
             str(n_nodes),
-            str(epsilon)
+            str(epsilon),
+            str(output_file)  # 4th argument: explicit output path
         ]
+        
         
         result = subprocess.run(
             cmd,
             cwd=TEMP_DIR,
             capture_output=True,
             text=True,
-            env=env
+            env=env,
         )
+        
+        # print(f"    lia] Completed. stdout: {result.stdout[-200:] if result.stdout else 'empty'}")
         
         if result.returncode != 0:
             raise RuntimeError(f"Spectral sparsification failed: {result.stderr}")
         
-        # Load output
-        output_file = TEMP_DIR / f"edges_sparsified_eps{epsilon}.txt"
-        sparsified_edges = _load_edges_from_file(output_file)
+        # Load output from unique file
+        if not output_file.exists():
+            raise RuntimeError(f"Julia did not create output file: {output_file}")
         
-        # Clean up output file
-        output_file.unlink(missing_ok=True)
+        sparsified_edges = _load_edges_from_file(output_file)
         
         return sparsified_edges
         
     finally:
-        # Clean up input file
+        # Clean up both files
         edges_file.unlink(missing_ok=True)
+        output_file.unlink(missing_ok=True)
 
 
 def _load_edges_from_file(filepath: Path) -> np.ndarray:
