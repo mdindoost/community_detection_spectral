@@ -9,14 +9,26 @@ Clean modular implementation - all functionality in dedicated modules.
 Uses parallel processing for speedup while maintaining ordered results.
 
 Run: python -m src.main
-     python -m src.main --datasets com-DBLP
-     python -m src.main --datasets com-DBLP,com-Amazon --dry_run
-     python -m src.main --max_edges 1000000
-     python -m src.main --workers 8
+    python -m src.main --datasets com-DBLP
+    python -m src.main --datasets com-DBLP,com-Amazon --dry_run
+    python -m src.main --max_edges 1000000
+    python -m src.main --workers 8
 """
+
+# Warn if .env does not exist
+import os
+from pathlib import Path
+PROJECT_ROOT = Path(__file__).parent.parent.resolve()
+env_path = PROJECT_ROOT / ".env"
+env_example_path = PROJECT_ROOT / ".env.example"
+if not env_path.exists():
+    print("[WARNING] .env file not found! Please copy .env.example to .env and edit as needed.")
+    if env_example_path.exists():
+       print(f"  You can run: cp {env_example_path} {env_path}")
 import sys
 import argparse
 import os
+import time
 from pathlib import Path
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from dataclasses import dataclass
@@ -29,12 +41,13 @@ if __name__ == "__main__":
 import numpy as np
 import pandas as pd
 
-# Import from dedicated modules - each module does ONE thing
 from src.config import (
     ALPHAS, METHODS, N_REPLICATES, SEED_BASE,
     DEFAULT_DATASETS, RESULTS_DIR,
-    SPECTRAL_EPSILON_MAP, SPECTRAL_TIMEOUT
-)
+    SPECTRAL_EPSILON_MAP, SPECTRAL_TIMEOUT)
+import os
+from pathlib import Path
+
 from src.data import load_large_dataset
 from src.clustering import run_leiden_timed
 from src.eval.metrics import compute_nmi, compute_modularity_fixed
@@ -279,6 +292,7 @@ def run_dataset_experiments(
         # Run spectral trials SEQUENTIALLY (Julia is memory-intensive)
         for i, config in enumerate(spectral_configs):
             try:
+                start_time = time.perf_counter()
                 idx, result = run_single_trial_worker(
                     config,
                     G_edges,
@@ -296,7 +310,7 @@ def run_dataset_experiments(
             except Exception as e:
                 status = f"ERR: {e}"
             
-            print(f"    [{i+1}/{total_spectral}] spectral, α={config.alpha:.1f}, rep={config.replicate+1} {status}")
+            print(f"    [{i+1}/{total_spectral}] spectral, α={config.alpha:.1f}, rep={config.replicate+1} {status} in {time.perf_counter() - start_time:.2f}s")
     
     elif has_spectral:
         print(f"\n  [WARNING] No DSpar times recorded, skipping spectral")
