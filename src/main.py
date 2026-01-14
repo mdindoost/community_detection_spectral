@@ -111,12 +111,17 @@ def run_single_trial_worker(
     m_sparse = G_sparse.ecount()
     retention_actual = m_sparse / m_edges if m_edges > 0 else 1.0
     
-    # Compute Q_sparse_fixed
+    # Compute Q_sparse_fixed: modularity of baseline partition on sparsified graph
     Q_sparse_fixed = compute_modularity_fixed(G_sparse, baseline_membership)
     dQ_fixed = Q_sparse_fixed - Q0
     
     # Run Leiden on sparsified graph
-    membership_sparse, Q_sparse_leiden, n_comm_sparse, T_leiden_sparse = run_leiden_timed(G_sparse)
+    membership_sparse, Q_sparse_leiden_on_sparse, n_comm_sparse, T_leiden_sparse = run_leiden_timed(G_sparse)
+    
+    # IMPORTANT: Compute modularity of the sparse partition on the ORIGINAL graph
+    # This gives a fair comparison: how good is the partition found on sparse graph
+    # when evaluated on the original graph structure
+    Q_sparse_leiden = compute_modularity_fixed(G, membership_sparse)
     dQ_leiden = Q_sparse_leiden - Q0
     
     # Pipeline time and speedup
@@ -147,8 +152,9 @@ def run_single_trial_worker(
         'Q0': Q0,
         'Q_sparse_fixed': Q_sparse_fixed,
         'dQ_fixed': dQ_fixed,
-        'Q_sparse_leiden': Q_sparse_leiden,
+        'Q_sparse_leiden': Q_sparse_leiden,  # Modularity of sparse partition on ORIGINAL graph
         'dQ_leiden': dQ_leiden,
+        'Q_sparse_leiden_on_sparse': Q_sparse_leiden_on_sparse,  # Modularity on sparse graph (for reference)
         
         'n_communities_orig': len(set(baseline_membership)),
         'n_communities_sparse': n_comm_sparse,
@@ -445,7 +451,8 @@ def main():
         return
     
     # Run experiments
-    raw_file = OUTPUT_DIR / "scalability_raw.csv"
+    raw_file = "results/scalability_raw.csv"
+    df = pd.DataFrame()
     
     df = run_all_experiments(
         datasets=datasets,
@@ -458,6 +465,11 @@ def main():
         output_file=raw_file
     )
     
+
+    if df.empty:
+        print(f"\n[INFO] No dataframe from run, attempting to read from {raw_file}")
+        df = pd.read_csv(raw_file)
+
     if len(df) == 0:
         print("\nERROR: No experiments completed successfully!")
         return
