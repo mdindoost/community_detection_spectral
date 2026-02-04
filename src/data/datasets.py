@@ -69,6 +69,51 @@ SNAP_DATASETS = {
         True,
         'https://snap.stanford.edu/data/bigdata/communities/com-orkut.top5000.cmty.txt.gz'
     ),
+    # Smaller SNAP datasets
+    'ca-AstroPh': (
+        'https://snap.stanford.edu/data/ca-AstroPh.txt.gz',
+        False, None
+    ),
+    'ca-HepPh': (
+        'https://snap.stanford.edu/data/ca-HepPh.txt.gz',
+        False, None
+    ),
+    'cit-HepPh': (
+        'https://snap.stanford.edu/data/cit-HepPh.txt.gz',
+        False, None
+    ),
+    'email-Enron': (
+        'https://snap.stanford.edu/data/email-Enron.txt.gz',
+        False, None
+    ),
+    'facebook-combined': (
+        'https://snap.stanford.edu/data/facebook_combined.txt.gz',
+        False, None
+    ),
+    'ca-GrQc': (
+        'https://snap.stanford.edu/data/ca-GrQc.txt.gz',
+        False, None
+    ),
+    'ca-CondMat': (
+        'https://snap.stanford.edu/data/ca-CondMat.txt.gz',
+        False, None
+    ),
+    'cit-HepTh': (
+        'https://snap.stanford.edu/data/cit-HepTh.txt.gz',
+        False, None
+    ),
+    'wiki-Vote': (
+        'https://snap.stanford.edu/data/wiki-Vote.txt.gz',
+        False, None
+    ),
+    'soc-Epinions1': (
+        'https://snap.stanford.edu/data/soc-Epinions1.txt.gz',
+        False, None
+    ),
+    'ca-HepTh': (
+        'https://snap.stanford.edu/data/ca-HepTh.txt.gz',
+        False, None
+    ),
 }
 
 
@@ -82,6 +127,17 @@ DATASET_PATHS = {
     'wiki-topcats': DATASETS_DIR / 'wiki-topcats' / 'wiki-topcats.txt',
     'com-LiveJournal': DATASETS_DIR / 'com-LiveJournal' / 'com-lj.ungraph.txt',
     'com-Orkut': DATASETS_DIR / 'com-Orkut' / 'com-orkut.ungraph.txt',
+    'ca-AstroPh': DATASETS_DIR / 'ca-AstroPh' / 'ca-AstroPh.txt',
+    'ca-HepPh': DATASETS_DIR / 'ca-HepPh' / 'ca-HepPh.txt',
+    'cit-HepPh': DATASETS_DIR / 'cit-HepPh' / 'cit-HepPh.txt',
+    'email-Enron': DATASETS_DIR / 'email-Enron' / 'email-Enron.txt',
+    'facebook-combined': DATASETS_DIR / 'facebook-combined' / 'facebook-combined.txt',
+    'ca-GrQc': DATASETS_DIR / 'ca-GrQc' / 'ca-GrQc.txt',
+    'ca-CondMat': DATASETS_DIR / 'ca-CondMat' / 'ca-CondMat.txt',
+    'cit-HepTh': DATASETS_DIR / 'cit-HepTh' / 'cit-HepTh.txt',
+    'wiki-Vote': DATASETS_DIR / 'wiki-Vote' / 'wiki-Vote.txt',
+    'soc-Epinions1': DATASETS_DIR / 'soc-Epinions1' / 'soc-Epinions1.txt',
+    'ca-HepTh': DATASETS_DIR / 'ca-HepTh' / 'ca-HepTh.txt',
 }
 
 
