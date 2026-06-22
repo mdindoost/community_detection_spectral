@@ -199,6 +199,146 @@ python tests/test_dspar.py --verbose
 | 1.0 | ~40% |
 | 2.0 | ~25% |
 
+## DSpar Separation (δ) - Why DSpar Preserves Communities
+
+### Overview
+
+The DSpar separation metric δ measures whether DSpar sparsification will preserve community structure:
+
+```
+δ = μ_intra - μ_inter
+```
+
+Where:
+- **μ_intra**: Mean DSpar score for intra-community edges (edges within communities)
+- **μ_inter**: Mean DSpar score for inter-community edges (edges between communities)
+- **DSpar score**: For edge (u,v), score = 1/d_u + 1/d_v
+
+**Interpretation:**
+- **δ > 0**: DSpar preserves community structure (good)
+- **δ < 0**: DSpar damages community structure (bad)
+
+### Step-by-Step Calculation
+
+**Step 1: Obtain Community Assignments**
+
+Run a community detection algorithm (e.g., Leiden) to assign each node to a community:
+
+```python
+membership = {node_id: community_id}
+# Example: {A: 0, B: 0, C: 0, D: 1, E: 1, F: 1}
+```
+
+**Step 2: Classify Edges**
+
+For each edge, check if both endpoints belong to the same community:
+
+```python
+for u, v in G.edges():
+    score = 1/degree[u] + 1/degree[v]
+
+    if membership[u] == membership[v]:
+        intra_scores.append(score)   # Same community
+    else:
+        inter_scores.append(score)   # Different communities
+```
+
+**Step 3: Compute δ**
+
+```python
+μ_intra = mean(intra_scores)
+μ_inter = mean(inter_scores)
+δ = μ_intra - μ_inter
+```
+
+### Worked Example
+
+Consider a graph with 6 nodes and 7 edges:
+
+```
+Community 0: {A, B, C}        Community 1: {D, E, F}
+
+    A ─── B                       D ─── E
+    │     │                       │     │
+    C ─ ─ ┘                       F ─ ─ ┘
+          \                      /
+           \____________________/
+               inter-edge (B-D)
+```
+
+**Edges:**
+- Intra (Community 0): A-B, A-C, B-C
+- Intra (Community 1): D-E, D-F, E-F
+- Inter: B-D
+
+**Degrees:**
+
+| Node | Degree | Connections |
+|------|--------|-------------|
+| A | 2 | B, C |
+| B | 3 | A, C, D (bridge) |
+| C | 2 | A, B |
+| D | 3 | B, E, F (bridge) |
+| E | 2 | D, F |
+| F | 2 | D, E |
+
+**Intra-Community Scores:**
+
+| Edge | d_u | d_v | Score = 1/d_u + 1/d_v |
+|------|-----|-----|----------------------|
+| A-B | 2 | 3 | 1/2 + 1/3 = 0.833 |
+| A-C | 2 | 2 | 1/2 + 1/2 = 1.000 |
+| B-C | 3 | 2 | 1/3 + 1/2 = 0.833 |
+| D-E | 3 | 2 | 1/3 + 1/2 = 0.833 |
+| D-F | 3 | 2 | 1/3 + 1/2 = 0.833 |
+| E-F | 2 | 2 | 1/2 + 1/2 = 1.000 |
+
+```
+μ_intra = (0.833 + 1.000 + 0.833 + 0.833 + 0.833 + 1.000) / 6 = 0.889
+```
+
+**Inter-Community Scores:**
+
+| Edge | d_u | d_v | Score = 1/d_u + 1/d_v |
+|------|-----|-----|----------------------|
+| B-D | 3 | 3 | 1/3 + 1/3 = 0.667 |
+
+```
+μ_inter = 0.667
+```
+
+**Final Result:**
+
+```
+δ = μ_intra - μ_inter = 0.889 - 0.667 = +0.222
+```
+
+### Why δ > 0 is Good
+
+DSpar samples edges with probability proportional to `1/d_u + 1/d_v`.
+
+In this example:
+- **Intra-community edges** connect lower-degree nodes → higher scores (0.833 - 1.000)
+- **Inter-community edge** connects high-degree bridge nodes → lower score (0.667)
+
+Since δ > 0, DSpar will:
+- Keep more intra-community edges (high scores)
+- Remove more inter-community edges (low scores)
+- **Result: Community structure is preserved**
+
+This pattern occurs because inter-community edges often connect **hubs** (high-degree bridge nodes), while intra-community edges connect regular community members. This is known as the **hub-bridging property**.
+
+### Computing δ for Real Datasets
+
+Use `compute_hub_bridge_table.py` in `PAPER_EXPERIMENTS/`:
+
+```bash
+cd PAPER_EXPERIMENTS
+python compute_hub_bridge_table.py
+```
+
+This computes δ for datasets and outputs results to `results/hub_bridge_exp3.csv`.
+
 ## References
 
 - Spielman, D. A., & Srivastava, N. (2011). Graph sparsification by effective resistances. *SIAM Journal on Computing*.

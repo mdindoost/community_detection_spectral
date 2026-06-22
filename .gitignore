@@ -1,4 +1,5 @@
 # Python
+.venv
 venv/
 __pycache__/
 *.py[cod]
@@ -37,3 +38,5 @@ Thumbs.db
 # Environment
 .env
 *.log
+
+temp
