@@ -29,6 +29,35 @@ def main():
     null = d[d.arm == "null"]
     print(f"networks: {nets}\nrows: {len(d)} (real {len(real)}, null {len(null)})")
 
+    # ------------------------------------------------------- structural preamble
+    npath = HERE / "node_attrs.csv"
+    if npath.exists():
+        na = pd.read_csv(npath, low_memory=False)
+        na["arm"] = na["arm"].fillna("null")
+        print("\n" + "=" * 100)
+        print("TABLE 0 -- how the pre-registered 'core' proxy (embeddedness) relates to "
+              "k-core index and degree")
+        print("=" * 100)
+        print(f"{'network':14s} {'arm':5s} {'n':>8s} {'k0':>5s} {'embmean':>8s} "
+              f"{'frac(emb=1)':>11s} {'r(emb,core)':>11s} {'r(emb,deg)':>11s} "
+              f"{'r(core,deg)':>11s} {'medcore_top3dec':>15s} {'medcore_bot3dec':>15s} "
+              f"{'meddeg_top3dec':>14s} {'meddeg_bot3dec':>14s}")
+        for net in nets:
+            for arm in ("real", "null"):
+                s = na[(na.network == net) & (na.arm == arm)]
+                if not len(s):
+                    continue
+                e, c, dg = s.embeddedness.values, s.coreness.values, s.degree.values
+                de = s.dec_emb.values
+                hi, lo = c[de >= 7], c[de <= 2]
+                hd, ld = dg[de >= 7], dg[de <= 2]
+                print(f"{net:14s} {arm:5s} {len(s):8d} {s.comm.nunique():5d} "
+                      f"{e.mean():8.4f} {float((e >= 1).mean()):11.4f} "
+                      f"{np.corrcoef(e, c)[0,1]:+11.4f} {np.corrcoef(e, dg)[0,1]:+11.4f} "
+                      f"{np.corrcoef(c, dg)[0,1]:+11.4f} "
+                      f"{np.median(hi):15.1f} {np.median(lo):15.1f} "
+                      f"{np.median(hd):14.1f} {np.median(ld):14.1f}")
+
     # ------------------------------------------------------------------ table
     print("\n" + "=" * 100)
     print("TABLE 1 -- real arm, per condition (mean over seeds; +- sd)")
