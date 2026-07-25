@@ -605,8 +605,7 @@ A quality claim requires a fixed objective: \emph{score every partition on the o
 Table~\ref{tab:transfer_loss} applies this control across 15 networks.
 We define the \emph{transfer loss} as $Q_{\mathrm{base}} - Q_{G}(P_\alpha)$: the unsparsified baseline minus the transferred partition's modularity on the original graph.
 The partition obtained by running Leiden on the sparsified graph scores far above baseline on the sparsified graph (e.g., \texttt{wiki-Talk}: $0.897$ vs.\ $0.602$), and \emph{below} baseline once evaluated on the original graph ($0.417$), a transfer loss of $0.185$.
-Transfer loss is positive on all 15 networks at every tested retention, from $0.004$ to $0.185$.
-Cross-graph comparison thus reverses the sign of the conclusion on every dataset: what appears as a gain of $+0.01$ to $+0.30$ is, on the fixed objective, a loss of $0.004$ to $0.19$.
+Transfer loss is positive on all 15 networks at every tested retention: what appears as a gain of $+0.01$ to $+0.30$ on the sparsified graph is, on the fixed objective, a loss of $0.004$ to $0.19$; the sign of the conclusion reverses on every dataset.
 Refining the transferred partition on the original graph (column $Q_{\mathrm{final}}$) recovers the baseline almost exactly, leaving residuals of $-0.001$ to $+0.008$; Section~\ref{sec:boundary} examines when those residuals are genuine.
 The artifact is not specific to DSpar: uniform random edge deletion, a sampler with no structural intelligence at all, reproduces the same sign flip on every configuration we tested (three networks, two retention levels: apparent gains of $+0.001$ to $+0.011$ on the sparsified graph, losses of $0.006$--$0.025$ on the original). Cross-graph inflation is a property of the scoring convention, not of any particular sparsifier.
 
@@ -636,7 +635,7 @@ We note additionally that reference labels are themselves imperfect proxies for 
 
 A sparsify--cluster--refine pipeline performs more optimization than the single baseline run it is typically compared against.
 The control is to grant the baseline equal wall-clock time, spent on independent restarts, and compare against the best.
-In our measurements the pipeline costs $1.5$--$2.0\times$ a single Leiden run (sparsification itself is $2$--$10\%$ of the total), so the matched baseline is best-of-two restarts. Best-of-two costs $2.0\times$ a single run, at or slightly above the pipeline's cost; the slack favors the baseline, which is conservative for reported gains and mildly anti-conservative for reported losses.
+In our measurements the pipeline costs $1.5$--$2.0\times$ a single Leiden run (sparsification itself is $2$--$10\%$ of the total), so the matched baseline is best-of-two restarts; best-of-two costs $2.0\times$, at or slightly above the pipeline, and the slack favors the baseline (conservative for reported gains, mildly anti-conservative for reported losses).
 The correction is not cosmetic: on \texttt{wiki-Vote}, the seeded pipeline beats the \emph{mean} baseline in six of eight configurations and loses to the runtime-matched baseline in all eight.
 Comparisons against single-run means manufacture false positives whenever the optimizer's seed variance is nonzero.
 
