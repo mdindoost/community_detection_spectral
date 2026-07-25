@@ -281,7 +281,7 @@ def best_of_k_distribution(vals, k):
 def analyze():
     import csv
     raw = []
-    for p in sorted((HERE / "raw").glob("*.json")):
+    for p in sorted((HERE / "raw").glob("w_*.json")):  # w_*.json = results; jobs_*.json = specs
         raw.extend(json.load(open(p)))
     base = sorted([r for r in raw if r["kind"] == "base"], key=lambda r: r["seed"])
     seeded = [r for r in raw if r["kind"] == "seeded"]
