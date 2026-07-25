@@ -61,6 +61,35 @@ story, and no claim enters the paper without the verification listed here.
    protocol, because the pitfalls they close are shared by the surrounding literature — we fell
    into each one ourselves before building the control.
 
+
+## P1 grounding (deep research, 2026-07-25 — full evidence in references/P1_EVIDENCE.md)
+
+**Verdict: P1 is legitimate as a published claim and shipped tooling; NOT as routine
+billion-scale practice** (the field distributes rather than sparsifies at the frontier — never
+claim "practitioners routinely sparsify"). The defensible framing: a 15-year line of papers
+proposes sparsify-then-detect and claims speedups AND quality gains; the methods ship
+(NetworKit, CRAN, Neo4j GDS); one production system prunes before detecting (Twitter
+SimClusters, KDD 2020); and nobody has tested the pipeline end-to-end against cost-matched
+baselines. Top-5 citations: Satuluri+ SIGMOD 2011 ("consistently enables higher clustering
+accuracies" — verbatim); Wu & Chen ICDM 2020 (GSGAN, "comparable or even better" at 5% edges);
+Satuluri+ KDD 2020 (SimClusters, production); Hamann+ SNAM 2016; Chen+ PVLDB 2024.
+
+**Prior-art obligations (must cite and position precisely):**
+- Hamann+ 2016 published the NMI-inflation warning and the partition-drift observation FIRST —
+  credit them; our resolution-matched control operationalizes their warning. They lack runtime,
+  cost-matched baselines, config nulls, GT-recovery controls.
+- Blagus+ Physica A 2015: "community structure ... merely an artifact of sampling" — closest
+  relative of our artifact framing (different mechanism); cite in related work.
+- Chen+ PVLDB 2024: fragmentation-with-pruning at benchmark scale; their conclusion is
+  "match sparsifier to task," not "don't."
+- Gottesbüren+ ESA 2025: sparsification overhead can counteract speedups (partitioning) —
+  corroborates our ~1×.
+- Gap statements verified: no end-to-end cost-matched study; no configuration null; no
+  resolution-matched GT control; DSpar never before applied to community detection; the
+  IJCAI-24 graph-reduction survey contains zero occurrences of "community."
+- PRE-SUBMISSION TASK (user-side): re-run citation search with library access (Scholar/ACM
+  full texts unreachable from here).
+
 ## Title candidates (question-driven)
 - "Does Graph Sparsification Preserve Community Structure?"
 - "Does Sparsification Preserve Communities? Spectral Guarantees, Degree Mechanics, and Honest Evaluation"
