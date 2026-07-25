@@ -1,0 +1,105 @@
+AUDIT OF THE FEBRUARY WEIGHTED-DSPAR RUN  (Exp K, task 1)
+=========================================================
+Script  : PAPER_EXPERIMENTS/exp_dspar_weighted_test.py
+Data    : PAPER_EXPERIMENTS/results/exp_dspar_weighted_test/scalability_raw.csv
+Audited : 2026-07-25
+
+1. SAMPLER
+----------
+Both arms call experiments/dspar.py::dspar_sparsify(G, retention=alpha,
+method='paper', seed=...).  Source read line by line (experiments/dspar.py,
+branch method == "paper"):
+
+    p_e   = s_e / sum(s),  s_e = 1/d_u + 1/d_v
+    q     = ceil(retention * m)                       # number of DRAWS
+    idx   = np.random.choice(m, size=q, replace=True, p=p)   # WITH replacement
+    k_e   = #times e drawn
+    w_e   = k_e / (q * p_e)                                   # reweighting
+
+This is exactly Liu et al. Algorithm 1 (with A_e = 1 on an unweighted input):
+with-replacement sampling proportional to the degree score, Horvitz-Thompson-
+style reweighting w_e = A_e/(Q p_e).  Unbiased: E[A'] = A.
+
+VERIFIED NUMERICALLY (ca-GrQc LCC, n=4158, m=13422):
+  * an independent re-implementation of w_e = count/(Q p_e) over the same edge
+    ordering and seed reproduces dspar.py's returned weight dict EXACTLY
+    (set equality + max abs diff < 1e-12).  return_weights=True returns
+    precisely {edge: k_e/(q p_e)}.
+  * unbiasedness check: mean over 30 seeds of sum_e w_e / m = 1.00019 at
+    alpha=1.0 (expectation exactly 1).
+  * with-replacement collision effect (nominal alpha != realized retention):
+    alpha = 1.0 -> 0.512 distinct-edge retention (mean, 10 seeds)
+    alpha = 0.8 -> 0.454 distinct-edge retention (mean, 10 seeds)
+    i.e. the Feb "alpha = 1.0" rows are ~51-59% effective retention, NOT 100%.
+
+The two Feb arms differ ONLY in what happens after sparsification:
+  'dspar'          -> rebuilds an unweighted nx.Graph from G_sparse's edges
+                      (weights DROPPED), Leiden and modularity unweighted.
+  'dspar_weighted' -> returns G_sparse as-is (weight attribute kept).
+
+2. HOW WEIGHTS REACH LEIDEN AND MODULARITY
+------------------------------------------
+nx_to_igraph() copies G[u][v]['weight'] onto ig_graph.es['weight'] iff the first
+edge carries a 'weight' key.  Then:
+  run_leiden()              -> ig_graph.community_leiden(objective_function=
+                               'modularity', resolution=1.0, n_iterations=2,
+                               weights=weights)          # igraph's own Leiden
+  compute_modularity_fixed()-> ig_graph.modularity(membership, weights=weights)
+So in the weighted arm both the clustering objective and the fixed-partition
+modularity are the WEIGHTED ones; in the unweighted arm both are unweighted.
+Membership is carried by node key (dict), and dspar_sparsify copies all original
+nodes into G_sparse, so the fixed partition P0 is well defined on the sparsified
+graph (isolated nodes included).  No node-alignment bug found.
+
+3. SEEDS / REPLICATION
+----------------------
+SEED_BASE = 42; per-trial seed = 42 + hash((dataset, method, alpha, rep)) % 2^20.
+ALPHAS = [1.0], N_REPLICATES = 1, DEFAULT_DATASETS = [com-DBLP, com-Amazon].
+The raw CSV has exactly 4 rows (2 datasets x 2 methods x 1 alpha x 1 replicate),
+with seeds {262069, 329583, 648274, 701306}.
+
+CAVEATS:
+ (i)  Python's hash() on a tuple containing a str is salted per process
+      (PYTHONHASHSEED), so those sparsification seeds are NOT reproducible.
+ (ii) n = 1 replicate: no error bars at all (std is NaN in every group).
+ (iii) Only alpha = 1.0 was ever run; the alpha=0.8 LaTeX/plot code in the
+      script produced "[WARNING] No data for alpha=0.8".
+ (iv) Leiden itself is igraph's community_leiden with NO RNG seed set, so the
+      baseline partition and the sparse partitions are not seed-controlled.
+ (v)  The script's headline pipeline metric dQ_leiden = Q_sparse_leiden - Q0
+      compares modularity measured on DIFFERENT graphs (the paper's Artifact I).
+      Its dQ_leiden values (+0.014 .. +0.064) must NOT be read as improvement.
+      There is no honest-transfer measurement (partition scored back on the
+      original graph) anywhere in the Feb run.
+ (vi) The baseline Q0 used for BOTH arms is the unweighted Leiden modularity on
+      the original graph -- correct for the (a) preservation metric.
+
+4. SUMMARY NUMBERS RE-DERIVED FROM scalability_raw.csv
+------------------------------------------------------
+dataset     method          alpha  n  dQ_fixed   realized ret.  dQ_leiden  n_com(orig/sparse)  Q0
+com-DBLP    dspar (unw.)    1.0    1  +0.038184  0.5308         +0.063537  240 / 5191          0.832717
+com-DBLP    dspar_weighted  1.0    1  -0.000287  0.5300         +0.046538  240 / 5294          0.832717
+com-Amazon  dspar (unw.)    1.0    1  -0.000267  0.5885         +0.013964  361 / 7879          0.931857
+com-Amazon  dspar_weighted  1.0    1  +0.000458  0.5890         +0.023587  361 / 7969          0.931857
+
+n_nodes/m_edges: com-DBLP 317,080 / 1,049,866 ; com-Amazon 334,863 / 925,872.
+
+=> The claimed numbers in STORY.md arc point 3 ("weighted dQ_fixed = -0.0003
+   com-DBLP, +0.0005 com-Amazon; unweighted +0.0382 on DBLP") are CONFIRMED
+   verbatim against the raw CSV, at ~53-59% effective retention.
+   Note the unweighted com-Amazon number is also ~0 (-0.0003): the unweighted
+   inflation shows on DBLP only, in this 2-dataset, n=1 sample.
+
+5. WHAT EXP K MUST FIX
+----------------------
+ - >=5 sparsification seeds (Feb: 1) and controlled Leiden seeds.
+ - reproducible seeds (no salted hash()).
+ - more networks, including the small ones where 1/alpha is huge (ca-GrQc 535,
+   ca-CondMat 139) -- the vacuous-bound regime the Feb run never touched.
+ - alpha = 0.8 as well as 1.0, plus a calibrated Bernoulli sampler whose
+   retention is a true 0.9 (with-replacement alpha is not interpretable as
+   retention).
+ - the honest transfer metric: cluster the WEIGHTED sparse graph, score the
+   resulting partition UNWEIGHTED on the ORIGINAL graph, compare to a
+   plain-Leiden baseline on the original (mean and best of 5 seeds).
+ - a labeled-recovery check (email-Eu-core departments).
