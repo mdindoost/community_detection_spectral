@@ -3,13 +3,13 @@
 \setlength{\tabcolsep}{5pt}
 \caption{Artifact II --- granularity. Ground-truth recovery on the five small benchmark graphs,
 10 seeds per cell, mean $\pm$ standard deviation. \emph{baseline} is Leiden on the original graph;
-\emph{DSpar \texttt{paper}} is the draft's pipeline (with-replacement sampler, nominal $\alpha=0.8$,
+\emph{DSpar \texttt{paper}} is the with-replacement pipeline (nominal $\alpha=0.8$,
 realized retention $0.44$--$0.55$); the \emph{resolution-matched control} applies no sparsification
 at all and instead tunes the RBConfiguration resolution $\gamma$ on the original graph until the
 cluster count matches the DSpar run; \emph{DSpar calibrated} uses the $\lambda$-bisection sampler
 with $\mathbb{E}[\text{retention}]=0.9$ exactly. AMI is the chance-corrected primary metric; NMI is
-the draft's metric and is inflated by the finer partitions sparsification produces. The only
-positive cell in the draft (email-Eu-core) is reproduced and exceeded by the resolution-matched
+commonly reported in this literature and is inflated by the finer partitions sparsification produces. The one
+apparently positive dataset (email-Eu-core) is reproduced and exceeded by the resolution-matched
 control at 100\% of the edges ($\Delta$AMI $+0.014$ vs $+0.007$), so the score against a
 granularity-matched baseline is 0/5.}
 \label{tab:gt_recheck}

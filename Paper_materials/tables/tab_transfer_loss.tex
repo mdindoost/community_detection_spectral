@@ -4,7 +4,7 @@
 \caption{Artifact I --- cross-graph modularity. $Q_{\mathrm{sparse}}$ is the modularity of the
 partition found on the sparsified graph, \emph{scored on that sparsified graph}; $Q_{\mathrm{orig}}$
 is the same partition scored on the original graph; the transfer loss is
-$Q_{\mathrm{sparse}}-Q_{\mathrm{orig}}$. It is positive for all 15 datasets at both $\alpha$ values,
+$Q_{\mathrm{base}}-Q_{\mathrm{orig}}$, the unsparsified baseline minus the transferred partition's score. It is positive for all 15 datasets at both $\alpha$ values,
 i.e.\ the headline ``modularity gain'' of the sparsify-then-cluster pipeline is an artifact of
 comparing scores computed on two different graphs. $Q_{\mathrm{final}}$ is Leiden seeded with the
 sparse-graph partition and run on the original graph, and $\Delta Q$ is that value minus the
