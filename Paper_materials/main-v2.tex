@@ -182,93 +182,19 @@ Leiden algorithm throughout this work.
 % \subsection{Spectral Graph Sparsification}
 % \label{sec:bg-spectral}
 
-Graph sparsification constructs a sparse subgraph $H$ that approximates 
-properties of the original graph $G$. Spectral sparsification, introduced 
-by Spielman and Teng~\cite{spielman2004nearly} and refined by Spielman and 
-Srivastava~\cite{spielman2008graph}, preserves the spectral properties of 
-the graph Laplacian.
+Graph sparsification constructs a sparse subgraph $H$ that approximates properties of the original graph $G$.
+Spectral sparsification~\cite{spielman2004nearly, spielman2008graph} preserves the Laplacian quadratic form: $H$ is a $(1 \pm \epsilon)$-spectral sparsifier of $G$ if $(1-\epsilon)\, x^\top L_G x \le x^\top L_H x \le (1+\epsilon)\, x^\top L_G x$ for all $x \in \mathbb{R}^n$, where $L = D - A$ is the combinatorial Laplacian.
+Spielman and Srivastava~\cite{spielman2008graph} showed that sampling $O(n \log n / \epsilon^2)$ edges with probability proportional to \emph{effective resistance}---the voltage difference induced across an edge when the graph is viewed as an electrical network with unit resistors~\cite{doyle1984random}---yields such a sparsifier with high probability.
+Edges of high effective resistance are critical for connectivity; edges of low effective resistance lie in densely connected regions with many alternative paths.
+Effective resistance is moreover closely related to vertex degrees: degree-based bounds follow from Rayleigh monotonicity~\cite{doyle1984random, lovasz1993random}, and edges embedded in dense subgraphs typically have lower resistance than edges bridging weakly connected regions.
 
-% \paragraph{Graph Laplacian.}
-The combinatorial Laplacian is defined as $L = D - A$, where $D$ is the 
-diagonal degree matrix. For any vector $x \in \mathbb{R}^n$, the Laplacian 
-quadratic form equals:
-\begin{equation}
-x^\top L x = \sum_{(i,j) \in E} (x_i - x_j)^2
-\label{eq:laplacian-quadratic}
-\end{equation}
-This quantity measures the ``smoothness'' of $x$ over the graph and appears 
-in spectral clustering~\cite{von2007tutorial}, random 
-walks~\cite{lovasz1993random}, and electrical network 
-theory~\cite{doyle1984random}.
-
-% \paragraph{Spectral approximation.}
-A graph $H$ is a $(1 \pm \epsilon)$-spectral sparsifier of $G$ if for all 
-$x \in \mathbb{R}^n$:
-\begin{equation}
-(1 - \epsilon) \cdot x^\top L_G x \leq x^\top L_H x \leq (1 + \epsilon) \cdot x^\top L_G x
-\label{eq:spectral-approx}
-\end{equation}
-
-Spielman and Srivastava~\cite{spielman2008graph} proved that sampling 
-$O(n \log n / \epsilon^2)$ edges with probability proportional to their 
-effective resistance yields a spectral sparsifier with high probability.
-
-% \paragraph{Effective resistance.}
-The effective resistance between nodes $u$ and $v$ is defined as:
-\begin{equation}
-R_{\text{eff}}(u,v) = (\chi_u - \chi_v)^\top L^+ (\chi_u - \chi_v)
-\label{eq:effective-resistance}
-\end{equation}
-where $L^+$ is the Moore-Penrose pseudoinverse of the Laplacian and 
-$\chi_u$ is the indicator vector for node $u$. This quantity has an 
-intuitive interpretation: if the graph is viewed as an electrical network 
-with unit resistors on each edge, $R_{\text{eff}}(u,v)$ is the voltage 
-difference induced by injecting one unit of current at $u$ and extracting 
-it at $v$~\cite{doyle1984random}.
-
-Edges with high effective resistance are critical for connectivity, removing them significantly alters the graph's spectral properties. Edges with low effective resistance are often embedded in regions with many alternative paths and are therefore less critical to preserving global spectral properties.
-
-% \paragraph{Computational cost.}
-Computing effective resistances requires $O(n^3)$ time for matrix 
-inversion, or $O(m + n \log n)$ time per resistance using Laplacian 
-solvers~\cite{spielman2014nearly}. While approximate effective-resistance sampling can be implemented in near-linear time using advanced Laplacian solvers, it remains substantially more complex than degree-based methods in practice. (For large networks, 
-this cost can exceed that of community detection itself, motivating 
-faster approximations.)
-
-%===========================================================================
-% \subsection{Degree-Based Sparsification (DSpar)}
-% \label{sec:bg-dspar}
-
-Classical results in electrical network theory show that effective resistance 
-is closely related to vertex degrees and graph connectivity; in particular, 
-degree-based bounds follow from Rayleigh monotonicity and appear in the work of 
-Doyle and Snell~\cite{doyle1984random} and later in the spectral sparsification 
-framework of Spielman and Srivastava~\cite{spielman2008graph}. 
-Lov\'{a}sz~\cite{lovasz1993random} provides a broader survey perspective, 
-connecting effective resistance to random walks and global spectral properties 
-of the graph Laplacian. These results imply that edges bridging weakly connected 
-regions typically exhibit higher effective resistance than edges embedded 
-within dense subgraphs.
-
-
-DSpar~\cite{liu2023dspar} leverages this intuition by assigning each edge $e=(u,v)$ the score
+DSpar~\cite{liu2023dspar} leverages this connection by assigning each edge $e=(u,v)$ the score
 \begin{equation}
 s(u,v) = \frac{1}{d_u} + \frac{1}{d_v},
 \label{eq:dspar-score}
 \end{equation}
-where $d_u$ and $d_v$ denote the endpoint degrees, and by sampling edges with probability increasing in $s(u,v)$.
-% \paragraph{Score interpretation.}
-The DSpar score has an intuitive interpretation:
-\begin{itemize}
-    \item \textbf{High score}: edge connects low-degree peripheral 
-          nodes, likely important for local connectivity
-    \item \textbf{Low score}: edge connects high-degree hub 
-          nodes, likely redundant due to alternative paths
-\end{itemize}
-
-% \paragraph{Computational advantage.}
-DSpar requires only degree information, computable in $O(m)$ time via a 
-single pass over the edge list. In contrast, effective-resistance sampling requires solving Laplacian systems; even with near-linear-time solvers~\cite{spielman2014nearly} it remains substantially more complex in practice, making degree-based scores attractive for networks with millions of edges.
+where $d_u$ and $d_v$ denote the endpoint degrees, and by sampling edges with probability increasing in $s(u,v)$: high-score edges join low-degree peripheral nodes and are likely important for local connectivity, while low-score edges join hubs and are likely redundant.
+DSpar requires only degree information, computable in $O(m)$ time in a single pass over the edge list; effective-resistance sampling requires Laplacian solves and, even with near-linear-time solvers~\cite{spielman2014nearly}, remains substantially more complex in practice, making degree-based scores attractive for networks with millions of edges.
 
 %===========================================================================
 %===========================================================================
