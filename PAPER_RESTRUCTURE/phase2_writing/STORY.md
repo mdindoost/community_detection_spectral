@@ -23,11 +23,16 @@ story, and no claim enters the paper without the verification listed here.
      1/α = 535 (ca-GrQc), 139 (ca-CondMat), vs 4.7 (email-Eu-core) — a nontrivial bound on
      ca-GrQc would need ~10^10 samples on a 13k-edge graph. The guarantee is numerically vacuous
      exactly where communities are strong. Hence the question must be answered empirically.
-   - **Weighted regime: PRESERVED, via unbiasedness, empirically confirmed.** Algorithm 1 gives
-     E[A'] = A [their p.3]; measured (Feb run, α=1.0 nominal ≈55% effective retention):
-     weighted ΔQ_fixed = −0.0003 (com-DBLP), +0.0005 (com-Amazon) — zero within noise — while
-     the unweighted variant on the same graphs gives +0.0382 and −0.0003 respectively.
-     Keeping the weights makes the inflation vanish.
+   - **Weighted regime: objective PRESERVED, via unbiasedness — now fully verified (Exp K).**
+     Weighted ΔQ_fixed within ±0.004 of zero in all 24 cells across 8 networks, independent of
+     1/α (com-Amazon, 1/α = 10,782, tightest of all); identical topology with weights dropped
+     inflates +0.013..+0.152. BUT Exp K's two surprises sharpen the claim: (i) preservation of the
+     fixed partition's objective is an EVALUATION-correctness fact, not a detection benefit — at
+     aggressive retention the weighted pipeline's detected partition transfers WORSE than its
+     unweighted twin (6/8), and recovery is worse in every configuration; (ii) there is no speed
+     payoff: 0.97–1.06× at quality-preserving retention. Final wording: weights are a correctness
+     requirement for evaluation, not a performance option; sparsification is not a route to faster
+     or better modularity community detection.
    - **Unweighted regime (as actually used): NOT preserved and NOT improved.** Degree mechanics
      inflate fixed-partition modularity for any partition on any heavy-tailed graph, communities or
      not; on the fixed objective, detection gets slightly worse; ground-truth recovery does not
@@ -65,7 +70,7 @@ story, and no claim enters the paper without the verification listed here.
 | # | Claim (as the story states it) | Verification | Status |
 |---|---|---|---|
 | C1 | DSpar w/ reweighting: (1±ε/α) spectral approx of normalized Laplacian; degree scores sandwich R_e within 2/α | Source paper read (references/DSPAR_NOTES.md, Thm 1 p.4, Thm 2 p.4-5); bib correct (TMLR 2023) | **SETTLED** |
-| C2 | Weighted regime preserves fixed-partition modularity — anchored on unbiasedness E[A']=A + concentration, NOT the vacuous (1±ε/α) bound (measured 1/α: 535 ca-GrQc, 139 ca-CondMat, 4.7 email-Eu-core) | Feb data verified: weighted ΔQ_fixed −0.0003/+0.0005 vs unweighted +0.0382/−0.0003 (com-DBLP/com-Amazon, ~55% eff. retention) | Half-verified (2 datasets); **Exp K extends across suite + honest metrics** |
+| C2 | Weighted regime preserves the fixed-partition objective (unbiasedness; bound vacuous, measured 1/α up to 10,782) — an evaluation-correctness fact, not a detection benefit: transfer/recovery do not improve, speed ≈1× | **Exp K complete**: 24/24 cells ≈0; controls attribute inflation to weight-dropping; V1–V4 in exp_K_weighted_regime/SUMMARY.md | **VERIFIED** |
 | C3 | δ>0 ⟹ preferential inter-edge removal, F rises (score-proportional regime) | Thms 1–3 + supplementary proofs; scope via clipping remark (α*≈0.05 verified by direct computation) | Done, in paper |
 | C4 | Mechanism verified quantitatively; two regimes (ΔF-driven vs ΔG-driven) | exp_I LCC tables (identity ≤1e-13; direction 9/11; ratio gap 0.01–0.29 measured) | Done, in paper |
 | C5 | Unweighted fixed-objective answer: slightly harmed (transfer loss 0.004–0.19, 15/15) | exp4_comprehensive CSV + audit fresh test; tab_transfer_loss | Done, in paper |
