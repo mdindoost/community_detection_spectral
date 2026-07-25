@@ -1,0 +1,39 @@
+\begin{table*}[t]
+\centering
+\setlength{\tabcolsep}{5pt}
+\caption{No predictor of the genuine gain. Correlations between 14 candidate structural statistics
+and the seeded-refinement outcome across the $n=15$ networks of Table~\ref{tab:boundary}.
+$y = Q_{\mathrm{seeded}} - Q_{\mathrm{matched}}$ is the runtime-matched (honest) outcome;
+$y_2 = Q_{\mathrm{seeded}} - Q_{\mathrm{base}}$ is the naive one. No predictor is significant for
+$y$ at the $5\%$ level; the strongest is $n$ ($\rho=0.468$, $p=0.079$). Two cells reach nominal
+significance against the \emph{naive} outcome only ($\mathrm{hb}$ excess, $p=0.026$; $n$, $p=0.044$), and
+neither survives correction for the 28 tests reported here. $\delta^{\ast}$ --- the null-corrected
+separation statistic --- is wrong-signed for both outcomes and is therefore retained as a diagnostic
+only. With $n=15$, the $95\%$ CI of a single Pearson $r$ spans roughly $\pm 0.5$; see the wiki-Talk
+case study in the text, where dropping one network moves $r(\mathrm{deg\ CV})$ from $0.69$ to $0.12$.
+Source: \texttt{PAPER\_RESTRUCTURE/exp\_E\_delta\_star/correlations.csv}.}
+\label{tab:predictors}
+\footnotesize
+\begin{tabular}{lrrrrrrrr}
+\toprule
+ & \multicolumn{4}{c}{$y$ (runtime-matched)} & \multicolumn{4}{c}{$y_2$ (naive)} \\
+\cmidrule(lr){2-5}\cmidrule(lr){6-9}
+Predictor & $\rho$ & $p$ & $r$ & $p$ & $\rho$ & $p$ & $r$ & $p$ \\
+\midrule
+$\delta$ (real graph) & +0.171 & 0.541 & +0.207 & 0.460 & +0.196 & 0.483 & +0.205 & 0.464 \\
+$\delta^{\ast}=\delta_{\mathrm{real}}-\delta_{\mathrm{null}}$ & $-$0.075 & 0.791 & $-$0.360 & 0.188 & $-$0.386 & 0.156 & $-$0.398 & 0.142 \\
+$\delta_{\mathrm{real}}/\delta_{\mathrm{null}}$ & +0.104 & 0.713 & +0.059 & 0.834 & $-$0.246 & 0.376 & $-$0.091 & 0.747 \\
+$\Delta Q_{\mathrm{fixed}}^{\mathrm{real}}/\Delta Q_{\mathrm{fixed}}^{\mathrm{null}}$ & $-$0.089 & 0.752 & $-$0.166 & 0.556 & $-$0.429 & 0.111 & $-$0.341 & 0.214 \\
+$\Delta Q_{\mathrm{fixed}}^{\mathrm{real}}-\Delta Q_{\mathrm{fixed}}^{\mathrm{null}}$ & $-$0.146 & 0.603 & $-$0.346 & 0.207 & $-$0.450 & 0.092 & $-$0.401 & 0.138 \\
+$\mathrm{hb}$ (real graph) & +0.304 & 0.271 & +0.129 & 0.646 & $-$0.050 & 0.860 & +0.036 & 0.899 \\
+$\mathrm{hb}_{\mathrm{real}}-\mathrm{hb}_{\mathrm{null}}$ & $-$0.211 & 0.451 & +0.038 & 0.893 & $-$0.571 & 0.026 & +0.040 & 0.888 \\
+$\mathrm{hb}_{\mathrm{real}}/\mathrm{hb}_{\mathrm{null}}$ & $-$0.050 & 0.860 & $-$0.234 & 0.400 & $-$0.436 & 0.104 & $-$0.445 & 0.097 \\
+degree CV $\sigma_d/\bar d$ & +0.339 & 0.216 & +0.122 & 0.664 & +0.346 & 0.206 & +0.109 & 0.699 \\
+$Q_{\mathrm{fixed}}^{\mathrm{base}}$ (real graph) & +0.200 & 0.475 & +0.257 & 0.355 & +0.211 & 0.451 & +0.179 & 0.522 \\
+$Q_{\mathrm{fixed}}^{\mathrm{base,real}}/Q_{\mathrm{fixed}}^{\mathrm{base,null}}$ & $-$0.118 & 0.676 & $-$0.185 & 0.510 & $-$0.150 & 0.594 & $-$0.242 & 0.384 \\
+average degree $\bar d$ & $-$0.286 & 0.302 & $-$0.358 & 0.191 & $-$0.396 & 0.143 & $-$0.403 & 0.137 \\
+$n$ (nodes) & +0.468 & 0.079 & +0.164 & 0.558 & +0.525 & 0.044 & +0.144 & 0.609 \\
+$m$ (edges) & +0.375 & 0.168 & +0.248 & 0.374 & +0.450 & 0.092 & +0.224 & 0.423 \\
+\bottomrule
+\end{tabular}
+\end{table*}

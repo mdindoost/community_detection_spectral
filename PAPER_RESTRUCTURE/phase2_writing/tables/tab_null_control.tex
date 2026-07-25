@@ -1,0 +1,49 @@
+\begin{table*}[t]
+\centering
+\setlength{\tabcolsep}{4pt}
+\caption{Configuration-model null control. For each network the degree sequence is preserved
+exactly by double-edge swaps ($10m$ swaps), which destroys community structure; the sparsifier
+(DSpar, \texttt{method="paper"}, nominal $\alpha=0.8$) and the fixed-partition decomposition are
+then applied identically to both arms. The rewired null reproduces \emph{both} signals the draft
+read as evidence of community structure: $\delta>0$ in 17/17 nulls and $\Delta Q_{\mathrm{fixed}}>0$
+in 17/17 nulls, with $\Delta Q_{\mathrm{fixed}}(\mathrm{null})\ge\Delta Q_{\mathrm{fixed}}(\mathrm{real})$
+in 15/17 networks (median ratio $1.24$) and $\delta(\mathrm{null})\ge\delta(\mathrm{real})$ in 16/17.
+facebook-combined is the only network with $\delta<0$ on the real graph (bold), yet its null is still
+$\delta>0$. Realized retention is $m'/m$: the with-replacement \texttt{paper} sampler retains far
+fewer distinct edges than the nominal $\alpha$ (see Table~\ref{tab:sampler_audit}).
+Real arm: 1 Leiden partition $\times$ 3 sparsification seeds; null arm: 2 rewire seeds $\times$
+2 sparsification seeds (1 $\times$ 2 for cit-Patents and wiki-topcats). Standard deviations over
+replicates are shown for $\Delta Q_{\mathrm{fixed}}$; for the remaining columns they are
+$\le 0.002$ ($Q_{\mathrm{fixed}}^{\mathrm{base}}$), $\le 0.004$ ($\delta$), $\le 0.175$ ($\mathrm{hb}$) and
+$\le 0.004$ (retention).
+Source: \texttt{PAPER\_RESTRUCTURE/exp\_B\_config\_null/results.csv}.}
+\label{tab:null_control}
+\footnotesize
+\begin{tabular}{lrrrrrrrrrrr}
+\toprule
+ & & \multicolumn{2}{c}{$Q_{\mathrm{fixed}}^{\mathrm{base}}$} & \multicolumn{2}{c}{$\delta$}
+ & \multicolumn{2}{c}{$\mathrm{hb}$} & \multicolumn{2}{c}{$\Delta Q_{\mathrm{fixed}}$}
+ & \multicolumn{2}{c}{realized ret.} \\
+\cmidrule(lr){3-4}\cmidrule(lr){5-6}\cmidrule(lr){7-8}\cmidrule(lr){9-10}\cmidrule(lr){11-12}
+Network & $m$ & real & null & real & null & real & null & real & null & real & null \\
+\midrule
+email-Eu-core & 16,064 & 0.4159 & 0.1274 & +0.034 & +0.041 & 2.113 & 1.404 & +0.0819 $\pm$ 0.0044 & +0.0350 $\pm$ 0.0032 & 0.444 & 0.447 \\
+wiki-Vote & 100,736 & 0.4240 & 0.1260 & +0.051 & +0.101 & 1.902 & 1.689 & +0.0711 $\pm$ 0.0012 & +0.0843 $\pm$ 0.0012 & 0.332 & 0.333 \\
+ca-GrQc & 13,422 & 0.8514 & 0.3768 & +0.087 & +0.189 & 0.478 & 1.758 & +0.0176 $\pm$ 0.0058 & +0.0991 $\pm$ 0.0031 & 0.452 & 0.474 \\
+ca-HepTh & 24,806 & 0.7619 & 0.4129 & +0.174 & +0.215 & 1.581 & 1.929 & +0.0523 $\pm$ 0.0022 & +0.0941 $\pm$ 0.0016 & 0.477 & 0.483 \\
+facebook-combined & 88,234 & 0.8355 & 0.1146 & \textbf{$-$0.001} & +0.017 & 2.681 & 1.391 & +0.0256 $\pm$ 0.0013 & +0.0270 $\pm$ 0.0005 & 0.437 & 0.460 \\
+ca-CondMat & 91,286 & 0.7312 & 0.3119 & +0.113 & +0.102 & 2.490 & 1.493 & +0.0606 $\pm$ 0.0006 & +0.0667 $\pm$ 0.0012 & 0.472 & 0.482 \\
+ca-HepPh & 117,619 & 0.6512 & 0.1571 & +0.021 & +0.094 & 0.501 & 1.872 & +0.0864 $\pm$ 0.0016 & +0.0917 $\pm$ 0.0016 & 0.340 & 0.383 \\
+ca-AstroPh & 196,972 & 0.6343 & 0.1676 & +0.033 & +0.041 & 1.496 & 1.294 & +0.0393 $\pm$ 0.0008 & +0.0489 $\pm$ 0.0011 & 0.417 & 0.436 \\
+email-Enron & 180,811 & 0.6124 & 0.2420 & +0.150 & +0.240 & 2.974 & 4.472 & +0.1422 $\pm$ 0.0004 & +0.1562 $\pm$ 0.0013 & 0.389 & 0.394 \\
+cit-HepTh & 352,021 & 0.6567 & 0.1583 & +0.026 & +0.032 & 2.173 & 1.778 & +0.0461 $\pm$ 0.0002 & +0.0376 $\pm$ 0.0006 & 0.434 & 0.453 \\
+cit-HepPh & 420,784 & 0.7314 & 0.1675 & +0.011 & +0.026 & 1.358 & 1.300 & +0.0126 $\pm$ 0.0003 & +0.0319 $\pm$ 0.0004 & 0.459 & 0.468 \\
+com-Amazon & 925,872 & 0.9296 & 0.4235 & +0.010 & +0.139 & 1.042 & 2.139 & +0.0000 $\pm$ 0.0001 & +0.0586 $\pm$ 0.0005 & 0.515 & 0.512 \\
+com-DBLP & 1,049,866 & 0.8271 & 0.3647 & +0.147 & +0.197 & 1.583 & 2.308 & +0.0437 $\pm$ 0.0002 & +0.0980 $\pm$ 0.0005 & 0.469 & 0.475 \\
+com-Youtube & 2,987,624 & 0.7188 & 0.4024 & +0.246 & +0.552 & 3.996 & 14.066 & +0.0959 $\pm$ 0.0002 & +0.2633 $\pm$ 0.0002 & 0.410 & 0.408 \\
+wiki-Talk & 4,656,682 & 0.5995 & 0.4878 & +0.513 & +0.831 & 10.477 & 105.630 & +0.2020 $\pm$ 0.0002 & +0.3529 $\pm$ 0.0001 & 0.455 & 0.415 \\
+cit-Patents & 16,511,740 & 0.8268 & 0.2962 & +0.038 & +0.166 & 0.723 & 1.940 & +0.0047 $\pm$ 0.0001 & +0.0768 $\pm$ 0.0000 & 0.461 & 0.467 \\
+wiki-topcats & 25,444,207 & 0.6452 & 0.1412 & +0.023 & +0.029 & 5.076 & 6.920 & +0.0484 $\pm$ 0.0001 & +0.0538 $\pm$ 0.0000 & 0.447 & 0.435 \\
+\bottomrule
+\end{tabular}
+\end{table*}

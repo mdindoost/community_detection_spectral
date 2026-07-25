@@ -1,0 +1,1579 @@
+\documentclass[10pt,journal,compsoc]{IEEEtran}
+
+% --- Basic packages ---
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath,amssymb,amsfonts,amsthm}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{multirow}
+% \usepackage{caption}
+% \usepackage{subcaption}
+\usepackage{xcolor}
+\usepackage{float}
+\usepackage{hyperref}
+\usepackage{tabularx}
+\usepackage{adjustbox}
+
+% --- Citation package (IEEE Computer Society requires nocompress) ---
+\ifCLASSOPTIONcompsoc
+  \usepackage[nocompress]{cite}
+\else
+  \usepackage{cite}
+\fi
+
+% --- Algorithms ---
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}{Lemma}
+\newtheorem{proposition}{Proposition}
+\newtheorem{corollary}{Corollary}
+\newtheorem{definition}{Definition}
+\newtheorem{remark}{Remark}
+\newtheorem{hypothesis}{Hypothesis}
+\newtheorem{assumption}{Assumption}
+
+% --- Hyperref setup (optional but nice) ---
+% \hypersetup{
+%   colorlinks=true,
+%   linkcolor=blue,
+%   citecolor=blue,
+%   urlcolor=blue
+% }
+
+\title{When Does Sparsification Help Community Detection? Separating Genuine Gains from Degree-Mechanical Artifacts}
+
+\author{Mohammad~Dindoost, Bavan~DivaaniAazar, and~David~A.~Bader%
+\IEEEcompsocitemizethanks{\IEEEcompsocthanksitem M. Dindoost, B. DivaaniAazar, and D.~A.~Bader are with the Department of Computer Science, New Jersey Institute of Technology, Newark, NJ 07102 USA.\protect\\
+E-mail: md724@njit.edu, bd344@njit.edu, bader@njit.edu}%
+\thanks{Manuscript submitted for review.}}
+
+\markboth{IEEE Transactions on Network Science and Engineering}%
+{Dindoost \MakeLowercase{\textit{et al.}}: When Does Sparsification Help Community Detection?}
+
+% For IEEE Computer Society journals, abstract and index terms must appear
+% inside \IEEEtitleabstractindextext{} BEFORE \begin{document}/\maketitle.
+\IEEEtitleabstractindextext{%
+\begin{abstract}
+Graph sparsification is increasingly reported to not merely accelerate community detection but to improve it. We show that, for degree-based sparsification, the standard evidence for such improvements is largely an artifact of evaluation methodology, and we characterize the narrow conditions under which genuine gains exist. We first develop a fixed-partition theory of degree-based edge sampling: when intra-community edges receive higher DSpar scores than inter-community edges (positive separation, $\delta > 0$), sparsification provably removes inter-community edges preferentially and increases the intra-community edge fraction. We then show empirically that this mechanism operates independently of community structure: on 17 real-world networks, degree-preserving configuration-model nulls reproduce both $\delta > 0$ and fixed-partition modularity gains on every network, typically exceeding the real graph (median ratio 1.24), so neither signal distinguishes a network from its own null model. We further identify three evaluation artifacts that generate apparent improvements: (i) comparing modularity across different graphs---partitions optimized on sparsified graphs lose $0.01$--$0.19$ modularity when evaluated on the original network, on all 15 networks tested; (ii) partition granularity---apparent ground-truth-recovery gains vanish against resolution-matched controls run on the unsparsified graph, on all eight labeled datasets tested; and (iii) unmatched computation---gains attributed to sparsification-seeded optimization disappear against runtime-matched restart baselines on most networks. After controlling for all three, a genuine benefit remains on 2 of 15 networks, where seeding Leiden with the sparsified-graph partition and refining on the original graph beats runtime-matched baselines by small but robust margins ($+0.008$ modularity); no structural statistic we tested predicts where these gains occur. Our results yield a practical evaluation protocol---null-model, resolution-matched, and runtime-matched controls---for any claim that preprocessing improves community detection.
+\end{abstract}
+
+\begin{IEEEkeywords}
+Graph sparsification, community detection, modularity maximization, null models, evaluation methodology, degree heterogeneity.
+\end{IEEEkeywords}}
+
+\begin{document}
+\maketitle
+\IEEEdisplaynontitleabstractindextext
+\IEEEpeerreviewmaketitle
+
+\IEEEraisesectionheading{\section{Introduction}\label{sec:introduction}}
+\IEEEPARstart{C}{ommunity} detection, the task of identifying densely connected groups in networks, is a fundamental problem in network science\cite{fortunato202220, karatacs2018application}.
+As modern networks scale to millions of nodes and edges, computational efficiency becomes a central concern.
+ 
+Graph sparsification, which removes edges while preserving key structural properties, is typically viewed as a preprocessing step aimed solely at reducing computational cost~\cite{spielman2008graph,benczur2015randomized}. 
+The prevailing assumption is that sparsification should, at best, preserve the quality of downstream analyses while accelerating computation.
+In this work, we challenge this assumption.
+
+We show that, on a broad class of real-world networks, \emph{strategic sparsification can actively improve the quality of community detection}, rather than merely maintaining it.
+Across collaboration, citation, social, and communication networks spanning diverse structural properties, degree-based sparsification improves modularity consistently and, under identifiable structural conditions, can also improve agreement with known communities.
+At moderate sparsification levels (e.g., retaining 50--80\% of edges), we observe modularity gains and nontrivial speedups in community detection pipelines.
+At the same time, we show that such improvements are \emph{not universal}: sparsification can degrade performance on networks that lack the relevant structural properties.
+Understanding when and why sparsification helps is therefore essential.
+
+Recent empirical work has revealed a related challenge: many state-of-the-art community detection methods produce poorly-connected or disconnected clusters, even when optimizing principled objectives like modularity or minimum description length \cite{park2024improved-WCC, park_cm_2024-journal,ramavarapu2024cm++,dindoost2025optimization}.
+Park et al.~\cite{park_cm_2024-journal} demonstrated that methods including Leiden\cite{traag2019louvain}, Infomap\cite{rosvall2008maps}, and MCL frequently produce clusters with small edge cuts across different networks, requiring post-processing to enforce well-connectedness.
+This phenomenon suggests that dense networks contain spurious connections that artificially subdivide natural communities, a problem we term \emph{over-clustering}.
+Rather than repairing poorly-connected clusters through post-processing, we investigate whether strategic pre-processing via sparsification can prevent their formation by clarifying community boundaries before detection.
+
+The explanation lies in a characteristic feature of many real networks: inter-community edges disproportionately connect high-degree hub nodes.
+In citation networks, prolific authors bridge multiple subfields~\cite{newman2001structure}.
+In social networks, influential users link otherwise separate groups~\cite{granovetter1973strength}.
+These hub-mediated inter-community edges are precisely those downweighted by degree-based sparsification methods such as DSpar~\cite{liu2023dspar}.
+As a result, sparsification preferentially removes structurally redundant edges that obscure community boundaries, yielding a graph in which communities are more clearly delineated.
+
+This mechanism reveals a deeper unification among several classical ideas.
+Newman's modularity~\cite{newman2006modularity} compares observed edges to a degree-corrected null model, inherently penalizing edges between high-degree nodes.
+Spectral sparsification~\cite{spielman2008graph} removes edges with low effective resistance, which similarly tend to connect well-connected regions of the graph.
+Lov\'{a}sz~\cite{lovasz1993random} surveys the intimate connections between effective resistance, random walks, and spectral graph theory, providing theoretical context for degree-based proxies in heterogeneous networks.
+Newman~\cite{newman2013spectral} further showed that modularity maximization, degree-corrected stochastic block models~\cite{karrer2011stochastic}, and normalized-cut objectives~\cite{shi2000normalized} admit closely related spectral relaxations based on degree-normalized operators.
+We extend this perspective by demonstrating that degree-based sparsification exploits the same structural principle: edges between high-degree nodes are often less informative for community assignment under degree-corrected null models and degree-normalized relaxations.
+
+This work addresses three central questions:
+
+\begin{enumerate}
+    \item When does sparsification improve community detection, and why?
+    \item Can linear-time degree-based sparsification achieve effects comparable to more expensive spectral methods?
+    \item What network properties predict whether sparsification will help or harm downstream community detection?
+\end{enumerate}
+
+\noindent\textbf{Contributions.}
+\begin{itemize}
+    \item \textbf{Empirical evidence} that degree-based sparsification consistently improves modularity on real-world networks, and can improve ground-truth community recovery when specific structural conditions hold.
+    
+    \item \textbf{Mechanistic explanation} via the \emph{hub-bridge hypothesis}: inter-community edges connect higher-degree nodes than intra-community edges, causing sparsification to preferentially clarify community structure. We validate this mechanism across 17 diverse networks, demonstrating that DSpar separation is a strong predictor of modularity improvement (Pearson $r = 0.92$, $p < 0.001$).
+    
+    \item \textbf{Theoretical unification} showing that modularity, spectral sparsification, and degree-based sparsification share a common principle of downweighting edges between high-degree nodes. We prove that DSpar separation guarantees preferential removal of inter-community edges and establish formal conditions for modularity improvement.
+    
+    \item \textbf{Boundary characterization}: we identify when sparsification degrades performance, explaining why standard LFR benchmarks~\cite{lancichinetti2008benchmark} fail to capture empirically observed improvements. We demonstrate that networks exhibit a spectrum of hub-bridging structures, from extreme (hub-bridge ratio $> 10$) to inverted (ratio $< 1$), with corresponding variation in sparsification effectiveness.
+    
+    \item \textbf{Scalable practice}: we demonstrate that DSpar achieves modularity gains comparable to spectral sparsification at linear-time cost, yielding end-to-end speedups in large-scale community detection pipelines.
+\end{itemize}
+
+
+
+\section{Background}
+\label{sec:background}
+
+We review three foundational concepts, modularity-based community detection, spectral graph sparsification, and degree-based sparsification, then establish 
+their theoretical connections.
+
+%===========================================================================
+% \subsection{Community Detection and Modularity}
+% \label{sec:bg-modularity}
+
+Community detection seeks to partition a network into groups with dense 
+internal connections and sparse external connections~\cite{fortunato2010community}. 
+Among the many formulations of this problem, modularity 
+maximization~\cite{newman2004finding,newman2006modularity} remains one of 
+the most widely used.
+
+For a graph $G = (V, E)$ with $n$ nodes and $m$ edges, the modularity $Q$ 
+of a partition is defined as:
+\begin{equation}
+Q = \frac{1}{2m} \sum_{ij} \left[ A_{ij} - \frac{k_i k_j}{2m} \right] 
+    \delta(c_i, c_j)
+\label{eq:modularity}
+\end{equation}
+where $A_{ij}$ is the adjacency matrix, $k_i$ is the degree of node $i$, 
+$c_i$ denotes the community assignment of node $i$, and $\delta(c_i, c_j) = 1$ 
+if nodes $i$ and $j$ belong to the same community. The term $k_i k_j / 2m$ represents the expected number of edges between 
+nodes $i$ and $j$ under the configuration model, a null model that preserves 
+the degree sequence but places edges uniformly at 
+random~\cite{newman2003structure,molloy1995critical}. Modularity thus 
+measures the deviation of intra-community edge density from this null 
+expectation.
+
+% \paragraph{Community-wise formulation.}
+Equation~\eqref{eq:modularity} can be rewritten as a sum over communities:
+\begin{equation}
+Q = \sum_{c=1}^{C} \left[ \frac{L_c}{m} - \left( \frac{d_c}{2m} \right)^2 \right]
+\label{eq:modularity-community}
+\end{equation}
+where $C$ is the number of communities, $L_c$ is the number of edges 
+internal to community $c$, and $d_c = \sum_{i \in c} k_i$ is the sum of 
+degrees of nodes in community $c$~\cite{newman2006modularity}. The first 
+term rewards internal edges, while the second term penalizes communities whose 
+nodes have high total degree.
+
+This formulation reveals a key asymmetry: inter-community edges contribute 
+to $d_c$ (they increase node degrees) but not to $L_c$ (they are not 
+internal). Consequently, For a fixed partition, downweighting or removing inter-community edges tends to increase the intra-community fraction relative to the degree-based null model, although the net modularity change also depends on how node degrees and total edge count change after sparsification.
+
+% \paragraph{Optimization.}
+Maximizing modularity is NP-hard~\cite{brandes2007modularity}, but effective 
+heuristics exist. The Louvain algorithm~\cite{blondel2008fast} uses greedy 
+local moves with hierarchical aggregation. The Leiden 
+algorithm~\cite{traag2019louvain} refines this approach by guaranteeing 
+well-connected communities and improving partition quality. We use the 
+Leiden algorithm throughout this work.
+
+%===========================================================================
+% \subsection{Spectral Graph Sparsification}
+% \label{sec:bg-spectral}
+
+Graph sparsification constructs a sparse subgraph $H$ that approximates 
+properties of the original graph $G$. Spectral sparsification, introduced 
+by Spielman and Teng~\cite{spielman2004nearly} and refined by Spielman and 
+Srivastava~\cite{spielman2008graph}, preserves the spectral properties of 
+the graph Laplacian.
+
+% \paragraph{Graph Laplacian.}
+The combinatorial Laplacian is defined as $L = D - A$, where $D$ is the 
+diagonal degree matrix. For any vector $x \in \mathbb{R}^n$, the Laplacian 
+quadratic form equals:
+\begin{equation}
+x^\top L x = \sum_{(i,j) \in E} (x_i - x_j)^2
+\label{eq:laplacian-quadratic}
+\end{equation}
+This quantity measures the ``smoothness'' of $x$ over the graph and appears 
+in spectral clustering~\cite{von2007tutorial}, random 
+walks~\cite{lovasz1993random}, and electrical network 
+theory~\cite{doyle1984random}.
+
+% \paragraph{Spectral approximation.}
+A graph $H$ is a $(1 \pm \epsilon)$-spectral sparsifier of $G$ if for all 
+$x \in \mathbb{R}^n$:
+\begin{equation}
+(1 - \epsilon) \cdot x^\top L_G x \leq x^\top L_H x \leq (1 + \epsilon) \cdot x^\top L_G x
+\label{eq:spectral-approx}
+\end{equation}
+
+Spielman and Srivastava~\cite{spielman2008graph} proved that sampling 
+$O(n \log n / \epsilon^2)$ edges with probability proportional to their 
+effective resistance yields a spectral sparsifier with high probability.
+
+% \paragraph{Effective resistance.}
+The effective resistance between nodes $u$ and $v$ is defined as:
+\begin{equation}
+R_{\text{eff}}(u,v) = (\chi_u - \chi_v)^\top L^+ (\chi_u - \chi_v)
+\label{eq:effective-resistance}
+\end{equation}
+where $L^+$ is the Moore-Penrose pseudoinverse of the Laplacian and 
+$\chi_u$ is the indicator vector for node $u$. This quantity has an 
+intuitive interpretation: if the graph is viewed as an electrical network 
+with unit resistors on each edge, $R_{\text{eff}}(u,v)$ is the voltage 
+difference induced by injecting one unit of current at $u$ and extracting 
+it at $v$~\cite{doyle1984random}.
+
+Edges with high effective resistance are critical for connectivity, removing them significantly alters the graph's spectral properties. Edges with low effective resistance are often embedded in regions with many alternative paths and are therefore less critical to preserving global spectral properties.
+
+% \paragraph{Computational cost.}
+Computing effective resistances requires $O(n^3)$ time for matrix 
+inversion, or $O(m + n \log n)$ time per resistance using Laplacian 
+solvers~\cite{spielman2014nearly}. While approximate effective-resistance sampling can be implemented in near-linear time using advanced Laplacian solvers, it remains substantially more complex than degree-based methods in practice. (For large networks, 
+this cost can exceed that of community detection itself, motivating 
+faster approximations.)
+
+%===========================================================================
+% \subsection{Degree-Based Sparsification (DSpar)}
+% \label{sec:bg-dspar}
+
+Classical results in electrical network theory show that effective resistance 
+is closely related to vertex degrees and graph connectivity; in particular, 
+degree-based bounds follow from Rayleigh monotonicity and appear in the work of 
+Doyle and Snell~\cite{doyle1984random} and later in the spectral sparsification 
+framework of Spielman and Srivastava~\cite{spielman2008graph}. 
+Lov\'{a}sz~\cite{lovasz1993random} provides a broader survey perspective, 
+connecting effective resistance to random walks and global spectral properties 
+of the graph Laplacian. These results imply that edges bridging weakly connected 
+regions typically exhibit higher effective resistance than edges embedded 
+within dense subgraphs.
+
+
+DSpar~\cite{liu2023dspar} 
+leverages this intuition by sampling edges with probability proportional 
+to $s(u,v)$.
+% \paragraph{Score interpretation.}
+The DSpar score has an intuitive interpretation:
+\begin{itemize}
+    \item \textbf{High score}: edge connects low-degree peripheral 
+          nodes, likely important for local connectivity
+    \item \textbf{Low score}: edge connects high-degree hub 
+          nodes, likely redundant due to alternative paths
+\end{itemize}
+
+% \paragraph{Computational advantage.}
+DSpar requires only degree information, computable in $O(m)$ time via a 
+single pass over the edge list. This represents a significant improvement 
+over spectral sparsification's $O(m \cdot n)$ or higher complexity, 
+enabling application to networks with millions of edges.
+
+%===========================================================================
+%===========================================================================
+\section{Theoretical Connections}
+\label{sec:theory}
+
+We now clarify the relationships between modularity-based community detection,
+spectral graph methods, and degree-based sparsification, and identify a
+shared structural bias common to all three.
+Although real networks typically contain multiple communities, many spectral
+relationships are most transparent in the bipartition setting. We therefore
+use bipartition-based spectral relaxations to develop intuition, while all
+subsequent definitions, hypotheses, and results apply to arbitrary
+multi-community partitions.
+
+% \paragraph{Spectral relaxations of community detection.}
+Newman~\cite{newman2013spectral} showed that several widely used community
+detection objectives, including modularity maximization, statistical inference
+under the degree-corrected stochastic block model~\cite{karrer2011stochastic},
+and normalized-cut graph partitioning~\cite{shi2000normalized}, admit closely
+related spectral relaxations. In each case, the discrete partitioning
+problem is relaxed to a continuous optimization whose solution is given by
+an eigenvector of a degree-normalized operator.
+
+For normalized cuts and related random-walk formulations, this operator is
+the \emph{normalized adjacency matrix}
+\begin{equation}
+\mathcal{A} = D^{-1/2} A D^{-1/2},
+\label{eq:normalized-adjacency}
+\end{equation}
+which is similar to the random-walk transition matrix $D^{-1}A$.
+In the bipartition setting, the relaxed solution is determined by the
+second-largest eigenvector of $\mathcal{A}$ (or equivalently, the
+second-smallest eigenvector of the normalized Laplacian $I-\mathcal{A}$),
+with a discrete partition obtained by thresholding or taking signs.
+For multi-community detection, multiple leading eigenvectors are used and
+rounded via clustering.
+% \paragraph{The modularity matrix.}
+The modularity matrix $B$, defined by $B_{ij} = A_{ij} - k_i k_j / 2m$,
+plays a central role in spectral modularity maximization~\cite{newman2006modularity}.
+Newman~\cite{newman2013spectral} showed that, under a degree-weighted spectral
+relaxation and the orthogonality constraint $k^\top s = 0$, the generalized
+eigenproblem
+\begin{equation}
+B s = \lambda D s
+\label{eq:modularity-eigenvector}
+\end{equation}
+reduces to
+\begin{equation}
+A s = \lambda D s.
+\label{eq:adjacency-eigenvector}
+\end{equation}
+After the similarity transform $u = D^{1/2}s$, this is equivalent to an
+eigenproblem involving the normalized adjacency matrix $\mathcal{A}$. Thus, Although the underlying objectives differ, their commonly used spectral relaxations lead to closely related degree-normalized eigenproblems.
+% \paragraph{A shared structural bias.}
+Despite their different formulations, modularity maximization, normalized-cut
+methods, spectral sparsification, and degree-based sparsification all encode
+a common \emph{structural bias}:
+
+Edges connecting high-degree nodes are systematically downweighted or deemphasized under degree-corrected null models, degree-normalized operators, and resistance- or degree-based sparsification schemes.
+
+This bias manifests differently across frameworks:
+\begin{itemize}
+    \item \textbf{Modularity}: The null-model term $k_i k_j / 2m$ is large for
+    high-degree node pairs, reducing their contribution to the modularity
+    objective.
+    \item \textbf{Normalized cuts}: Degree normalization in operators such as
+    $\mathcal{A} = D^{-1/2} A D^{-1/2}$ reduces the influence of hubs on the
+    relaxed partitioning objective.
+    \item \textbf{Spectral sparsification}: Edges embedded in highly connected
+    regions typically have low effective resistance and are more likely to be
+    removed when constructing a spectral sparsifier.
+    \item \textbf{DSpar}: The score $s(u,v)=1/d_u+1/d_v$ assigns low sampling
+    probability to hub--hub edges, favoring retention of edges incident to
+    low-degree nodes.
+\end{itemize}
+
+These mechanisms do not imply that hub--hub edges are universally uninformative,
+but rather that all four frameworks preferentially discount edges that are
+expected under degree-driven null models or dense connectivity.
+
+%===========================================================================
+\subsection{The Hub--Bridge Hypothesis}
+\label{sec:Hub-Bridge }
+
+The connections above suggest that sparsification \emph{may} improve community
+detection, but only under specific structural conditions commonly observed in
+real networks.
+
+\begin{hypothesis}[Hub--Bridge Correlation]
+\label{hyp:hub-bridge}
+In networks with community structure, inter-community edges connect
+higher-degree nodes on average than intra-community edges:
+\begin{equation}
+\mathbb{E}\!\left[d_u d_v \mid (u,v)\in E_{\mathrm{inter}}\right]
+>
+\mathbb{E}\!\left[d_u d_v \mid (u,v)\in E_{\mathrm{intra}}\right].
+\label{eq:hub-bridge}
+\end{equation}
+\end{hypothesis}
+
+% \paragraph{Mechanistic basis.}
+Two complementary mechanisms motivate this hypothesis.
+
+\textit{Probabilistic mechanism.}
+In networks with heterogeneous degree distributions and finite community
+sizes, high-degree nodes exhaust available intra-community connections and
+must place surplus edges externally. For a node of degree $d$ in a community
+of size $n_c$, the expected number of external edges scales as
+$\max(0, d-n_c+1)$.
+
+\textit{Functional mechanism.}
+In social and information networks, hubs often play bridging roles across
+groups~\cite{granovetter1973strength,newman2001structure}, such as prolific
+authors linking research areas or influential users connecting communities.
+These functional roles naturally induce inter-community connectivity among
+high-degree nodes.
+
+% \paragraph{Implications for sparsification.}
+When Hypothesis~\ref{hyp:hub-bridge} holds, degree-based sparsification tends
+to assign lower sampling probability to inter-community edges, since such
+edges typically connect high-degree endpoints. As a result, DSpar
+preferentially removes inter-community edges relative to intra-community
+edges, which can increase the intra-community edge fraction and, for a fixed
+partition, improve modularity.
+
+% \paragraph{Boundary conditions.}
+The hypothesis suggests that sparsification is unlikely to improve community
+detection when:
+\begin{enumerate}
+    \item the degree distribution is homogeneous (no hubs), or
+    \item inter-community edges do not preferentially involve high-degree nodes.
+\end{enumerate}
+% We validate these boundary conditions empirically in
+% Section~\ref{sec:boundaries}
+
+%==============================================================================
+\subsection{Theoretical Analysis}
+
+Our theoretical results characterize how degree-based weighting and sparsification bias edge retention for a fixed partition; improvements in optimized community detection outcomes are established empirically rather than guaranteed by the theory.
+
+% \subsection{Preliminaries}
+%==============================================================================
+
+\begin{definition}[DSpar Score]
+For an edge $e = (u,v)$ in graph $G = (V, E)$, the \emph{DSpar score} is:
+\begin{equation}
+s(e) = \frac{1}{d_u} + \frac{1}{d_v}
+\end{equation}
+where $d_u, d_v$ denote the degrees of nodes $u$ and $v$ respectively.
+\end{definition}
+
+\begin{definition}[Edge Classification]
+Given a partition $\mathcal{C} = \{C_1, \ldots, C_k\}$ of the vertex set $V$:
+\begin{itemize}
+    \item $E_{\text{intra}} = \{(u,v) \in E : \exists\, i \text{ such that } u, v \in C_i\}$ (intra-community edges)
+    \item $E_{\text{inter}} = \{(u,v) \in E : u \in C_i, v \in C_j, i \neq j\}$ (inter-community edges)
+\end{itemize}
+Let $n_1 = |E_{\text{intra}}|$, $n_2 = |E_{\text{inter}}|$, and $m = n_1 + n_2$.
+\end{definition}
+
+\begin{definition}[Mean DSpar Scores]
+The mean DSpar scores for each edge type are:
+\begin{equation}
+\mu_{\text{intra}} = \frac{1}{n_1} \sum_{e \in E_{\text{intra}}} s(e), \qquad
+\mu_{\text{inter}} = \frac{1}{n_2} \sum_{e \in E_{\text{inter}}} s(e)
+\end{equation}
+The global mean is $\bar{s} = \frac{1}{m}\sum_{e \in E} s(e) = \frac{n_1 \mu_{\text{intra}} + n_2 \mu_{\text{inter}}}{m}$.
+\end{definition}
+
+\begin{definition}[DSpar Separation]
+A partition $\mathcal{C}$ exhibits \emph{DSpar separation} with gap $\delta > 0$ if:
+\begin{equation}
+\mu_{\text{intra}} - \mu_{\text{inter}} = \delta > 0
+\end{equation}
+\end{definition}
+
+\begin{definition}[DSpar Sparsification]
+DSpar sparsification with parameter $\alpha \in (0,1]$ retains each edge $e$ independently with probability:
+\begin{equation}
+p(e) = \alpha \cdot \frac{s(e)}{\bar{s}}
+\end{equation}
+assuming $\alpha \leq \bar{s}/s_{\max}$ to ensure $p(e) \leq 1$ for all edges.
+\end{definition}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{definition}[Edge Preservation Ratio]
+After sparsification, let $E' \subseteq E$ denote the retained edges. The \emph{edge preservation ratio} is:
+\begin{equation}
+\text{Ratio} = \frac{|E' \cap E_{\text{inter}}| / n_2}{|E' \cap E_{\text{intra}}| / n_1}
+\end{equation}
+A ratio less than 1 indicates preferential removal of inter-community edges.
+\end{definition}
+
+%==============================================================================
+% \subsection{Theorem 1: Preferential Inter-Community Edge Removal}
+%==============================================================================
+
+\begin{assumption}[Non-degeneracy]
+\label{ass:nondegen}
+We assume throughout that:
+\begin{enumerate}
+    \item $n_1 \geq 1$ and $n_2 \geq 1$ (both edge types exist)
+    \item $\mu_{\text{intra}} > 0$ and $\mu_{\text{inter}} > 0$ (positive mean scores)
+\end{enumerate}
+These conditions hold for any connected graph with a non-trivial partition.
+\end{assumption}
+
+\begin{theorem}[DSpar Separation Implies Preferential Removal]
+\label{thm:ratio}
+Let $G$ be a graph with partition $\mathcal{C}$ exhibiting DSpar separation with gap $\delta > 0$. Under DSpar sparsification:
+
+\textbf{(a)} The ratio of expected preservation rates satisfies:
+\begin{equation}
+\frac{\mathbb{E}[|E' \cap E_{\text{inter}}|] / n_2}{\mathbb{E}[|E' \cap E_{\text{intra}}|] / n_1} = \frac{\mu_{\text{inter}}}{\mu_{\text{intra}}} < 1
+\end{equation}
+
+\textbf{(b) Asymptotic Convergence:} Consider a sequence of graphs $\{G_n\}_{n=1}^\infty$ with partitions $\{\mathcal{C}_n\}$ satisfying:
+\begin{enumerate}
+    \item[(i)] $n_1^{(n)}, n_2^{(n)} \to \infty$ as $n \to \infty$
+    \item[(ii)] There exist constants $\mu_{\min}, \mu_{\max} > 0$ such that $\mu_{\min} \leq \mu_{\text{intra}}^{(n)}, \mu_{\text{inter}}^{(n)} \leq \mu_{\max}$ for all $n$
+    \item[(iii)] DSpar separation is maintained: $\mu_{\text{intra}}^{(n)} - \mu_{\text{inter}}^{(n)} \geq \delta_0 > 0$ for some fixed $\delta_0$
+    \item[(iv)] The mean scores converge: $\mu_{\text{intra}}^{(n)} \to \mu_{\text{intra}}^*$ and $\mu_{\text{inter}}^{(n)} \to \mu_{\text{inter}}^*$ for some constants $\mu_{\text{intra}}^* > \mu_{\text{inter}}^* > 0$
+\end{enumerate}
+Then the edge preservation ratio converges in probability:
+\begin{equation}
+\text{Ratio}_n \xrightarrow{P} \frac{\mu_{\text{inter}}^*}{\mu_{\text{intra}}^*} < 1
+\end{equation}
+
+\textbf{(c) Concentration Bound:} For any $\epsilon > 0$:
+\begin{equation}
+\mathbb{P}\left[ \left| \frac{|E' \cap E_{\text{inter}}|}{n_2} - \frac{\alpha \mu_{\text{inter}}}{\bar{s}} \right| > \epsilon \right] \leq \frac{\alpha \mu_{\text{inter}}}{n_2 \bar{s} \epsilon^2}
+\end{equation}
+and similarly for the intra-community preservation rate.
+\end{theorem}
+
+\begin{proof}
+\textbf{Part (a):} Let $X_{\text{inter}} = |E' \cap E_{\text{inter}}|$ denote the number of preserved inter-community edges. Since edges are retained independently with probability $p(e) = \alpha s(e)/\bar{s}$:
+\begin{equation}
+\begin{aligned}
+\mathbb{E}[X_{\text{inter}}]
+&= \sum_{e \in E_{\text{inter}}} p(e) \\
+&= \sum_{e \in E_{\text{inter}}} \frac{\alpha\, s(e)}{\bar{s}} \\
+&= \frac{\alpha}{\bar{s}} \sum_{e \in E_{\text{inter}}} s(e) \\
+&= \frac{\alpha \cdot n_2 \cdot \mu_{\text{inter}}}{\bar{s}}
+\end{aligned}
+\end{equation}
+
+
+The expected inter-community preservation rate is:
+\begin{equation}
+\frac{\mathbb{E}[X_{\text{inter}}]}{n_2} = \frac{\alpha \cdot \mu_{\text{inter}}}{\bar{s}}
+\end{equation}
+
+By identical reasoning:
+\begin{equation}
+\frac{\mathbb{E}[X_{\text{intra}}]}{n_1} = \frac{\alpha \cdot \mu_{\text{intra}}}{\bar{s}}
+\end{equation}
+
+Taking the ratio:
+\begin{equation}
+\frac{\mathbb{E}[X_{\text{inter}}]/n_2}{\mathbb{E}[X_{\text{intra}}]/n_1} = \frac{\alpha \mu_{\text{inter}}/\bar{s}}{\alpha \mu_{\text{intra}}/\bar{s}} = \frac{\mu_{\text{inter}}}{\mu_{\text{intra}}} < 1
+\end{equation}
+where the inequality follows from DSpar separation ($\mu_{\text{intra}} > \mu_{\text{inter}}$).
+
+\textbf{Part (b):} Define empirical preservation rates:
+\begin{equation}
+\hat{p}_{\text{inter}} = \frac{X_{\text{inter}}}{n_2}, \qquad \hat{p}_{\text{intra}} = \frac{X_{\text{intra}}}{n_1}
+\end{equation}
+
+From the concentration bound in part (c), for any $\epsilon > 0$:
+\begin{equation}
+\mathbb{P}\left[|\hat{p}_{\text{inter}} - \mathbb{E}[\hat{p}_{\text{inter}}]| > \epsilon\right] \leq \frac{\alpha \mu_{\text{inter}}}{n_2 \bar{s} \epsilon^2} \to 0 \quad \text{as } n_2 \to \infty
+\end{equation}
+Hence $\hat{p}_{\text{inter}} \xrightarrow{P} \frac{\alpha \mu_{\text{inter}}^*}{\bar{s}^*}$, and similarly $\hat{p}_{\text{intra}} \xrightarrow{P} \frac{\alpha \mu_{\text{intra}}^*}{\bar{s}^*}$, where $\bar{s}^*$ is the limiting mean DSpar score.
+
+To apply the Continuous Mapping Theorem to the ratio, we must verify that $\hat{p}_{\text{intra}}$ is bounded away from zero with high probability. Since $\mu_{\text{intra}} \geq \mu_{\min} > 0$ and $\bar{s} \leq 2$ (as $s(e) \leq 2$ for any edge), we have $\mathbb{E}[\hat{p}_{\text{intra}}] \geq \alpha \mu_{\min}/2 > 0$. Taking $\epsilon = \alpha \mu_{\min}/(4)$, the concentration bound gives:
+\begin{equation}
+\mathbb{P}\left[\hat{p}_{\text{intra}} < \frac{\alpha \mu_{\min}}{4}\right] \leq \mathbb{P}\left[|\hat{p}_{\text{intra}} - \mathbb{E}[\hat{p}_{\text{intra}}]| > \frac{\alpha \mu_{\min}}{4}\right] \to 0
+\end{equation}
+Thus $\hat{p}_{\text{intra}}$ is bounded away from zero with probability approaching 1. The Continuous Mapping Theorem (applied to $g(x,y) = x/y$, continuous on $\{(x,y): y > 0\}$) yields:
+\begin{equation}
+\text{Ratio}_n = \frac{\hat{p}_{\text{inter}}}{\hat{p}_{\text{intra}}} \xrightarrow{P} \frac{\mu_{\text{inter}}^*}{\mu_{\text{intra}}^*} < 1
+\end{equation}
+
+\textbf{Part (c):} Let $Y = |E' \cap E_{\text{inter}}| = \sum_{e \in E_{\text{inter}}} X_e$ where $X_e = \mathbf{1}[e \in E']$.
+
+Since the $X_e$ are independent Bernoulli random variables:
+\begin{equation}
+\text{Var}(Y) = \sum_{e \in E_{\text{inter}}} p(e)(1 - p(e)) \leq \sum_{e \in E_{\text{inter}}} p(e) = \frac{\alpha n_2 \mu_{\text{inter}}}{\bar{s}}
+\end{equation}
+
+By Chebyshev's inequality:
+\begin{equation}
+\mathbb{P}[|Y - \mathbb{E}[Y]| > n_2 \epsilon] \leq \frac{\text{Var}(Y)}{n_2^2 \epsilon^2} \leq \frac{\alpha \mu_{\text{inter}}}{n_2 \bar{s} \epsilon^2}
+\end{equation}
+\end{proof}
+
+\begin{corollary}[Quantifying Preferential Removal]
+The limiting ratio satisfies:
+\begin{equation}
+\lim_{n \to \infty} \text{Ratio} = 1 - \frac{\delta}{\mu_{\text{intra}}}
+\end{equation}
+where $\delta = \mu_{\text{intra}} - \mu_{\text{inter}}$ is the DSpar separation gap. Larger gaps yield smaller ratios and stronger preferential removal.
+\end{corollary}
+
+\begin{proof}
+From Theorem~\ref{thm:ratio}(a), the limiting ratio is $\mu_{\text{inter}}/\mu_{\text{intra}}$. Substituting $\mu_{\text{inter}} = \mu_{\text{intra}} - \delta$:
+\begin{equation}
+\frac{\mu_{\text{inter}}}{\mu_{\text{intra}}} = \frac{\mu_{\text{intra}} - \delta}{\mu_{\text{intra}}} = 1 - \frac{\delta}{\mu_{\text{intra}}}
+\end{equation}
+\end{proof}
+
+\begin{remark}[Relationship to Hub-Bridging]
+A common structural property in real networks is \emph{hub-bridging}: inter-community edges tend to connect higher-degree nodes. Formally,
+$\mathbb{E}[d_u d_v \mid e \in E_{\text{inter}}] > \mathbb{E}[d_u d_v \mid e \in E_{\text{intra}}]$.
+Hub-bridging and DSpar separation are related but distinct: hub-bridging concerns degree products, while DSpar separation concerns inverse-degree sums.
+Empirically, the two conditions are often correlated in the networks we study: networks in which high-degree nodes disproportionately bridge communities tend to exhibit DSpar separation, in the sense that inter-community edges receive lower $1/d_u + 1/d_v$ scores on average.
+Across diverse real-world networks, we observed both conditions simultaneously in all cases.
+\end{remark}
+
+
+%==============================================================================
+% \subsection{Theorem 2: Modularity Improvement}
+%==============================================================================
+
+\begin{definition}[Weighted Modularity]
+For a graph with edge weights $w_e \geq 0$, the modularity with respect to partition $\mathcal{C}$ is:
+\begin{equation}
+Q^{(w)} = \frac{W_{\text{intra}}}{W} - \sum_{c \in \mathcal{C}} \left( \frac{D_c^{(w)}}{2W} \right)^2
+\end{equation}
+where:
+\begin{itemize}
+    \item $W = \sum_{e \in E} w_e$ is the total edge weight
+    \item $W_{\text{intra}} = \sum_{e \in E_{\text{intra}}} w_e$ is the intra-community edge weight
+    \item $D_c^{(w)} = \sum_{i \in c} d_i^{(w)}$ is the total weighted degree of community $c$
+    \item $d_i^{(w)} = \sum_{j: (i,j) \in E} w_{(i,j)}$ is the weighted degree of node $i$, where $w_{(i,j)}$ denotes the weight of edge $(i,j)$
+\end{itemize}
+We write $Q^{(w)} = F^{(w)} - G^{(w)}$ where $F^{(w)} = W_{\text{intra}}/W$ and $G^{(w)} = \sum_c (D_c^{(w)}/2W)^2$.
+\end{definition}
+
+\begin{definition}[DSpar Weighting]
+The \emph{DSpar weighting} assigns weight $w_e = s(e)/\bar{s}$ to each edge, where $s(e)$ is the DSpar score and $\bar{s}$ is the mean. This normalizes the total weight to equal the edge count: $W = m$.
+\end{definition}
+
+\begin{definition}[Balanced Communities]
+A partition $\mathcal{C}$ has \emph{balanced communities} if all communities have equal total degree:
+\begin{equation}
+D_c = \frac{2m}{k} \quad \text{for all } c \in \mathcal{C}
+\end{equation}
+where $k = |\mathcal{C}|$ is the number of communities.
+\end{definition}
+
+%------------------------------------------------------------------------------
+% \subsection{Main Result}
+%------------------------------------------------------------------------------
+
+\begin{theorem}[Modularity Improvement under DSpar]
+\label{thm:modularity}
+Let $G$ be a graph with partition $\mathcal{C}$ exhibiting DSpar separation. Let $Q^{(1)}$ denote modularity under unit weights and $Q^{(s)}$ denote modularity under DSpar weighting.
+
+\textbf{(a) Intra-Community Fraction Improvement:} The weighted intra-community fraction strictly increases:
+\begin{equation}
+F^{(s)} - F^{(1)} = \frac{n_1 n_2 (\mu_{\text{intra}} - \mu_{\text{inter}})}{m(n_1 \mu_{\text{intra}} + n_2 \mu_{\text{inter}})} > 0
+\end{equation}
+
+\textbf{(b) Modularity Decomposition:} The modularity change decomposes as:
+\begin{equation}
+Q^{(s)} - Q^{(1)} = \underbrace{(F^{(s)} - F^{(1)})}_{> 0 \text{ by part (a)}} - \underbrace{(G^{(s)} - G^{(1)})}_{\text{sign depends on network}}
+\end{equation}
+
+\textbf{(c) Sufficient Condition:} $Q^{(s)} > Q^{(1)}$ if and only if $G^{(s)} - G^{(1)} < F^{(s)} - F^{(1)}$.
+In particular, $Q^{(s)} > Q^{(1)}$ whenever $G^{(s)} \leq G^{(1)}$.
+\end{theorem}
+
+\begin{proof}
+\textbf{Part (a):} Under unit weights, the intra-community fraction is:
+\begin{equation}
+F^{(1)} = \frac{n_1}{m} = \frac{n_1}{n_1 + n_2}
+\end{equation}
+
+Under DSpar weighting with $w_e = s(e)/\bar{s}$:
+\begin{equation}
+F^{(s)} = \frac{\sum_{e \in E_{\text{intra}}} s(e)/\bar{s}}{\sum_{e \in E} s(e)/\bar{s}} = \frac{\sum_{e \in E_{\text{intra}}} s(e)}{\sum_{e \in E} s(e)} = \frac{n_1 \mu_{\text{intra}}}{n_1 \mu_{\text{intra}} + n_2 \mu_{\text{inter}}}
+\end{equation}
+
+We show $F^{(s)} > F^{(1)}$. This inequality is equivalent to:
+\begin{equation}
+\frac{n_1 \mu_{\text{intra}}}{n_1 \mu_{\text{intra}} + n_2 \mu_{\text{inter}}} > \frac{n_1}{n_1 + n_2}
+\end{equation}
+
+Cross-multiplying (all terms positive):
+\begin{align}
+n_1 \mu_{\text{intra}} (n_1 + n_2) &> n_1 (n_1 \mu_{\text{intra}} + n_2 \mu_{\text{inter}}) \\
+n_1^2 \mu_{\text{intra}} + n_1 n_2 \mu_{\text{intra}} &> n_1^2 \mu_{\text{intra}} + n_1 n_2 \mu_{\text{inter}} \\
+n_1 n_2 \mu_{\text{intra}} &> n_1 n_2 \mu_{\text{inter}} \\
+\mu_{\text{intra}} &> \mu_{\text{inter}}
+\end{align}
+which holds by DSpar separation.
+
+The explicit formula follows by computing $F^{(s)} - F^{(1)}$ directly:
+\begin{align}
+F^{(s)} - F^{(1)} &= \frac{n_1 \mu_{\text{intra}}}{n_1 \mu_{\text{intra}} + n_2 \mu_{\text{inter}}} - \frac{n_1}{n_1 + n_2} \\
+&= n_1 \cdot \frac{\mu_{\text{intra}}(n_1 + n_2) - (n_1 \mu_{\text{intra}} + n_2 \mu_{\text{inter}})}{(n_1 \mu_{\text{intra}} + n_2 \mu_{\text{inter}})(n_1 + n_2)} \\
+&= \frac{n_1 n_2 (\mu_{\text{intra}} - \mu_{\text{inter}})}{m(n_1 \mu_{\text{intra}} + n_2 \mu_{\text{inter}})}
+\end{align}
+
+\textbf{Parts (b) and (c):} Follow directly from the definition $Q = F - G$.
+\end{proof}
+
+\begin{lemma}[Characterization of $G$ Change]
+\label{lem:G_change}
+Under DSpar weighting (which by construction preserves total weight: $W^{(s)} = W^{(1)} = m$):
+\begin{equation}
+G^{(s)} - G^{(1)} = \frac{1}{4m^2} \left[ \sum_c (D_c^{(s)})^2 - \sum_c (D_c^{(1)})^2 \right]
+\end{equation}
+Thus $G^{(s)} \leq G^{(1)}$ if and only if $\sum_c (D_c^{(s)})^2 \leq \sum_c (D_c^{(1)})^2$.
+\end{lemma}
+
+\begin{proof}
+By definition:
+\begin{equation}
+\begin{aligned}
+G^{(w)}
+&= \sum_c \left(\frac{D_c^{(w)}}{2W}\right)^2 \\
+&= \frac{1}{4W^2} \sum_c \bigl(D_c^{(w)}\bigr)^2
+\end{aligned}
+\end{equation}
+
+Since $W^{(s)} = W^{(1)} = m$:
+\begin{equation}
+\begin{aligned}
+G^{(s)} - G^{(1)}
+&= \frac{1}{4m^2} \sum_c \bigl(D_c^{(s)}\bigr)^2
+ - \frac{1}{4m^2} \sum_c \bigl(D_c^{(1)}\bigr)^2 \\
+&= \frac{1}{4m^2}
+\left[
+\sum_c \bigl(D_c^{(s)}\bigr)^2
+- \sum_c \bigl(D_c^{(1)}\bigr)^2
+\right]
+\end{aligned}
+\end{equation}
+\end{proof}
+
+
+\begin{remark}[When $G^{(s)} \leq G^{(1)}$]
+DSpar weighting assigns higher weights to edges connecting low-degree nodes. In networks with hub-bridging structure, high-degree nodes have edges with low DSpar scores. This tends to compress the weighted degree distribution, reducing the variance of $D_c^{(s)}$ across communities, which implies $G^{(s)} \leq G^{(1)}$. Our experiments confirm this condition holds across all tested networks.
+\end{remark}
+
+%------------------------------------------------------------------------------
+\subsection{\texorpdfstring{Sufficient Conditions for $G^{(s)} \leq G^{(1)}$}{Sufficient Conditions for G(s) <= G(1)}}
+%------------------------------------------------------------------------------
+
+By Theorem~\ref{thm:modularity}(c), modularity improves whenever $G^{(s)} \leq G^{(1)}$. By Lemma~\ref{lem:G_change}, this is equivalent to $\sum_c (D_c^{(s)})^2 \leq \sum_c (D_c^{(1)})^2$. We provide verifiable conditions:
+
+\begin{proposition}[Verifiable Conditions for $G^{(s)} \leq G^{(1)}$]
+\label{prop:alternatives}
+
+\textbf{(A) Direct Verification:} Compute $D_c^{(s)} = \sum_{i \in c} d_i^{(s)}$ for each community, where:
+\begin{equation}
+d_i^{(s)} = \sum_{j \in N(i)} \frac{s(i,j)}{\bar{s}} = \frac{1}{\bar{s}}\left(1 + \sum_{j \in N(i)} \frac{1}{d_j}\right)
+\end{equation}
+Then $G^{(s)} \leq G^{(1)}$ if and only if:
+\begin{equation}
+\sum_{c \in \mathcal{C}} (D_c^{(s)})^2 \leq \sum_{c \in \mathcal{C}} (D_c^{(1)})^2
+\end{equation}
+This condition can be checked numerically for any given graph and partition.
+
+\textbf{(B) Degree Variance Reduction:} A sufficient (but not necessary) condition is that DSpar weighting reduces the variance of community degree sums:
+\begin{equation}
+\text{Var}_c(D_c^{(s)}) \leq \text{Var}_c(D_c^{(1)})
+\end{equation}
+where variance is taken over communities. Since $\sum_c D_c^{(s)} = \sum_c D_c^{(1)} = 2m$ (total degree is preserved), reduced variance implies reduced sum of squares.
+
+\textbf{(C) Perfectly Balanced Communities:} If $D_c^{(1)} = 2m/k$ for all communities $c$ (perfectly balanced), then $G^{(1)} = 1/k$. If additionally $D_c^{(s)} = 2m/k$ for all $c$, then $G^{(s)} = G^{(1)} = 1/k$. Note: This second condition rarely holds exactly, but approximate balance ($D_c^{(s)} \approx 2m/k$) yields $G^{(s)} \approx G^{(1)}$.
+\end{proposition}
+
+\begin{proof}
+\textbf{(A)} follows directly from Lemma~\ref{lem:G_change}. 
+
+\textbf{(B)} For any set of values $\{x_c\}$ with fixed sum $S = \sum_c x_c$, we have $\sum_c x_c^2 = k \cdot \text{Var}_c(x_c) + S^2/k$. Since $\sum_c D_c^{(s)} = \sum_c D_c^{(1)} = 2m$, reduced variance implies reduced sum of squares.
+
+\textbf{(C)} If $D_c = 2m/k$ for all $c$, then $\sum_c D_c^2 = k \cdot (2m/k)^2 = 4m^2/k$, so $G = 1/k$.
+\end{proof}
+
+\begin{remark}[Why $G^{(s)} \leq G^{(1)}$ Often Holds]
+The weighted degree formula shows that $d_i^{(s)}$ depends on the degrees of $i$'s neighbors. High-degree hubs connected to other hubs have $d_i^{(s)} < d_i^{(1)}$ (their edge weights are reduced). In networks where hubs are concentrated in a few communities, this compression reduces the variance of $D_c^{(s)}$, satisfying condition (B). Our experiments confirm $G^{(s)} \leq G^{(1)}$ holds across all tested networks.
+\end{remark}
+
+%------------------------------------------------------------------------------
+% \subsection{Quantitative Bound}
+%------------------------------------------------------------------------------
+
+\begin{corollary}[Quantitative Improvement Bound]
+Under balanced communities, the modularity improvement satisfies:
+\begin{equation}
+Q^{(s)} - Q^{(1)} \geq \frac{n_1 n_2 \delta}{m(n_1 \mu_{\text{intra}} + n_2 \mu_{\text{inter}})}
+\end{equation}
+where $\delta = \mu_{\text{intra}} - \mu_{\text{inter}}$ is the DSpar separation gap.
+\end{corollary}
+
+\begin{proof}
+For balanced communities, $G^{(s)} = G^{(1)} = 1/k$ (the null model term is unchanged when community degrees remain balanced). Therefore:
+\begin{equation}
+Q^{(s)} - Q^{(1)} = (F^{(s)} - G^{(s)}) - (F^{(1)} - G^{(1)}) = F^{(s)} - F^{(1)}
+\end{equation}
+The result follows from Theorem~\ref{thm:modularity}(a).
+\end{proof}
+
+
+While Theorems~\ref{thm:ratio} and~\ref{thm:modularity} analyze DSpar weighting, our experiments use DSpar \emph{sparsification} (edge removal). The following theorem directly addresses sparsification:
+
+\begin{theorem}[Sparsification Improves Intra-Community Fraction (Asymptotically)]
+\label{thm:sparsification}
+Let $G$ be a graph with partition $\mathcal{C}$ exhibiting DSpar separation, and
+let $G'$ denote the DSpar-sparsified graph.
+
+\textbf{(a) High-Probability Approximation:}
+For any $\varepsilon > 0$, there exists $N$ such that for all $n_1,n_2 \ge N$,
+\begin{equation}
+\mathbb{P}\!\left(
+\left| F' -
+\frac{n_1 \mu_{\text{intra}}}{n_1 \mu_{\text{intra}} + n_2 \mu_{\text{inter}}}
+\right| > \varepsilon
+\right) \to 0.
+\end{equation}
+In particular, $F' = F^{(s)} + o_p(1)$.
+
+Here $o_p(1)$ denotes a random term converging to zero in probability as the graph size increases; consequently, $F'$ concentrates around the deterministic limit $F^{(s)}$.
+
+\textbf{(b) Asymptotic Improvement:}
+Consider a sequence of graphs $\{G_n\}$ satisfying the conditions of
+Theorem~\ref{thm:ratio}(b), and assume additionally that
+$n_2^{(n)}/n_1^{(n)} \to \rho > 0$. Then
+\begin{equation}
+F'_n \xrightarrow{P}
+\frac{\mu_{\text{intra}}^*}{\mu_{\text{intra}}^* + \rho \mu_{\text{inter}}^*}
+>
+\frac{1}{1+\rho}
+= \lim_{n \to \infty} F^{(1)}_n,
+\end{equation}
+where the inequality follows from preserved DSpar separation
+($\mu_{\text{intra}}^* > \mu_{\text{inter}}^*$).
+\end{theorem}
+
+\begin{proof}
+Let $X_{\text{intra}} = |E' \cap E_{\text{intra}}|$ and
+$X_{\text{inter}} = |E' \cap E_{\text{inter}}|$. By Theorem~\ref{thm:ratio}(a),
+\begin{equation}
+\mathbb{E}[X_{\text{intra}}]
+= \frac{\alpha n_1 \mu_{\text{intra}}}{\bar{s}}, \qquad
+\mathbb{E}[X_{\text{inter}}]
+= \frac{\alpha n_2 \mu_{\text{inter}}}{\bar{s}}.
+\end{equation}
+
+From the concentration bound in Theorem~\ref{thm:ratio}(c), both
+$X_{\text{intra}}/n_1$ and $X_{\text{inter}}/n_2$ converge in probability to
+their respective expectations. Writing
+\begin{equation}
+F'
+= \frac{X_{\text{intra}}/n_1}
+{X_{\text{intra}}/n_1 + (n_2/n_1)(X_{\text{inter}}/n_2)},
+\end{equation}
+and applying Slutsky’s theorem together with the Continuous Mapping Theorem
+yields part (a).
+
+For part (b), the assumed convergence $n_2/n_1 \to \rho$ gives
+\begin{equation}
+F'_n \xrightarrow{P}
+\frac{\mu_{\text{intra}}^*}{\mu_{\text{intra}}^* + \rho \mu_{\text{inter}}^*}.
+\end{equation}
+Since $F^{(1)}_n = 1/(1+n_2/n_1) \to 1/(1+\rho)$ and
+$\mu_{\text{intra}}^* > \mu_{\text{inter}}^*$, the claimed inequality follows.
+\end{proof}
+
+\begin{remark}[Connection Between Weighting and Sparsification]
+Theorem~\ref{thm:sparsification} shows that DSpar sparsification produces, with
+high probability in large graphs, the same intra-community fraction as DSpar
+weighting. This establishes a formal link between the deterministic weighting
+analysis (Theorem~\ref{thm:modularity}) and the randomized sparsification
+procedure used in our experiments.
+\end{remark}
+
+
+%==============================================================================
+\subsection{Connection to Spectral Theory}
+%==============================================================================
+
+Newman~\cite{newman2013spectral} established a close relationship between
+modularity maximization and spectral properties of degree-normalized graph
+operators. We summarize the aspects most relevant to our analysis.
+
+\begin{proposition}[Spectral Relaxation of Modularity~\cite{newman2006modularity,newman2013spectral}]
+\label{prop:newman}
+In the bipartition setting, modularity maximization admits a standard spectral
+relaxation in which the discrete constraint $s_i \in \{-1,+1\}$ is relaxed to
+continuous values subject to degree-weighted normalization and orthogonality
+constraints (e.g., $k^\top s = 0$). The relaxed problem reduces to a leading
+eigenvector computation of a modularity-based operator, which can be expressed
+as a generalized eigenvalue problem of the form
+\begin{equation}
+B s = \lambda D s,
+\end{equation}
+or, equivalently under the orthogonality constraint, as
+\begin{equation}
+A s = \lambda D s.
+\end{equation}
+The optimal relaxed solution is proportional to the corresponding leading
+eigenvector, and a discrete partition is obtained by rounding (e.g., by taking
+signs). The achieved relaxed modularity is proportional to the associated
+eigenvalue, with the constant of proportionality depending on the specific
+normalization.
+\end{proposition}
+
+This result provides useful spectral intuition for our approach:
+
+\begin{enumerate}
+    \item \textbf{Spectral sparsification}~\cite{spielman2008graph} preserves
+    quadratic forms and, consequently, the eigenvalues of degree-normalized
+    graph operators up to $(1\pm\varepsilon)$ factors by sampling edges
+    proportional to effective resistance.
+    \item \textbf{DSpar} is a degree-based proxy motivated by classical
+    connections between effective resistance, random walks, and graph
+    connectivity~\cite{doyle1984random,spielman2008graph}. While DSpar does not
+    provide worst-case spectral approximation guarantees, it preferentially
+    downweights edges incident to high-degree nodes, similar to resistance-based
+    sampling in heterogeneous networks.
+    \item \textbf{Spectral interpretation of communities.} For degree-normalized
+    operators such as the normalized adjacency matrix
+    $\mathcal{A}=D^{-1/2}AD^{-1/2}$, community structure corresponds to slow
+    mixing of random walks between groups. In this setting, a second eigenvalue
+    $\lambda_2$ close to $1$ indicates strong separation between communities.
+\end{enumerate}
+
+Taken together, these observations suggest that sparsification schemes which
+preferentially remove inter-community edges while preserving intra-community
+connectivity tend to preserve or even accentuate the spectral signatures associated with community structure. In particular, by preferentially removing inter-community edges (Theorem~\ref{thm:ratio}), DSpar makes the graph closer to
+block-diagonal form. In the idealized block-diagonal limit of completely disconnected communities, the normalized adjacency matrix has multiple eigenvalues equal to $1$, corresponding to perfectly separated components.
+
+\begin{remark}[Random-Walk Interpretation]
+For the normalized adjacency matrix $\mathcal{A}$, eigenvalues near $1$
+correspond to slowly mixing random walks. Reducing inter-community connectivity
+increases the persistence of random walks within communities, providing a
+spectral interpretation of improved community separation. This interpretation
+is heuristic but aligns with both classical spectral clustering theory and our
+empirical observations.
+\end{remark}
+
+The key insight is that DSpar separation, where intra-community edges receive
+systematically higher DSpar scores than inter-community edges, is sufficient to
+guarantee preferential removal of inter-community edges
+(Theorem~\ref{thm:ratio}) and an increase in the intra-community edge fraction,
+both under weighting (Theorem~\ref{thm:modularity}(a)) and sparsification
+(Theorem~\ref{thm:sparsification}). For full modularity improvement under
+weighting, we additionally require $G^{(s)} \leq G^{(1)}$, which holds
+empirically across all tested networks. The spectral perspective provides
+additional intuition but is not required for the formal results.
+
+
+\section{Experiments}
+\label{sec:experiments}
+\subsection{Experiment 1: Theoretical Validation via Modularity Decomposition}
+\subsubsection{Experimental Setup}
+
+We evaluate the theoretical predictions of DSpar sparsification through a controlled modularity-based analysis across multiple real-world networks spanning collaboration, citation, social, communication, and voting domains. These graphs exhibit diverse size, density, and degree heterogeneity, making them suitable for evaluating the structural conditions under which sparsification alters community quality. All experiments focus on isolating the \emph{structural effect of sparsification}, independently of community detection re-optimization, while also reporting downstream performance for completeness.
+
+\paragraph{Community detection and fixed partition.}
+For each dataset, we first run the Leiden algorithm on the original graph to obtain a high-quality community assignment. This partition (the Leiden membership on the original graph) is then treated as \emph{fixed} throughout the theoretical evaluation. Fixing the partition allows us to attribute all observed changes in modularity solely to sparsification, rather than to re-optimization effects.
+
+\paragraph{Sparsification protocol.}
+We apply DSpar sparsification over a range of retention levels $\alpha \in (0,1]$. For each dataset and each value of $\alpha$, we perform 10 independent sparsification runs using probabilistic no-replacement sampling. All reported statistics are averaged across runs, and standard deviations reflect run-to-run variability. Unless otherwise stated, we present results at $\alpha = 0.8$ as a representative sparsification level; qualitatively similar trends are observed across the full range of $\alpha$ values. For $\alpha = 1$, no sparsification is applied, so $\Delta Q_{\mathrm{fixed}} = 0$.
+
+
+\paragraph{Evaluation metrics.}
+Let $Q = F - G$ denote the modularity of a fixed partition, where $F$ is the fraction of intra-community edges and $G$ is the null-model penalty term based on community volumes. We report:
+\begin{itemize}
+  \item $\Delta Q_{\mathrm{fixed}}$: modularity change of the fixed partition when evaluated on the sparsified graph,
+  \item $\Delta Q_{\mathrm{Leiden}}$: modularity change after re-running Leiden on the sparsified graph,
+  \item $\Delta F_{\mathrm{obs}}$ and $\Delta G_{\mathrm{obs}}$: observed changes in the modularity components under the fixed partition.
+\end{itemize}
+
+We additionally verify that the modularity decomposition identity
+\[
+\Delta Q_{\mathrm{fixed}} = \Delta F_{\mathrm{obs}} - \Delta G_{\mathrm{obs}}
+\]
+holds to machine precision for all datasets and runs.
+
+
+\begin{table*}[t]
+\centering
+\caption{Modularity changes under DSpar sparsification at $\alpha = 0.8$.}
+\label{tab:exp1_2_modularity}
+\begin{tabular}{lrrrr}
+\toprule
+Dataset & $m$ & $Q_{\mathrm{orig}}$ & $\Delta Q_{\mathrm{fixed}}$ & $\Delta Q_{\mathrm{Leiden}}$ \\
+\midrule
+ca-AstroPh\cite{leskovec2007graph} & 198,050 & $0.6393$ & $0.0423 \pm 0.0008$ & $0.0571 \pm 0.0016$ \\
+ca-CondMat\cite{leskovec2007graph}& 93,439 & $0.7410$ & $0.0638 \pm 0.0016$ & $0.1018 \pm 0.0012$ \\
+ca-GrQc\cite{leskovec2007graph} & 14,484 & $0.8664$ & $0.0257 \pm 0.0022$ & $0.0628 \pm 0.0022$ \\
+ca-HepPh\cite{leskovec2007graph} & 118,489 & $0.6631$ & $0.0844 \pm 0.0012$ & $0.1089 \pm 0.0029$ \\
+ca-HepTh\cite{leskovec2007graph} & 25,973 & $0.7760$ & $0.0609 \pm 0.0023$ & $0.1212 \pm 0.0022$ \\
+cit-HepPh\cite{leskovec2007graph} & 420,877 & $0.7349$ & $0.0136 \pm 0.0004$ & $0.0182 \pm 0.0019$ \\
+cit-HepTh\cite{leskovec2007graph} & 352,285 & $0.6637$ & $0.0469 \pm 0.0009$ & $0.0546 \pm 0.0022$ \\
+email-Enron\cite{leskovec2009community} & 183,831 & $0.6248$ & $0.1507 \pm 0.0009$ & $0.1853 \pm 0.0008$ \\
+facebook-combined\cite{leskovec2012learning} & 88,234 & $0.8357$ & $0.0259 \pm 0.0008$ & $0.0273 \pm 0.0008$ \\
+wiki-Vote\cite{leskovec2010signed} & 100,762 & $0.4175$ & $0.0694 \pm 0.0011$ & $0.0932 \pm 0.0062$ \\
+email-Eu-core\cite{yin2017local} & 16,064 & $0.4174$ & $0.0789 \pm 0.0041$ & $0.0912 \pm 0.0029$ \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\begin{table*}[t]
+\centering
+\caption{Modularity decomposition verification at $\alpha = 0.8$.
+For all datasets and runs, the identity $\Delta Q_{\mathrm{fixed}} = \Delta F_{\mathrm{obs}} - \Delta G_{\mathrm{obs}}$ holds up to machine precision (maximum absolute reconstruction error $\le 10^{-14}$).}
+
+\label{tab:exp1_2_decomposition}
+\begin{tabular}{lrrrr}
+\toprule
+Dataset & $\Delta Q_{\mathrm{fixed}}$ & $\Delta F_{\mathrm{obs}}$ & $-\Delta G_{\mathrm{obs}}$  \\
+\midrule
+ca-AstroPh & $0.0423 \pm 0.0008$ & $0.0350 \pm 0.0008$ & $0.0072 \pm 0.0001$  \\
+ca-CondMat & $0.0638 \pm 0.0016$ & $0.0588 \pm 0.0016$ & $0.0051 \pm 0.0001$ \\
+ca-GrQc & $0.0257 \pm 0.0022$ & $0.0142 \pm 0.0022$ & $0.0115 \pm 0.0003$ \\
+ca-HepPh & $0.0844 \pm 0.0012$ & $0.0030 \pm 0.0011$ & $0.0814 \pm 0.0002$ \\
+ca-HepTh & $0.0609 \pm 0.0023$ & $0.0518 \pm 0.0023$ & $0.0091 \pm 0.0003$  \\
+cit-HepPh & $0.0136 \pm 0.0004$ & $0.0078 \pm 0.0004$ & $0.0058 \pm 0.0001$ \\
+cit-HepTh & $0.0469 \pm 0.0009$ & $0.0318 \pm 0.0009$ & $0.0152 \pm 0.0001$  \\
+email-Enron & $0.1507 \pm 0.0009$ & $0.1186 \pm 0.0009$ & $0.0321 \pm 0.0003$  \\
+facebook-combined & $0.0259 \pm 0.0008$ & $-0.0008 \pm 0.0007$ & $0.0268 \pm 0.0002$  \\
+wiki-Vote & $0.0694 \pm 0.0011$ & $0.0671 \pm 0.0016$ & $0.0023 \pm 0.0007$  \\
+email-Eu-core & $0.0789 \pm 0.0041$ & $0.0681 \pm 0.0040$ & $0.0108 \pm 0.0009$ \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\begin{table}[htbp]
+\centering
+\caption{Cross-dataset summary statistics at $\alpha = 0.8$.
+Statistics are computed across datasets using per-dataset mean improvements (each dataset value is already averaged over 10 runs).}
+
+\label{tab:exp1_2_summary}
+\begin{tabular}{lcc}
+\toprule
+Metric & $\Delta Q_{\mathrm{fixed}}$ & $\Delta Q_{\mathrm{Leiden}}$ \\
+\midrule
+Mean improvement & $0.0574$ & $0.0791$ \\
+Std across datasets & $0.0358$ & $0.0458$ \\
+Min & $0.0136$ & $0.0182$ \\
+Max & $0.1507$ & $0.1853$ \\
+Datasets with $\Delta Q > 0$ & 11/11 & 11/11 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsubsection{Results and Analysis}
+
+We now analyze the empirical behavior of DSpar sparsification under the modularity decomposition framework introduced in Section~\ref{sec:theory}. All results in this section correspond to $\alpha = 0.8$ unless otherwise stated.
+
+\paragraph{Overall modularity improvements.}
+Table~\ref{tab:exp1_2_modularity} shows that DSpar yields consistent modularity improvements across all evaluated datasets. Under the fixed partition, modularity increases by approximately $0.014$--$0.151$, while re-optimizing communities on the sparsified graph typically amplifies these gains. Figure~\ref{fig:fixed_vs_leiden} illustrates this effect on \texttt{cit-HepTh}, where sparsification yields positive modularity improvements prior to re-optimization ($\Delta Q_{\mathrm{fixed}}$), which are further increased by re-running Leiden on the sparsified graph ($\Delta Q_{\mathrm{Leiden}}$). In all cases, $\Delta Q_{\mathrm{Leiden}} \ge \Delta Q_{\mathrm{fixed}}$, indicating that sparsification improves the modularity of a given partition and enables Leiden to achieve higher modularity on the sparsified graph.
+
+\paragraph{Exact modularity decomposition.}
+Table~\ref{tab:exp1_2_decomposition} verifies that the modularity change under a fixed partition decomposes exactly as
+\[
+\Delta Q_{\mathrm{fixed}} = \Delta F_{\mathrm{obs}} - \Delta G_{\mathrm{obs}},
+\]
+with reconstruction error at machine precision for all datasets.
+This confirms that observed modularity gains arise from genuine structural changes in intra-community edge density ($\Delta F_{\mathrm{obs}}$) and changes in the null-model penalty term ($\Delta G_{\mathrm{obs}}$), rather than numerical or algorithmic artifacts.
+
+Figure~\ref{fig:decomposition_cit_hepth} provides a visual illustration of the modularity decomposition on \texttt{cit-HepTh}. 
+The figure shows the modularity gain of the fixed partition ($\Delta Q_{\mathrm{fixed}}$) alongside the reduction in the null-model penalty term ($-\Delta G_{\mathrm{obs}}$) across sparsification levels. 
+The remaining contribution arises from changes in the intra-community edge fraction, $\Delta F_{\mathrm{obs}} = \Delta Q_{\mathrm{fixed}} + \Delta G_{\mathrm{obs}}$, which is reported explicitly in Table~\ref{tab:exp1_2_decomposition}. 
+As $\alpha \to 1$, all quantities smoothly vanish, confirming that the effect is induced by sparsification.
+
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.85\linewidth]{figures/cit-HepTh_figure_B_decomposition_no_alpha1.png}
+ \caption{Modularity decomposition under DSpar sparsification on \texttt{cit-HepTh}. 
+The modularity gain of the fixed partition ($\Delta Q_{\mathrm{fixed}}$) is shown alongside the reduction in the null-model penalty term ($-\Delta G_{\mathrm{obs}}$) across sparsification levels $\alpha$. 
+The remaining contribution, $\Delta F_{\mathrm{obs}} = \Delta Q_{\mathrm{fixed}} + \Delta G_{\mathrm{obs}}$, corresponds to changes in the intra-community edge fraction and is reported in Table~\ref{tab:exp1_2_decomposition}. 
+As $\alpha \to 1$, all quantities smoothly vanish, confirming that the effect is induced by sparsification.}
+
+  \label{fig:decomposition_cit_hepth}
+\end{figure}
+
+\paragraph{Two sparsification regimes.}
+The modularity decomposition reveals two distinct sparsification regimes determined by how DSpar interacts with the fixed community structure. In networks such as \texttt{cit-HepTh} and \texttt{ca-CondMat}, the intra-community fraction increases after sparsification ($\Delta F_{\mathrm{obs}} > 0$), consistent with preferential removal of inter-community edges under the fixed partition. In contrast, in networks such as \texttt{facebook-combined} and \texttt{ca-HepPh}, $\Delta F_{\mathrm{obs}}$ can be near zero or slightly negative, indicating that DSpar does not preferentially remove inter-community edges under the fixed partition. In this latter regime, modularity nonetheless improves because the reduction in the null-model penalty term ($-\Delta G_{\mathrm{obs}}$) dominates the net change, as observed for \texttt{facebook-combined} in Table~\ref{tab:exp1_2_decomposition}. These results show that DSpar can enhance modularity either by sharpening inter-community boundaries or by attenuating hub-dominated null-model effects, depending on network structure.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.85\linewidth]{figures/cit-HepTh_figure_A_modularity_no_alpha1.png}
+  \caption{Fixed-partition and re-optimized modularity improvements under DSpar sparsification on \texttt{cit-HepTh}. 
+  Sparsification yields positive modularity gains under the fixed partition ($\Delta Q_{\mathrm{fixed}}$), which are further amplified by re-running Leiden on the sparsified graph ($\Delta Q_{\mathrm{Leiden}}$).}
+  \label{fig:fixed_vs_leiden}
+\end{figure}
+
+\paragraph{Cross-dataset consistency.}
+Table~\ref{tab:exp1_2_summary} summarizes performance across all datasets. Both fixed-partition and re-optimized modularity improve consistently, with positive gains observed in all cases. While the magnitude of improvement varies across datasets, reflecting differences in degree heterogeneity and community structure, the qualitative behavior remains stable.
+
+
+% Taken together, these results empirically validate the modularity decomposition analysis and clarify the mechanisms by which DSpar-induced sparsification can improve modularity under diverse network conditions.
+
+\paragraph{Validation of the hub-bridge hypothesis.}
+To validate the hub-bridge hypothesis empirically, we compute the hub-bridging ratio for a subset of networks. The hub-bridging ratio measures the extent to which inter-community edges connect higher-degree nodes than intra-community edges:
+\begin{equation}
+\text{hb\_ratio} = \frac{\mathbb{E}[d_u d_v \mid (u,v) \in E_{\text{inter}}]}
+                       {\mathbb{E}[d_u d_v \mid (u,v) \in E_{\text{intra}}]}
+\end{equation}
+
+Table~\ref{tab:hub_bridge_validation} reports hub-bridging ratios, DSpar separation ($\delta$), mean DSpar scores, and fixed-partition modularity improvements across 17 networks from our evaluation suite. The results demonstrate a strong correlation between DSpar separation and modularity improvement (Pearson $r = 0.92$, $p < 0.001$), validating our theoretical framework.
+
+\paragraph{DSpar separation is the key structural predictor.}
+While hub-bridging ratio and DSpar separation are positively correlated ($r = 0.62$, $p = 0.014$), DSpar separation is a substantially stronger predictor of fixed-partition modularity improvement. This validates our theoretical choice: Theorems~1--3 are stated in terms of DSpar separation because it is the formal condition under which sparsification guarantees preferential removal and intra-community fraction improvement.
+
+Several networks exhibit decoupling between hub-bridging and DSpar separation:
+\begin{itemize}
+
+\item \textbf{Inverted hub-bridging}: Three networks (\texttt{ca-GrQc}, \texttt{ca-HepPh}, \texttt{cit-Patents}) have hb\_ratio $< 1$, yet exhibit positive DSpar separation and modularity gains, confirming that hub-bridging and DSpar separation are related but distinct (Remark~1).
+
+\item \textbf{Decoupled networks}: \texttt{facebook-combined} (hb\_ratio $= 2.69$, $\delta = 0.0002$) and \texttt{wiki-topcats} (hb\_ratio $= 4.96$, $\delta = 0.022$) show strong hub-bridging but minimal DSpar separation. In both cases, modularity improvement occurs primarily through null-model penalty reduction rather than preferential edge removal, consistent with our two-regime characterization.
+\end{itemize}
+
+\paragraph{Spectrum of hub-bridging structures.}
+The evaluated networks span a broad spectrum, from extreme hub-bridging (\texttt{wiki-Talk}, hb\_ratio $= 10.19$, $\delta = 0.498$) to weak or inverted patterns (\texttt{com-Amazon}, hb\_ratio $= 1.03$, $\delta = 0.011$). Networks with large DSpar separation consistently exhibit substantial fixed-partition improvements: \texttt{wiki-Talk} ($\Delta Q_{\text{fixed}} = 0.203$), \texttt{email-Enron} ($\Delta Q_{\text{fixed}} = 0.151$), \texttt{ca-HepTh} ($\Delta Q_{\text{fixed}} = 0.061$), and \texttt{com-Youtube} ($\Delta Q_{\text{fixed}} = 0.089$). These results demonstrate that the hub-bridge hypothesis accurately characterizes when and why sparsification improves community detection.
+
+\begin{table*}[t]
+\centering
+\caption{Hub-bridging structure and DSpar separation across networks at $\alpha=0.8$. 
+Networks are grouped by hub-bridging strength. 
+DSpar separation ($\delta$) strongly predicts fixed-partition modularity improvement 
+(Pearson $r = 0.92$, $p < 0.001$), validating the theoretical framework.}
+\label{tab:hub_bridge_validation}
+\begin{tabular}{lrrrrrr}
+\toprule
+Dataset & hb\_ratio & $\delta$ & $\mu_{\text{intra}}$ & $\mu_{\text{inter}}$ & $\Delta Q_{\text{fix}}$ & Comm. \\
+\midrule
+\multicolumn{7}{l}{\textit{Extreme hub-bridging (hb\_ratio $> 4$)}} \\
+wiki-Talk & 10.19 & 0.498 & 0.677 & 0.178 & 0.203 & 275 \\
+wiki-topcats & 4.96 & 0.022 & 0.076 & 0.054 & 0.051 & 34 \\
+com-Youtube & 4.78 & 0.251 & 0.423 & 0.172 & 0.089 & 5,879 \\
+\midrule
+\multicolumn{7}{l}{\textit{Strong hub-bridging ($2 < \text{hb\_ratio} \leq 4$)}} \\
+email-Enron & 3.12 & 0.154 & 0.229 & 0.075 & 0.151 & 194 \\
+facebook-combined & 2.69 & 0.000 & 0.046 & 0.046 & 0.026 & 16 \\
+ca-CondMat & 2.43 & 0.110 & 0.259 & 0.149 & 0.064 & 58 \\
+email-Eu-core & 2.09 & 0.031 & 0.074 & 0.044 & 0.079 & 27 \\
+cit-HepTh & 2.02 & 0.024 & 0.084 & 0.060 & 0.047 & 31 \\
+\midrule
+\multicolumn{7}{l}{\textit{Moderate hub-bridging ($1 < \text{hb\_ratio} \leq 2$)}} \\
+wiki-Vote & 1.96 & 0.056 & 0.090 & 0.035 & 0.069 & 6 \\
+com-DBLP & 1.62 & 0.148 & 0.324 & 0.176 & 0.044 & 267 \\
+ca-HepTh & 1.54 & 0.172 & 0.382 & 0.210 & 0.061 & 51 \\
+ca-AstroPh & 1.45 & 0.033 & 0.101 & 0.068 & 0.042 & 41 \\
+cit-HepPh & 1.30 & 0.010 & 0.083 & 0.074 & 0.014 & 24 \\
+\midrule
+\multicolumn{7}{l}{\textit{Weak/Inverted hub-bridging (hb\_ratio $\leq 1$)}} \\
+com-Amazon & 1.03 & 0.011 & 0.362 & 0.351 & 0.000 & 357 \\
+cit-Patents & 0.72 & 0.037 & 0.233 & 0.196 & 0.006 & 102 \\
+ca-HepPh & 0.65 & 0.029 & 0.101 & 0.072 & 0.084 & 41 \\
+ca-GrQc & 0.48 & 0.087 & 0.319 & 0.232 & 0.026 & 42 \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+Taken together, these results empirically validate the modularity decomposition analysis, confirm the hub-bridge mechanism, and clarify the structural conditions under which DSpar-induced sparsification improves modularity.
+
+
+
+\subsection{Experiment 2: LFR Benchmark Analysis}
+\label{sec:exp-lfr}
+
+\subsubsection{Experimental Setup}
+
+Synthetic benchmarks are commonly used to evaluate community detection methods, with the LFR benchmark serving as a standard model for graphs with power-law degree distributions and planted community structure.
+However, while LFR controls degree heterogeneity and the fraction of inter-community edges, it does not explicitly model how inter-community edges are distributed with respect to node degree.
+
+In this experiment, we investigate whether this structural property explains why DSpar sparsification exhibits limited or inconsistent gains on standard LFR graphs, despite strong improvements on real-world networks (Experiment~1.2).
+
+\paragraph{Standard and modified LFR models.}
+We generate standard LFR graphs with planted ground-truth communities and vary the mixing parameter $\mu \in \{0.1,0.2,0.3,0.4,0.5\}$.
+To isolate the role of degree–community coupling, we introduce a modified LFR variant in which inter-community edges are rewired to preferentially connect high-degree nodes.
+This modification preserves the number of inter-community edges (and thus the mixing parameter $\mu$), while inducing a controllable level of \emph{hub-bridging}.
+We control the strength of this effect using a hub-bridging parameter $h \in \{1,2,4\}$, where $h=1$ corresponds to standard LFR-like behavior.
+
+\paragraph{Evaluation protocol.}
+For each graph, the planted LFR communities are treated as a \emph{fixed partition}.
+DSpar sparsification is applied at retention levels $\alpha \in \{0.5,0.8\}$ using probabilistic no-replacement sampling.
+All reported results are averaged over multiple independent graph realizations and sparsification runs.
+We evaluate modularity strictly under the fixed partition, allowing all observed changes to be attributed solely to structural effects of sparsification.
+
+\paragraph{Metrics.}
+We report the DSpar separation
+\[
+\delta = \mu_{\mathrm{intra}} - \mu_{\mathrm{inter}},
+\]
+where $\mu_{\mathrm{intra}}$ and $\mu_{\mathrm{inter}}$ denote the mean DSpar scores of intra- and inter-community edges, respectively.
+We additionally compute the fixed-partition modularity change $\Delta Q_{\mathrm{fixed}}$ and its decomposition
+\[
+\Delta Q_{\mathrm{fixed}} = \Delta F_{\mathrm{obs}} - \Delta G_{\mathrm{obs}},
+\]
+which is verified to hold to machine precision for all runs.
+To quantify hub-bridging, we measure the ratio between the mean degree product of inter-community edges and that of intra-community edges.
+
+\subsubsection{Results and Analysis}
+
+\paragraph{Standard LFR lacks hub-bridging and exhibits no DSpar gains.}
+Across all values of $\mu$, standard LFR graphs consistently exhibit hub-bridging ratios strictly below one, indicating that inter-community edges are not preferentially attached to high-degree nodes.
+Correspondingly, the DSpar separation $\delta$ is consistently non-positive, and sparsification leads to a decrease in fixed-partition modularity.
+At $n=10{,}000$ and $\alpha=0.8$, standard LFR graphs exhibit a hub-bridging ratio less than one,
+resulting in a negative DSpar separation ($\delta=-0.0065$) and a decrease in fixed-partition
+modularity ($\Delta Q_{\mathrm{fixed}}=-0.0110$).
+
+
+\paragraph{Hub-bridged LFR restores DSpar effectiveness.}
+Introducing hub-bridging fundamentally alters this behavior.
+As the hub-bridging strength $h$ increases, inter-community edges become increasingly concentrated on high-degree nodes, resulting in hub-bridging ratios significantly greater than one.
+This structural shift induces a positive DSpar separation ($\delta>0$), and DSpar sparsification yields substantial modularity improvements under the fixed partition.
+For the strongest hub-bridging setting ($h=4$), we observe a positive DSpar separation
+($\delta=0.0507$) and a substantial modularity improvement
+($\Delta Q_{\mathrm{fixed}}=0.1156$) under the same sparsification level.
+
+
+\paragraph{Mechanistic explanation of benchmark discrepancies.}
+Figure~\ref{fig:lfr_dq_vs_hubratio} summarizes this relationship by plotting $\Delta Q_{\mathrm{fixed}}$ against the hub-bridging ratio.
+Across both graph sizes and sparsification levels, modularity gains emerge only when inter-community edges are sufficiently coupled to high-degree nodes.
+This explains why standard LFR benchmarks fail to exhibit DSpar improvements, while real-world networks, where hub-bridging is prevalent, consistently benefit from sparsification.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.85\linewidth]{figures/plot3_dQ_vs_hub_ratio_n10000_r0.8.png}
+\caption{Fixed-partition modularity change under DSpar sparsification as a function of hub-bridging strength on LFR graphs ($n=10{,}000$, $\alpha=0.8$).
+Standard LFR graphs cluster at hub-bridging ratios below one and exhibit negative DSpar separation and modularity change (e.g., $\delta=-0.0065$, $\Delta Q_{\mathrm{fixed}}=-0.0110$ at $\mu=0.3$), indicating the absence of preferential hub-mediated inter-community connectivity.
+In contrast, modified LFR graphs with increasing hub-bridging strength show a strong monotonic increase in modularity improvement.
+For the strongest hub-bridging setting ($h=4$), inter-community edges concentrate on high-degree nodes (hub-bridging ratio $\approx 15.9$), yielding a positive DSpar separation ($\delta=0.0507$) and a substantial modularity gain ($\Delta Q_{\mathrm{fixed}}=0.1156$).
+Across all configurations, $\Delta Q_{\mathrm{fixed}}$ is strongly correlated with the hub-bridging ratio ($r=0.897$, $p=2.97\times10^{-22}$), demonstrating that DSpar improves modularity precisely when inter-community edges are coupled to hubs.}
+
+  \label{fig:lfr_dq_vs_hubratio}
+\end{figure}
+
+% \subsection{Additional Results for Experiment 2}
+% \label{app:lfr}
+\paragraph{Effect of the Mixing Parameter \texorpdfstring{$\mu$}{mu}}
+\label{app:lfr_mu}
+We evaluate the effect of the mixing parameter $\mu$ on DSpar sparsification across both standard and hub-bridged LFR graphs.
+Figure~\ref{fig:lfr_delta_vs_mu} reports the DSpar separation $\delta$ as a function of $\mu$, while Figure~\ref{fig:lfr_dq_vs_mu} shows the corresponding fixed-partition modularity change $\Delta Q_{\mathrm{fixed}}$.
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=0.9\linewidth]{figures/plot1_delta_vs_mu.png}
+\caption{DSpar separation $\delta=\mu_{\mathrm{intra}}-\mu_{\mathrm{inter}}$ as a function of the LFR mixing parameter $\mu$ ($n=10{,}000$, $\alpha=0.8$).
+Standard LFR graphs exhibit $\delta<0$ across all values of $\mu$, indicating the absence of preferential inter-community edge suppression.
+In contrast, introducing hub-bridging ($h>1$) yields positive DSpar separation that gradually diminishes as community structure weakens with increasing $\mu$.}
+
+  \label{fig:lfr_delta_vs_mu}
+\end{figure}
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=0.9\linewidth]{figures/plot2_dQ_vs_delta_n10000_r0.8.png}
+  \caption{Fixed-partition modularity change $\Delta Q_{\mathrm{fixed}}$ as a function of DSpar separation $\delta$ on LFR graphs ($n=10{,}000$, $\alpha=0.8$).
+  Positive modularity gains emerge only when $\delta>0$, confirming the theoretical condition for DSpar effectiveness.}
+  \label{fig:lfr_dq_vs_mu}
+\end{figure}
+
+\paragraph{Effect of the Sparsification Retention Level}
+\label{app:lfr_alpha}
+To assess the sensitivity of DSpar sparsification to the retention level, we repeat Experiment~2 at $\alpha=0.5$ and $\alpha=0.8$.
+Across both graph sizes and all mixing parameters, the qualitative relationship between hub-bridging, DSpar separation, and modularity improvement remains unchanged.
+Lower retention amplifies both positive and negative effects, while higher retention yields more conservative but consistent trends.
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=0.9\linewidth]{figures/plot3_dQ_vs_hub_ratio_n10000_r0.5.png}
+  \caption{Fixed-partition modularity change under DSpar sparsification at $\alpha=0.5$.
+  The monotonic relationship between hub-bridging and $\Delta Q_{\mathrm{fixed}}$ persists, indicating that the observed effects are not specific to a particular sparsification level.}
+  \label{fig:lfr_retention}
+\end{figure}
+
+\paragraph{Effect of Graph Size}
+\label{app:lfr_size}
+We further evaluate the effect of graph size by comparing results obtained on LFR graphs with $n=1{,}000$ and $n=10{,}000$ nodes.
+Figure~\ref{fig:lfr_size} shows that while absolute modularity gains increase with graph size, the qualitative dependence on hub-bridging remains consistent.
+This confirms that the observed behavior is not a finite-size artifact.
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=0.9\linewidth]{figures/plot3_dQ_vs_hub_ratio_n1000_r0.8.png}
+  \caption{Fixed-partition modularity change as a function of hub-bridging on smaller LFR graphs ($n=1{,}000$, $\alpha=0.8$).
+  Although gains are reduced relative to larger graphs, the same structural dependency is observed.}
+  \label{fig:lfr_size}
+\end{figure}
+
+\paragraph{Verification of Modularity Decomposition}
+\label{app:lfr_decomposition}
+For all LFR configurations, we verify that the fixed-partition modularity change decomposes exactly as
+\[
+\Delta Q_{\mathrm{fixed}} = \Delta F_{\mathrm{obs}} - \Delta G_{\mathrm{obs}}.
+\]
+Across all runs, the reconstruction error remains below $10^{-10}$, confirming that observed modularity changes are attributable solely to structural effects induced by sparsification.
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=0.9\linewidth]{figures/plot4_decomposition_mu0.3_n10000_r0.8.png}
+  \caption{Modularity decomposition under DSpar sparsification on LFR graphs ($n=10{,}000$, $\mu=0.3$, $\alpha=0.8$).
+  The fixed-partition modularity change is exactly recovered as the difference between observed changes in the intra-community edge fraction and the null-model penalty term.}
+  \label{fig:lfr_decomposition}
+\end{figure}
+
+These results demonstrate that the effectiveness of sparsification depends not only on degree heterogeneity and community mixing, but critically on how inter-community edges are distributed with respect to node degree.
+
+
+\subsection{Experiment 3: Ground-Truth Community Recovery}
+\label{sec:exp-groundtruth}
+
+\subsubsection{Experimental Setup}
+
+While modularity is a widely used objective for community detection, it does not necessarily coincide with externally provided node labels, which often reflect metadata, organizational structure, or sociological factors.
+In this experiment, we evaluate whether DSpar sparsification improves the recovery of known communities \emph{when its structural condition holds}, rather than assuming universal accuracy gains.
+
+We consider five real-world graphs with disjoint ground-truth communities: \texttt{Karate Club}, \texttt{Dolphins}, \texttt{Football}, \texttt{Polbooks}, and \texttt{email-Eu-core}.
+For each dataset, we treat the ground-truth labeling as a fixed reference partition.
+
+The experimental protocol is as follows.
+We first run the Leiden algorithm on the original graph to obtain a baseline partition.
+We then compute the DSpar separation statistic
+\[
+\delta = \mu_{\mathrm{intra}} - \mu_{\mathrm{inter}},
+\]
+where $\mu_{\mathrm{intra}}$ and $\mu_{\mathrm{inter}}$ denote the mean DSpar scores of intra- and inter-community edges with respect to the ground-truth partition.
+Based on the sign of $\delta$, datasets are categorized as either \emph{DSpar-favorable} ($\delta > 0$) or \emph{DSpar-neutral/unfavorable} ($\delta \le 0$).
+
+DSpar sparsification is applied at retention levels $\alpha \in \{0.8, 0.5\}$.
+Leiden is then re-run on the sparsified graph, and the resulting partition is compared to the ground truth using Normalized Mutual Information (NMI) and Adjusted Rand Index (ARI).
+We report changes in accuracy relative to the original graph,
+\begin{equation}
+\begin{aligned}
+\Delta \mathrm{NMI} &= \mathrm{NMI}(P_\alpha, Y)
+                     - \mathrm{NMI}(P_0, Y), \\
+\Delta \mathrm{ARI} &= \mathrm{ARI}(P_\alpha, Y)
+                     - \mathrm{ARI}(P_0, Y).
+\end{aligned}
+\end{equation}
+
+averaged over 10 independent sparsification runs.
+
+\subsubsection{Results and Analysis}
+
+Table~\ref{tab:ground_truth_summary} summarizes the ground-truth recovery results at $\alpha=0.8$.
+Consistent with the structural analysis in Experiments~1.2 and~1.3, improvements in label agreement concentrate in datasets with positive DSpar separation.
+
+\paragraph{Favorable regime ($\delta > 0$).}
+Among the evaluated datasets, \texttt{email-Eu-core} exhibits positive DSpar separation ($\delta = 0.0347$).
+On this network, DSpar sparsification improves both accuracy metrics, yielding
+$\Delta \mathrm{NMI} = +0.023$ and $\Delta \mathrm{ARI} = +0.050$ at $\alpha=0.8$.
+This graph represents a realistic organizational network with moderate size (986 nodes) and many communities (42), indicating that DSpar can enhance ground-truth recovery when inter-community edges are structurally aligned with high-degree nodes.
+
+\paragraph{Neutral and unfavorable regime ($\delta \le 0$).}
+In contrast, \texttt{Dolphins}, \texttt{Football}, and \texttt{Polbooks} all exhibit non-positive DSpar separation ($\delta \le 0$).
+For these datasets, DSpar sparsification consistently leads to neutral or negative changes in accuracy, with $\Delta \mathrm{NMI}$ ranging from $-0.026$ to $-0.109$ and $\Delta \mathrm{ARI}$ from $-0.068$ to $-0.261$.
+These results are expected, as the structural condition required for DSpar to preferentially remove inter-community edges is not satisfied.
+
+\paragraph{Small-graph effects.}
+The \texttt{Karate Club} network illustrates that positive DSpar separation is a \emph{necessary but not sufficient} condition for improving ground-truth community recovery.
+Despite exhibiting a large positive separation ($\delta = 0.105$), DSpar sparsification leads to decreases in both NMI and ARI.
+This behavior can be attributed to the extremely small graph size (34 nodes) and the sociological nature of the ground-truth split, which does not correspond to a modularity-optimal partition.
+In such settings, even minor structural perturbations can reduce label agreement despite improving modularity-related structure.
+
+
+\paragraph{Accuracy change versus DSpar separation.}
+Figure~\ref{fig:delta_nmi_vs_delta} plots $\Delta \mathrm{NMI}$ against $\delta$, while Figure~\ref{fig:delta_ari_vs_delta} shows the corresponding relationship for ARI.
+Across datasets, positive accuracy gains occur only in graphs with $\delta > 0$, while datasets with $\delta \le 0$ consistently exhibit non-positive changes.
+These trends confirm that DSpar’s impact on ground-truth recovery is conditional on the same structural criterion that governs modularity improvement.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.85\linewidth]{figures/plot_delta_nmi_vs_delta.png}
+  \caption{Change in Normalized Mutual Information ($\Delta \mathrm{NMI}$) as a function of DSpar separation $\delta$ across ground-truth datasets.
+  Accuracy gains are observed only in datasets with positive DSpar separation, while graphs with $\delta \le 0$ exhibit neutral or negative changes.}
+  \label{fig:delta_nmi_vs_delta}
+\end{figure}
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.85\linewidth]{figures/plot_delta_ari_vs_delta.png}
+  \caption{Change in Adjusted Rand Index ($\Delta \mathrm{ARI}$) as a function of DSpar separation $\delta$ across ground-truth datasets.
+  The observed trend mirrors that of $\Delta \mathrm{NMI}$, indicating that DSpar improves label recovery only when its structural condition holds.}
+  \label{fig:delta_ari_vs_delta}
+\end{figure}
+
+\paragraph{Summary.}
+Taken together, these results demonstrate that DSpar sparsification can improve ground-truth community recovery on realistic networks when inter-community edges are preferentially associated with high-degree nodes.
+At the same time, they clarify that improvements in modularity do not universally translate to higher label agreement, particularly on small graphs or when ground-truth labels reflect non-structural factors.
+
+\begin{table*}[t]
+\centering
+\caption{Ground-truth community recovery under DSpar sparsification ($\alpha = 0.8$).}
+\label{tab:ground_truth_summary}
+\begin{tabular}{lrrrr}
+\toprule
+Dataset & $\delta$ & $\Delta$NMI & $\Delta$ARI & $\Delta Q_{\mathrm{Leiden}}$ \\
+\midrule
+Karate Club\cite{zachary1977information} & $+0.1053$ $\uparrow$ & $-0.1300 \pm 0.0435$ & $-0.1609 \pm 0.0511$ & $+0.1360 \pm 0.0330$ \\
+email-Eu-core\cite{yin2017local} & $+0.0347$ $\uparrow$ & $+0.0248 \pm 0.0155$ & $+0.0712 \pm 0.0487$ & $+0.0899 \pm 0.0034$ \\
+Football\cite{girvan2002community} & $-0.0054$ & $-0.0632 \pm 0.0317$ & $-0.1179 \pm 0.0711$ & $+0.0134 \pm 0.0136$ \\
+Polbooks\cite{rossi2015network} & $-0.0401$ & $-0.1348 \pm 0.0311$ & $-0.3446 \pm 0.0290$ & $+0.0613 \pm 0.0144$ \\
+Dolphins\cite{rossi2015network} & $-0.1264$ & $-0.1287 \pm 0.0444$ & $-0.1924 \pm 0.0477$ & $+0.1191 \pm 0.0288$ \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\subsection{Experiment 4: Scalability and Large-Graph Tradeoffs}
+\label{sec:exp4_scalability}
+
+\subsubsection{Experimental Setup}
+
+The previous experiments establish that DSpar sparsification can improve modularity and ground-truth recovery when its structural condition holds.
+We now evaluate whether these structural advantages translate into \emph{practical scalability benefits} on large real-world graphs.
+
+The central question of this experiment is:
+\emph{Does sparsifying a graph with DSpar before community detection reduce the computational cost of Leiden while maintaining or improving community quality, compared to running Leiden directly on the original graph?}
+
+\paragraph{Datasets.}
+We evaluate scalability on eight large real-world networks from collaboration, e-commerce, social, communication, and citation domains. These graphs span a wide range of sizes and sparsity patterns, and exhibit substantial degree heterogeneity and complex community structure, making them representative of settings where community detection is computationally demanding.
+
+\paragraph{Sparsification methods.}
+We compare DSpar against three baselines:
+\begin{itemize}
+  \item \textbf{Uniform random sampling}, which removes edges independently with equal probability;
+  \item \textbf{Degree-based sampling}, which preferentially retains edges incident to high-degree nodes;
+  \item \textbf{Spectral sparsification}, based on effective-resistance sampling.
+\end{itemize}
+These baselines span a range of structural biases and computational costs, from structure-agnostic to degree-biased heuristics and theoretically principled but expensive methods.
+
+\paragraph{Protocol.}
+For each dataset, we first run Leiden on the original graph to obtain a baseline partition $P_0$, modularity $Q_0$, and clustering time $T_{\mathrm{Leiden}}$.
+We then sparsify the graph at retention levels $\alpha \in \{0.2, 0.4, 0.6, 0.8\}$ using each method and re-run Leiden on the sparsified graph to obtain a new partition $P_\alpha$.
+
+All results are averaged over multiple independent sparsification runs.
+To isolate the effect of sparsification on clustering efficiency, we report both:
+(i) the runtime of Leiden on the sparsified graph, and
+(ii) the end-to-end pipeline time including sparsification.
+Following common practice in community-detection acceleration studies, we use Leiden runtime speedup as the primary metric and report pipeline overhead separately.
+
+\paragraph{Metrics.}
+We report:
+\begin{itemize}
+  \item \textbf{Leiden speedup}:
+  \[
+  \mathrm{Speedup}_{\mathrm{Leiden}} =
+  \frac{T_{\mathrm{Leiden}}}{T_{\mathrm{Leiden}}^{(\alpha)}},
+  \]
+  where $T_{\mathrm{Leiden}}^{(\alpha)}$ is the clustering time on the sparsified graph;
+  \item \textbf{Pipeline speedup} (including sparsification):
+  \[
+  \mathrm{Speedup}_{\mathrm{pipe}} =
+  \frac{T_{\mathrm{Leiden}}}{T_{\mathrm{sparsify}}^{(\alpha)} + T_{\mathrm{Leiden}}^{(\alpha)}};
+  \]
+  \item \textbf{Modularity change after re-optimization}:
+  \[
+  \Delta Q_{\mathrm{Leiden}} = Q(P_\alpha) - Q_0;
+  \]
+  \item \textbf{Partition stability} between $P_0$ and $P_\alpha$, measured using normalized mutual information (NMI);
+  \item \textbf{Fragmentation diagnostics} to interpret timing anomalies at low retention:
+  number of connected components, largest connected component (LCC) fraction, and the number of detected communities.
+\end{itemize}
+
+\subsubsection{Results and Analysis}
+
+\paragraph{Quality improvements persist at scale.}
+Table~\ref{tab:scalability_alpha08} summarizes results at $\alpha=0.8$.
+Across all eight large graphs, DSpar yields positive modularity gains after re-optimization, with $\Delta Q_{\mathrm{Leiden}}$ ranging from modest improvements (e.g., \texttt{com-Orkut}) to substantial gains (e.g., \texttt{wiki-Talk} and \texttt{com-Youtube}).
+In contrast, uniform random sampling produces near-zero modularity change across datasets, while degree-based sampling frequently degrades modularity despite reducing edge count.
+Spectral sparsification preserves modularity closely but does not yield consistent improvements, and incurs substantially higher sparsification cost.
+
+
+\begin{table*}[t]
+\centering
+\caption{Scalability results at $\alpha=0.8$.
+Leiden speedup is reported relative to clustering on the original graph.
+Positive $\Delta Q_{\mathrm{Leiden}}$ indicates improved modularity after re-optimization.}
+\label{tab:scalability_alpha08}
+\begin{tabular}{llrrrrrrrrrr}
+\toprule
+Dataset & Method & $m$ & $m_\alpha$ & $\delta$ & $T_{\mathrm{LOrig}}$ & $T_{\mathrm{LSparse}}$ & Speedup$_{\mathrm{L}}$ & $\Delta Q_{\mathrm{fix}}$ & $\Delta Q_{\mathrm{L}}$ & NMI \\
+\midrule
+com-Amazon\cite{yang2012defining}
+ & DSpar    & 925,872 & 477,328 & 0.011 & 1.18 s & 1.34 s & 0.88 & -0.0000 & 0.0205 & 0.658 \\
+ & Degree   &         & 569,723 &  &        & 1.92 s & 0.61 & -0.0035 & 0.0143 & 0.669 \\
+ & Spectral &         & 925,872 &  &        & 1.18 s & 1.00 & 0.0000 & -0.0001 & 0.824 \\
+ & Uniform  &         & 740,698 &  &        & 2.41 s & 0.49 & 0.0000 & 0.0056 & 0.750 \\
+\midrule
+com-DBLP\cite{yang2012defining}
+ & DSpar    & 1,049,866 & 492,237 & 0.148 & 1.28 s & 2.18 s & 0.59 & 0.0443 & 0.0798 & 0.432 \\
+ & Degree   &           & 602,106 &  &        & 2.01 s & 0.64 & -0.0506 & -0.0165 & 0.508 \\
+ & Spectral &           & 1,049,866 &  &        & 1.28 s & 1.00 & 0.0000 & 0.0024 & 0.626 \\
+ & Uniform  &           & 839,893 &  &        & 2.27 s & 0.56 & 0.0000 & 0.0105 & 0.554 \\
+\midrule
+com-Youtube\cite{yang2012defining}
+ & DSpar    & 2,987,624 & 1,224,914 & 0.251 & 5.32 s & 7.89 s & 0.67 & 0.0893 & 0.1586 & 0.407 \\
+ & Degree   &           & 889,540   &  &        & 8.77 s & 0.61 & -0.0987 & -0.0200 & 0.456 \\
+ & Spectral &           & 2,987,005 &  &        & 5.32 s & 1.00 & 0.0001 & -0.0015 & 0.725 \\
+ & Uniform  &           & 2,390,100 &  &        & 10.29 s & 0.52 & 0.0000 & 0.0081 & 0.568 \\
+\midrule
+wiki-Talk\cite{leskovec2010signed}
+ & DSpar    & 4,656,682 & 2,119,686 & 0.498 & 7.37 s & 12.74 s & 0.58 & 0.2028 & 0.2964 & 0.449 \\
+ & Degree   &           & 1,772,687 &  &        & 14.98 s & 0.49 & -0.0101 & 0.0800 & 0.464 \\
+ & Spectral &           & 4,645,332 &  &        & 7.37 s & 1.00 & 0.0013 & 0.0023 & 0.741 \\
+ & Uniform  &           & 3,725,346 &  &        & 16.28 s & 0.45 & -0.0001 & 0.0192 & 0.575 \\
+\midrule
+cit-Patents\cite{leskovec2005graphs}
+ & DSpar    & 16,511,740 & 7,614,121 & 0.037 & 43.38 s & 34.33 s & 1.02 & 0.0056 & 0.0153 & 0.557 \\
+ & Degree   &            & 10,224,930 &  &        & 56.91 s & 0.76 & -0.0033 & 0.0154 & 0.501 \\
+ & Spectral &            & 16,511,740 &  &        & 43.38 s & 1.00 & 0.0000 & -0.0006 & 0.706 \\
+ & Uniform  &            & 13,209,390 &  &        & 65.19 s & 0.67 & 0.0000 & 0.0038 & 0.641 \\
+\midrule
+wiki-topcats\cite{yin2017local}
+ & DSpar    & 25,444,207 & 11,385,488 & 0.022 & 36.48 s & 29.01 s & 1.26 & 0.0512 & 0.0558 & 0.695 \\
+ & Degree   &            & 5,449,937  &  &         & 10.36 s & 3.52 & -0.1242 & -0.0395 & 0.418 \\
+ & Spectral &            & 25,413,976 &  &         & 36.48 s & 1.00 & 0.0005 & 0.0010 & 0.787 \\
+ & Uniform  &            & 20,355,366 &  &         & 44.76 s & 0.82 & 0.0000 & 0.0028 & 0.734 \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+
+\paragraph{{Runtime gains depend on retention and fragmentation.}}
+
+Figure~\ref{fig:scaling_pipeline_time} shows that sparsification time can dominate the end-to-end pipeline, particularly for computationally heavy methods such as spectral sparsification.
+Accordingly, DSpar provides a favorable practical tradeoff: it is substantially cheaper than spectral sparsification while improving modularity more consistently than uniform or degree-based sampling.
+
+At the same time, Leiden runtime does not strictly scale with edge count.
+At moderate retention levels ($\alpha \ge 0.6$), reducing the edge set typically reduces Leiden runtime.
+However, at aggressive retention (e.g., $\alpha=0.2$), sparsification can fragment the graph into many small components and induce extremely fine partitions with a very large number of communities.
+In this regime, Leiden incurs substantial bookkeeping overhead per community, and runtime may increase despite a smaller edge set.
+We therefore interpret speedups jointly with fragmentation diagnostics (connected components, LCC fraction, and number of communities), and treat extreme fragmentation as an undesirable operating regime.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.85\linewidth]{figures/plot2_scaling_pipeline_time.png}
+  \caption{End-to-end pipeline time (sparsification + Leiden) versus graph size on a log--log scale.
+  Spectral sparsification incurs overhead, while DSpar achieves a more favorable runtime--quality tradeoff.}
+  \label{fig:scaling_pipeline_time}
+\end{figure}
+
+
+
+
+\paragraph{Speed--quality tradeoffs.}
+Figure~\ref{fig:speedup_vs_quality} plots Leiden speedup against modularity improvement.
+DSpar consistently occupies a favorable regime in which clustering acceleration coincides with improved community quality.
+Uniform random sampling provides limited quality benefits, while degree-based sampling can achieve higher speedups but often at the cost of negative modularity change.
+Spectral sparsification rarely provides competitive pipeline speedups due to high sparsification overhead.
+
+\begin{figure}[t]
+  \centering
+   \includegraphics[width=0.85\linewidth]{figures/plot5_speedup_leiden_vs_quality_com_Youtube_no_alpha1.png}
+  \caption{Leiden speedup versus modularity improvement under sparsification on the \texttt{com-Youtube} dataset.
+  DSpar achieves favorable speed--quality tradeoffs, improving modularity while reducing clustering runtime.
+  Baselines either provide limited quality gains (uniform random), sacrifice modularity for speed (degree-based sampling), or incur high overhead (spectral).}
+  \label{fig:speedup_vs_quality}
+\end{figure}
+
+\paragraph{Partition stability and controlled reorganization.}
+Partition similarity between $P_0$ and $P_\alpha$ provides a measure of how much sparsification alters the community assignment.
+DSpar sometimes yields lower $\mathrm{NMI}(P_0,P_\alpha)$ than degree-based sampling, reflecting that DSpar can induce meaningful structural reorganization rather than merely preserving the original partition.
+This behavior is expected: $\mathrm{NMI}(P_0,P_\alpha)$ measures stability relative to the original Leiden solution, not community quality.
+In cases where DSpar increases modularity, reduced NMI indicates that sparsification enables Leiden to escape local optima of the original graph and converge to a higher-modularity partition.
+Detailed NMI trends as a function of $\alpha$ are reported in the appendix.
+
+\paragraph{Summary.}
+Taken together, these results show that DSpar provides a favorable scalability tradeoff on large real-world graphs.
+DSpar consistently improves re-optimized modularity across all evaluated datasets and retention levels, while maintaining competitive runtime relative to inexpensive baselines and substantially lower overhead than spectral methods.
+Moreover, the relationship between edge reduction and clustering time is mediated by graph fragmentation: aggressive sparsification can enter a degenerate regime with community explosion and increased Leiden overhead.
+By reporting fragmentation diagnostics alongside timing and quality metrics, we obtain a consistent explanation of runtime behavior and a practical operating regime in which DSpar delivers both community-quality improvements and meaningful computational savings.
+
+
+\section{Conclusion}
+We showed that graph sparsification can improve community detection quality, rather than merely preserving it, when specific structural conditions hold. Focusing on modularity-based methods, we demonstrated that degree-based sparsification preferentially removes inter-community edges when such edges are disproportionately associated with high-degree nodes, a pattern we formalized through the hub–bridge hypothesis and DSpar separation. We proved that under this condition, sparsification increases the intra-community edge fraction and improves modularity, both under deterministic weighting and randomized edge removal, and validated these predictions empirically using fixed-partition modularity decomposition to isolate structural effects from re-optimization artifacts. 
+
+Our empirical evaluation across 17 diverse networks spanning collaboration, citation, social, and communication domains confirms that DSpar separation is a strong predictor of modularity improvement, substantially outperforming hub-bridging ratio as a structural indicator. The evaluated networks exhibit a broad spectrum of hub-bridging structures, from extreme cases such as Wikipedia discussion networks (hub-bridge ratio $> 10$, DSpar separation $\delta = 0.498$) yielding the largest improvements, to weak or inverted patterns where sparsification provides minimal structural benefit. Importantly, we identified networks where strong hub-bridging coexists with near-zero DSpar separation, demonstrating that these measures capture related but mathematically distinct properties and validating our theoretical choice to formalize conditions in terms of DSpar separation rather than hub-bridging alone.
+
+Extensive experiments on real and synthetic networks clarified both the effectiveness and the limits of this mechanism, explaining why standard benchmarks without degree–community coupling fail to exhibit improvements, and why gains in modularity do not universally translate to higher agreement with external labels. Finally, we showed that degree-based sparsification achieves modularity gains comparable to spectral sparsification at linear-time cost, yielding favorable quality–runtime tradeoffs on large graphs. 
+
+Our results provide a complementary perspective to post-processing approaches that enforce cluster connectivity. While such methods repair poorly-connected clusters after detection by removing small edge cuts and re-clustering, DSpar prevents their formation through principled pre-processing. Both approaches address redundant edges that artificially subdivide communities, but from opposite directions. Future work could explore hybrid pipelines combining DSpar pre-processing with connectivity enforcement to achieve stronger guarantees on both modularity and well-connectedness.
+
+Together, these results characterize when sparsification helps or harms community detection and highlight a shared structural principle underlying modularity, spectral methods, and degree-based sparsification.
+
+
+
+
+\section*{Acknowledgment}
+
+This research was funded in part by NSF grant numbers CCF-2109988, OAC-2402560, and CCF-2453324.
+% (Bader) and OAC-2402559 (Warnow and Chacko).
+
+\appendix
+
+
+
+% \subsection{Reproducibility and Experimental Details}
+% \label{app:lfr_repro}
+% All LFR experiments are repeated across multiple independent graph realizations and sparsification runs.
+% Random seeds, graph parameters, and all intermediate quantities (including DSpar scores, modularity components, and reconstruction errors) are logged and made available in the supplementary material.
+% Complete CSV files include per-run values of $\delta$, $\Delta F_{\mathrm{obs}}$, $\Delta G_{\mathrm{obs}}$, and $\Delta Q_{\mathrm{fixed}}$ for full reproducibility.
+
+\bibliographystyle{IEEEtran}
+\bibliography{refs}
+
+\end{document}

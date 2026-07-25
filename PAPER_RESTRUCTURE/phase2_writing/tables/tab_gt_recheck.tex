@@ -1,0 +1,53 @@
+\begin{table*}[t]
+\centering
+\setlength{\tabcolsep}{5pt}
+\caption{Artifact II --- granularity. Ground-truth recovery on the five small benchmark graphs,
+10 seeds per cell, mean $\pm$ standard deviation. \emph{baseline} is Leiden on the original graph;
+\emph{DSpar \texttt{paper}} is the draft's pipeline (with-replacement sampler, nominal $\alpha=0.8$,
+realized retention $0.44$--$0.55$); the \emph{resolution-matched control} applies no sparsification
+at all and instead tunes the RBConfiguration resolution $\gamma$ on the original graph until the
+cluster count matches the DSpar run; \emph{DSpar calibrated} uses the $\lambda$-bisection sampler
+with $\mathbb{E}[\text{retention}]=0.9$ exactly. AMI is the chance-corrected primary metric; NMI is
+the draft's metric and is inflated by the finer partitions sparsification produces. The only
+positive cell in the draft (email-Eu-core) is reproduced and exceeded by the resolution-matched
+control at 100\% of the edges ($\Delta$AMI $+0.014$ vs $+0.007$), so the score against a
+granularity-matched baseline is 0/5.
+Source: \texttt{PAPER\_RESTRUCTURE/exp\_F\_gt\_recheck/results.csv}.}
+\label{tab:gt_recheck}
+\footnotesize
+\begin{tabular}{llrrrrrr}
+\toprule
+Dataset & Condition & true ret. & $\gamma$ & \#clusters & AMI & ARI & NMI \\
+\midrule
+\multirow{4}{*}{Karate} & baseline (no sparsification) & 1.000 & 1.000 & 4.0 $\pm$ 0.0 & 0.557 $\pm$ 0.028 & 0.457 $\pm$ 0.022 & 0.579 $\pm$ 0.027 \\
+ & DSpar \texttt{paper}, $\alpha=0.8$ & 0.541 & 1.000 & 7.3 $\pm$ 1.7 & 0.366 $\pm$ 0.059 & 0.294 $\pm$ 0.073 & 0.429 $\pm$ 0.050 \\
+ & resolution-matched control & 1.000 & 2.000 & 7.3 $\pm$ 0.5 & 0.392 $\pm$ 0.005 & 0.239 $\pm$ 0.009 & 0.445 $\pm$ 0.003 \\
+ & DSpar calibrated, $\alpha=0.9$ & 0.887 & 1.000 & 4.0 $\pm$ 0.0 & 0.492 $\pm$ 0.038 & 0.416 $\pm$ 0.031 & 0.517 $\pm$ 0.036 \\
+\addlinespace[2pt]
+\multirow{4}{*}{Dolphins$^{\dagger}$} & baseline (no sparsification) & 1.000 & 1.000 & 5.0 $\pm$ 0.4 & 0.270 $\pm$ 0.029 & 0.246 $\pm$ 0.033 & 0.293 $\pm$ 0.027 \\
+ & DSpar \texttt{paper}, $\alpha=0.8$ & 0.520 & 1.000 & 9.7 $\pm$ 1.2 & 0.216 $\pm$ 0.045 & 0.132 $\pm$ 0.029 & 0.264 $\pm$ 0.039 \\
+ & resolution-matched control & 1.000 & 2.300 & 10.3 $\pm$ 0.9 & 0.223 $\pm$ 0.018 & 0.125 $\pm$ 0.010 & 0.270 $\pm$ 0.014 \\
+ & DSpar calibrated, $\alpha=0.9$ & 0.892 & 1.000 & 4.9 $\pm$ 0.5 & 0.261 $\pm$ 0.021 & 0.195 $\pm$ 0.047 & 0.284 $\pm$ 0.019 \\
+\addlinespace[2pt]
+\multirow{4}{*}{Football} & baseline (no sparsification) & 1.000 & 1.000 & 9.7 $\pm$ 0.5 & 0.849 $\pm$ 0.018 & 0.779 $\pm$ 0.047 & 0.880 $\pm$ 0.016 \\
+ & DSpar \texttt{paper}, $\alpha=0.8$ & 0.549 & 1.000 & 9.2 $\pm$ 0.9 & 0.812 $\pm$ 0.032 & 0.737 $\pm$ 0.059 & 0.849 $\pm$ 0.028 \\
+ & resolution-matched control & 1.000 & 1.000 & 9.7 $\pm$ 0.5 & 0.849 $\pm$ 0.018 & 0.779 $\pm$ 0.047 & 0.880 $\pm$ 0.016 \\
+ & DSpar calibrated, $\alpha=0.9$ & 0.899 & 1.000 & 8.9 $\pm$ 0.3 & 0.816 $\pm$ 0.013 & 0.702 $\pm$ 0.027 & 0.852 $\pm$ 0.011 \\
+\addlinespace[2pt]
+\multirow{4}{*}{Polbooks} & baseline (no sparsification) & 1.000 & 1.000 & 4.7 $\pm$ 0.5 & 0.535 $\pm$ 0.026 & 0.625 $\pm$ 0.061 & 0.551 $\pm$ 0.024 \\
+ & DSpar \texttt{paper}, $\alpha=0.8$ & 0.527 & 1.000 & 6.8 $\pm$ 0.7 & 0.413 $\pm$ 0.043 & 0.341 $\pm$ 0.069 & 0.439 $\pm$ 0.041 \\
+ & resolution-matched control & 1.000 & 1.500 & 6.8 $\pm$ 0.6 & 0.431 $\pm$ 0.012 & 0.333 $\pm$ 0.021 & 0.456 $\pm$ 0.010 \\
+ & DSpar calibrated, $\alpha=0.9$ & 0.900 & 1.000 & 5.2 $\pm$ 0.7 & 0.475 $\pm$ 0.028 & 0.490 $\pm$ 0.088 & 0.494 $\pm$ 0.025 \\
+\addlinespace[2pt]
+\multirow{4}{*}{email-Eu-core} & baseline (no sparsification) & 1.000 & 1.000 & 7.7 $\pm$ 0.5 & 0.558 $\pm$ 0.010 & 0.323 $\pm$ 0.021 & 0.583 $\pm$ 0.011 \\
+ & DSpar \texttt{paper}, $\alpha=0.8$ & 0.443 & 1.000 & 8.6 $\pm$ 0.5 & 0.565 $\pm$ 0.014 & 0.360 $\pm$ 0.026 & 0.592 $\pm$ 0.013 \\
+ & resolution-matched control & 1.000 & 1.075 & 8.6 $\pm$ 0.9 & 0.571 $\pm$ 0.017 & 0.361 $\pm$ 0.043 & 0.598 $\pm$ 0.018 \\
+ & DSpar calibrated, $\alpha=0.9$ & 0.900 & 1.000 & 7.3 $\pm$ 0.6 & 0.549 $\pm$ 0.024 & 0.298 $\pm$ 0.037 & 0.573 $\pm$ 0.024 \\
+\bottomrule
+\end{tabular}
+
+\vspace{2pt}
+{\footnotesize\raggedright $^{\dagger}$Dolphins has no canonical ground-truth partition; the labels
+used here are a surrogate two-group split obtained by Kernighan--Lin bisection, so its recovery
+scores measure agreement with a heuristic cut, not with metadata.\par}
+\end{table*}

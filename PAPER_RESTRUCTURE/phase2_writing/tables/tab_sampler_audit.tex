@@ -1,0 +1,40 @@
+\begin{table}[t]
+\centering
+\setlength{\tabcolsep}{4pt}
+\caption{Sampler audit: nominal $\alpha$ versus realized edge retention $m'/m$, over all runs on
+disk. The three samplers used in (or implied by) the pipeline are not interchangeable.
+\texttt{paper} samples $\lceil \alpha m\rceil$ edges \emph{with} replacement, so distinct-edge
+retention collapses to roughly $\alpha/2$ and never approaches $\alpha$ --- even at $\alpha=1.0$.
+\texttt{probabilistic\_no\_replace} sets $p_e=\mathrm{clip}(s_e/\sum s\cdot\lceil\alpha m\rceil,0,1)$;
+$13$--$35\%$ of edges hit the clip, so $\mathbb{E}[\text{kept}]<\alpha m$ always and the sampler
+saturates below $0.7$. The calibrated sampler solves $\sum_e \min(1,\lambda s_e)=\alpha m$ by
+bisection, giving $\mathbb{E}[\text{retention}]=\alpha$ exactly; it is the only variant for which the
+nominal knob means what the formal definition says. ``\#'' is the number of network$\times$sampler
+runs pooled into the range. Ranges are min--max of the per-network mean realized retention.
+Sources: \texttt{PAPER\_RESTRUCTURE/audit/AUDIT\_FINDINGS.md},
+\texttt{exp\_C/results\_summary.csv}, \texttt{exp\_B/results.csv}, \texttt{exp\_E/outcomes.csv},
+\texttt{exp\_F/results.csv},
+\texttt{PAPER\_EXPERIMENTS/results/exp4\_comprehensive/comprehensive\_alpha\_results.csv}.
+Exp\_C additionally ran $\alpha\in\{0.7,0.95\}$ (\texttt{no\_replace}: $0.366$--$0.572$ and
+$0.447$--$0.678$; calibrated: $0.699$--$0.700$ and $0.950$--$0.951$). The calibrated
+$\alpha=1.0$ cell was never run, as it is the no-sparsification sentinel.}
+\label{tab:sampler_audit}
+\footnotesize
+\begin{tabular}{llrrl}
+\toprule
+Sampler & nominal $\alpha$ & realized $m'/m$ & \# & source \\
+\midrule
+\multirow{3}{*}{\texttt{paper} (w/ repl.)} & 0.8 & 0.317--0.549 & 54 & exp4, exp\_B (both arms), exp\_F \\
+ & 0.9 & 0.334--0.554 & 15 & exp4 \\
+ & 1.0 & 0.350--0.589 & 15 & exp4 \\
+\addlinespace[2pt]
+\multirow{3}{*}{\texttt{prob.\_no\_replace}} & 0.8 & 0.400--0.619 & 6 & exp\_C \\
+ & 0.9 & 0.432--0.660 & 6 & exp\_C \\
+ & 1.0 & 0.662 & 1 & audit (email-Eu-core) \\
+\addlinespace[2pt]
+\multirow{3}{*}{calibrated ($\lambda$-bisection)} & 0.8 & 0.799--0.800 & 6 & exp\_C \\
+ & 0.9 & 0.887--0.901 & 26 & exp\_C, exp\_E, exp\_F \\
+ & 1.0 & -- & -- & not run \\
+\bottomrule
+\end{tabular}
+\end{table}
