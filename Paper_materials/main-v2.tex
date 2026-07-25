@@ -184,7 +184,7 @@ Leiden algorithm throughout this work.
 
 Graph sparsification constructs a sparse subgraph $H$ that approximates properties of the original graph $G$.
 Spectral sparsification~\cite{spielman2004nearly, spielman2008graph} preserves the Laplacian quadratic form: $H$ is a $(1 \pm \epsilon)$-spectral sparsifier of $G$ if $(1-\epsilon)\, x^\top L_G x \le x^\top L_H x \le (1+\epsilon)\, x^\top L_G x$ for all $x \in \mathbb{R}^n$, where $L = D - A$ is the combinatorial Laplacian.
-Spielman and Srivastava~\cite{spielman2008graph} showed that sampling $O(n \log n / \epsilon^2)$ edges with probability proportional to \emph{effective resistance}---the voltage difference induced across an edge when the graph is viewed as an electrical network with unit resistors~\cite{doyle1984random}---yields such a sparsifier with high probability.
+Spielman and Srivastava~\cite{spielman2008graph} showed that sampling $O(n \log n / \epsilon^2)$ edges with probability proportional to \emph{effective resistance}, the voltage difference induced across an edge when the graph is viewed as an electrical network with unit resistors~\cite{doyle1984random}, yields such a sparsifier with high probability.
 Edges of high effective resistance are critical for connectivity; edges of low effective resistance lie in densely connected regions with many alternative paths.
 Effective resistance is moreover closely related to vertex degrees: degree-based bounds follow from Rayleigh monotonicity~\cite{doyle1984random, lovasz1993random}, and edges embedded in dense subgraphs typically have lower resistance than edges bridging weakly connected regions.
 
@@ -210,7 +210,7 @@ Finally, post-processing methods that repair poorly connected clusters~\cite{par
 \label{sec:theory}
 
 Modularity maximization, normalized-cut partitioning, and inference under the degree-corrected stochastic block model admit closely related spectral relaxations, each solved by leading eigenvectors of a degree-normalized operator such as $\mathcal{A} = D^{-1/2} A D^{-1/2}$~\cite{newman2013spectral, karrer2011stochastic, shi2000normalized}.
-These frameworks, together with resistance-based spectral sparsification and DSpar, encode a common structural bias: edges between high-degree nodes are systematically down-weighted---by the null-model term $k_i k_j / 2m$, by degree normalization, by the low effective resistance of edges in densely connected regions, or by the score $s(u,v) = 1/d_u + 1/d_v$.
+These frameworks, together with resistance-based spectral sparsification and DSpar, encode a common structural bias: edges between high-degree nodes are systematically down-weighted, whether by the null-model term $k_i k_j / 2m$, by degree normalization, by the low effective resistance of edges in densely connected regions, or by the score $s(u,v) = 1/d_u + 1/d_v$.
 This does not make hub--hub edges uninformative; it means all four frameworks discount edges that are expected under degree-driven null models.
 The spectral perspective supplies intuition only, and none of our formal results depends on it: in the idealized limit in which all inter-community edges are removed, $\mathcal{A}$ becomes block-diagonal with repeated unit eigenvalues, so preferential inter-community removal moves the spectrum toward the signature of separated communities.
 
