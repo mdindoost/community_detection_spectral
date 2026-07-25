@@ -954,7 +954,7 @@ Results reported at ``$\alpha = 0.8$'' under this sampler are, in fact, roughly 
 
 \paragraph{Probability clipping causes saturation.}
 A natural no-replacement variant retains edge $e$ independently with probability proportional to its score, clipped at one.
-Because a substantial fraction of low-degree edges clips (13--35\% in our measurements), the expected retention falls strictly below $\alpha m$ at every setting and \emph{saturates}: on \texttt{email-Eu-core} this sampler cannot retain more than $66\%$ of edges even at $\alpha = 1.0$.
+Because a substantial fraction of low-degree edges clips (12--36\% in our measurements), the expected retention falls strictly below $\alpha m$ at every setting and \emph{saturates}: on \texttt{email-Eu-core} this sampler cannot retain more than $66\%$ of edges even at $\alpha = 1.0$.
 True mild sparsification (e.g., retaining $90\%$ of edges) is unreachable under either published variant.
 
 \paragraph{Calibration closes the gap.}
@@ -997,14 +997,14 @@ Because these runs use the with-replacement sampler, the Bernoulli-model ratio o
 
 \begin{figure}[t]
   \centering
-  \includegraphics[width=0.85\linewidth]{figures/cit-HepTh_figure_A_modularity_no_alpha1.png}
+  \includegraphics[width=0.85\linewidth]{figures/cit-HepTh_figure_A_modularity_no_alpha1.pdf}
   \caption{Fixed-partition and re-optimized modularity changes under DSpar sparsification on \texttt{cit-HepTh}, both evaluated on the sparsified graph.}
   \label{fig:fixed_vs_leiden}
 \end{figure}
 
 \begin{figure}[t]
   \centering
-  \includegraphics[width=0.85\linewidth]{figures/cit-HepTh_figure_B_decomposition_no_alpha1.png}
+  \includegraphics[width=0.85\linewidth]{figures/cit-HepTh_figure_B_decomposition_no_alpha1.pdf}
  \caption{Modularity decomposition under DSpar sparsification on \texttt{cit-HepTh}: $\Delta Q_{\mathrm{fixed}}$ alongside the null-model contribution $-\Delta G_{\mathrm{obs}}$ across sparsification levels; the remainder is $\Delta F_{\mathrm{obs}}$ (Table~\ref{tab:exp1_2_decomposition}).}
   \label{fig:decomposition_cit_hepth}
 \end{figure}
@@ -1056,14 +1056,14 @@ At $h = 4$ the hub-bridging ratio reaches $\approx 15.9$, $\delta$ turns positiv
 
 \begin{figure}[t]
   \centering
-  \includegraphics[width=0.85\linewidth]{figures/plot3_dQ_vs_hub_ratio_n10000_r0.8.png}
+  \includegraphics[width=0.85\linewidth]{figures/plot3_dQ_vs_hub_ratio_n10000_r0.8.pdf}
 \caption{Fixed-partition modularity change under DSpar as a function of induced hub-bridging on LFR graphs ($n = 10^4$, nominal $\alpha = 0.8$, planted partitions). The controlled rewiring operator ($h$: endpoint choice $\propto d^{\,h}$) restores the coupling between hub-bridging, $\delta$, and $\Delta Q_{\mathrm{fixed}}$.}
   \label{fig:lfr_dq_vs_hubratio}
 \end{figure}
 
 \begin{figure}[t]
   \centering
-  \includegraphics[width=0.85\linewidth]{figures/plot1_delta_vs_mu.png}
+  \includegraphics[width=0.85\linewidth]{figures/plot1_delta_vs_mu.pdf}
 \caption{DSpar separation $\delta$ (planted partitions) versus mixing parameter $\mu$ for standard ($h=1$) and hub-bridged ($h>1$) LFR graphs ($n=10^4$).}
   \label{fig:lfr_delta_vs_mu}
 \end{figure}
@@ -1152,7 +1152,7 @@ This uses sparsification not as a replacement for the graph but as a perturbatio
 Table~\ref{tab:boundary} reports the outcome on 15 networks at calibrated retention $0.9$.
 In the screening experiment, the seeded pipeline beats the runtime-matched baseline beyond twice the baseline's seed deviation on exactly \textbf{2 of 15} networks: \texttt{email-Enron} ($+0.0077$, $4.1$ baseline standard deviations) and \texttt{com-Youtube} ($+0.0086$, $2.5$); across 15 networks at a two-deviation screening threshold, roughly half a false positive is expected.
 The \texttt{com-Youtube} margin as screened is inflated: its matched baseline is a single best-of-two realization that landed at the second percentile of the exact best-of-two distribution (all 45 pairs over ten baseline runs). A dedicated sweep (both samplers, $\alpha \in \{0.7, 0.8, 0.9, 0.95\}$, five seeds each) gives the corrected picture. Against the \emph{expected} best-of-two, the gain is confined to the calibrated sampler at $\alpha \ge 0.9$ and is small ($+0.0023$ at $\alpha = 0.9$, $+0.0031$ at $\alpha = 0.95$); the clipped sampler is negative in all four of its configurations, and aggressive calibrated sparsification ($\alpha = 0.7$) is strongly negative. The $\alpha = 0.95$ cell is nonetheless statistically solid: its seeded mean beats every one of the 45 matched best-of-two draws and all ten individual baseline runs (bootstrap $p < 10^{-4}$, surviving Bonferroni correction across the eight configurations), with across-seed spread $\pm 0.0004$. That the gain \emph{rises} as the sparsifier removes less marks it as a perturbation-of-the-optimizer effect rather than a sparsification benefit. We therefore report one substantial robust gain (\texttt{email-Enron}) and one small, regime-confined gain (\texttt{com-Youtube}).
-The \texttt{email-Enron} result is robust in every direction we probed: it holds for both sampler variants tested there (calibrated and clipped no-replacement), at every retention level ($0.7$--$0.95$), against best-of-five as well as best-of-two baselines, and it strengthens under \emph{harsher} sparsification (up to $+0.0149$ under the clipped no-replacement sampler at nominal $\alpha = 0.7$, true retention $0.45$). The gain therefore stems from aggressive hub-edge removal changing the optimizer's search space, not from mild denoising.
+The \texttt{email-Enron} result is robust across the sweep: against the runtime-matched best-of-two baseline it is positive in all eight configurations (both sampler variants, every retention level $0.7$--$0.95$; margins $+0.0007$ to $+0.0149$, the largest under the clipped no-replacement sampler at nominal $\alpha = 0.7$, true retention $0.45$), and against the stricter best-of-five baseline it is positive in seven of eight (margins up to $+0.0107$; the exception is calibrated $\alpha = 0.7$ at $-0.004$). That the margins grow under \emph{harsher} sparsification indicates the gain stems from aggressive hub-edge removal changing the optimizer's search space, not from mild denoising.
 On \texttt{email-Enron} the raw transferred partition itself (before refinement) already exceeds baseline at true retention $\ge 0.8$, the only network in the suite where the transfer loss of Section~\ref{sec:artifact-modularity} changes sign.
 
 \subsection{No Tested Statistic Predicts the Gains}
