@@ -1,0 +1,42 @@
+\section{Discussion and Conclusion}
+\label{sec:discussion}
+
+\paragraph{What the theory licenses.}
+Our fixed-partition results (Theorems~\ref{thm:ratio}--\ref{thm:sparsification}) are correct and verified to high precision, and they should be read for exactly what they state: degree-biased sampling shifts edge composition and null-model mass in a direction determined by the score gap $\delta$, for whatever partition $\delta$ is measured against.
+The configuration-model controls show that this premise, and therefore the conclusion, holds as readily on graphs without communities as on real networks.
+The theory is a quantitative account of degree mechanics; treating it as a theory of community clarification was an over-interpretation---one we made ourselves, and one the literature on preprocessing-for-clustering is structurally exposed to, since the certifying statistics look meaningful and the standard evaluations all move in the flattering direction.
+
+\paragraph{What we recommend.}
+For practitioners: degree-based sparsification remains a legitimate \emph{scaling} tool at mild retention, where the fixed-objective cost is small (Section~\ref{sec:boundary-retention}), and seeded refinement is worth trying when clustering budgets allow a second pass---but no quality improvement should be assumed, and none should be claimed without the controls of Section~\ref{sec:protocol}.
+For evaluators and reviewers: the three controls (fixed objective, granularity matching, compute matching) plus the configuration-model null are each a few lines of code, and each reversed at least one published-style conclusion in this paper.
+For benchmark designers: standard LFR is doubly unrepresentative for sparsification studies---nearly homogeneous in degree and uncoupled between degree and community membership---and controlled degree--community coupling of the kind used here (or in richer generators) is required for synthetic conclusions to transfer.
+
+\paragraph{Limitations.}
+Our scope is modularity-based detection with Leiden under DSpar-family sparsification; other objectives (description-length, flow-based), other detectors, and similarity- or resistance-based sparsifiers may behave differently, and our protocol is designed to test exactly that.
+The boundary characterization rests on 15 networks: sufficient to establish existence (2 genuine successes) and to defeat the tested predictors, insufficient to establish what does predict success.
+Reference-label experiments inherit the known gap between metadata and structural communities~\cite{peel2017ground, hric2014community}.
+
+\paragraph{Open problems.}
+Why \texttt{email-Enron} and \texttt{com-Youtube}?
+Both gains are real, robust, and---by every statistic we computed---unforecastable; understanding what landscape property lets hub-edge removal unlock better optima on precisely these graphs is the concrete open question this work leaves.
+A second is constructive: whether a sparsifier can be \emph{designed} so that its selection signal separates real networks from their configuration models, rather than inheriting the degree sequence's behavior.
+
+\paragraph{Conclusion.}
+We set out to determine when sparsification helps community detection.
+The answer has three parts.
+The mechanism by which degree-based sparsification reshapes graphs is real, provable, and controllable.
+The standard evidence that this mechanism improves detection is artifactual---attributable to cross-graph scoring, granularity, and unmatched computation, and reproduced in full by configuration models without community structure.
+And a genuine benefit exists but is rare and currently unpredictable: two networks in fifteen, small margins, surviving every control we could construct.
+Sparsification, in short, is a scaling tool that occasionally---and so far inexplicably---doubles as an optimizer's heuristic; it is not a general clarifier of community structure.
+The evaluation protocol that separates these outcomes costs little, and we hope it becomes routine.
+
+\section*{Acknowledgment}
+
+This research was funded in part by NSF grant numbers CCF-2109988, OAC-2402560, and CCF-2453324.
+
+\appendix
+
+\section*{Reproducibility}
+All experiments in this paper are reproducible from the accompanying repository: per-experiment scripts, per-run CSV outputs, fixed seeds, and the calibrated sampler implementation, together with the audit artifacts (including bit-level verification of our reimplementation of the with-replacement sampler against the reference implementation).
+Realized retention is logged for every sparsification call.
+Dataset sources: SNAP collections for the large networks and standard repositories for the classical labeled graphs, as cited per table.

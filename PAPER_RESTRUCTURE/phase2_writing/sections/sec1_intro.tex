@@ -1,0 +1,53 @@
+\IEEEraisesectionheading{\section{Introduction}\label{sec:introduction}}
+\IEEEPARstart{C}{ommunity} detection, the task of identifying densely connected groups of nodes, is a fundamental problem in network science~\cite{fortunato202220, karatacs2018application}.
+As networks scale to millions of nodes and edges, graph sparsification---removing edges while approximately preserving structural properties---has become a standard preprocessing step, classically justified by computational savings alone~\cite{spielman2008graph, benczur2015randomized}.
+Recently, a more ambitious claim has emerged: that sparsification can \emph{improve} downstream community detection rather than merely accelerate it.
+Similarity-based sparsification has been reported to sharpen cluster structure~\cite{satuluri2011local}; degree-based schemes such as DSpar~\cite{liu2023dspar} preferentially remove edges between high-degree hubs, which are intuitively the edges most likely to blur community boundaries~\cite{granovetter1973strength, newman2001structure}; and, in an earlier version of this work, we ourselves reported consistent modularity improvements from DSpar preprocessing across a broad collection of real-world networks.
+
+This paper subjects that class of claims to controlled evaluation, and the result is largely negative: \emph{for degree-based sparsification, the standard evidence of improved community detection is dominated by measurement artifacts rather than genuine structural gains}.
+At the same time, the underlying mechanism is real and provable, and a small genuine benefit survives the strictest controls we could devise---on 2 of 15 networks.
+Characterizing precisely which part is real and which is artifact, and providing the controls that separate them, is the contribution of this paper.
+
+\paragraph{The mechanism is real.}
+Degree-based sparsification assigns each edge $(u,v)$ a score $s(u,v) = 1/d_u + 1/d_v$ and retains edges with probability increasing in this score, so edges between high-degree nodes are removed preferentially.
+When intra-community edges receive higher scores on average than inter-community edges---a condition we call \emph{DSpar separation}, $\delta > 0$---we prove that sparsification removes inter-community edges preferentially and increases the intra-community edge fraction of any fixed partition (Section~\ref{sec:theory}).
+These results hold under both deterministic edge weighting and randomized edge removal, and our experiments verify their quantitative predictions to high accuracy.
+
+\paragraph{The evidence is confounded.}
+The mechanism, however, does not imply improved community detection, because the standard ways of measuring improvement are confounded by three distinct artifacts.
+First, \emph{modularity is not comparable across graphs}: sparsification changes the edge set and the configuration null model simultaneously, and sparser graphs support higher modularity for purely combinatorial reasons~\cite{guimera2004modularity}.
+When partitions optimized on sparsified graphs are evaluated on the \emph{original} network, they \emph{lose} $0.01$--$0.19$ modularity---on every one of the 15 networks we test.
+Second, \emph{partition granularity}: sparsification fragments graphs, detection algorithms return finer partitions, and popular agreement measures reward finer partitions against small ground-truth communities~\cite{vinh2010information}.
+A resolution-matched control---the same detection algorithm run on the \emph{unsparsified} graph, tuned to the same number of clusters---matches or beats sparsification on all eight labeled datasets we test.
+Third, \emph{unmatched computation}: sparsify-cluster-refine pipelines spend more optimization effort than the single-run baselines they are compared against; when baselines are granted equal wall-clock time via restarts, most apparent gains disappear.
+
+\paragraph{The certifying signals are degree statistics.}
+More fundamentally, we show that the structural signals used to certify the mechanism carry no information about community structure per se.
+On all 17 networks in our suite, degree-preserving configuration-model rewiring---which destroys community structure while retaining the degree sequence---reproduces both $\delta > 0$ and positive fixed-partition modularity change under sparsification, typically at \emph{larger} magnitude than the real graph (median ratio $1.24$).
+Hub-bridging behaves identically: the degree-product ratio between inter- and intra-community edges exceeds one on every rewired null, while it is erratic on the real graphs.
+Both quantities are properties of heavy-tailed degree sequences interacting with modularity optimization, not of community structure; neither can distinguish a real network from its own configuration model.
+
+\paragraph{What survives.}
+After all three controls, one genuine effect remains: seeding the Leiden algorithm~\cite{traag2019louvain} with the partition found on the sparsified graph and \emph{refining on the original graph} beats runtime-matched restart baselines on 2 of 15 networks (email-Enron and com-Youtube; $+0.008$ modularity, $5$--$8$ baseline standard deviations).
+No structural statistic we tested---including $\delta$, its null-corrected excess, hub-bridging strength, degree heterogeneity, and graph size---predicts where these gains occur.
+Notably, the strongest candidate correlation appeared statistically significant over 14 networks ($r = 0.69$, $p = 0.006$) and was eliminated by the fifteenth ($r = 0.12$): a cautionary illustration of small-sample correlation claims in this literature, including one made in the earlier version of this work.
+
+\noindent\textbf{Contributions.}
+\begin{itemize}
+    \item \textbf{A fixed-partition theory of degree-based sparsification} (Section~\ref{sec:theory}): DSpar separation provably yields preferential inter-community edge removal and intra-community fraction gains, under a corrected sampler formulation whose realized retention matches its nominal rate exactly.
+
+    \item \textbf{A null-model characterization} showing that DSpar separation and fixed-partition modularity gains are reproduced---usually amplified---by degree-preserving configuration models on 17/17 real networks, and are therefore degree statistics rather than community statistics.
+
+    \item \textbf{A three-control evaluation protocol} for preprocessing claims in community detection: score partitions on the original graph (not the preprocessed one), compare against resolution-matched controls, and grant baselines matched computation. Each control is paired with the artifact it exposes, with open implementations.
+
+    \item \textbf{A boundary characterization}: genuine runtime-matched gains exist on 2 of 15 networks, and no tested structural statistic predicts them---an existence proof, an open problem, and a demonstration of why predictor claims in this regime require far larger samples.
+
+    \item \textbf{A sampler audit} showing that the nominal retention parameter $\alpha$ of published DSpar-style samplers differs systematically from realized edge retention (by up to a factor of two), with a calibrated sampler that closes the gap.
+\end{itemize}
+
+The remainder of the paper is organized as follows.
+Section~\ref{sec:background} reviews background and related work.
+Section~\ref{sec:theory} develops the fixed-partition theory.
+Section~\ref{sec:sampler} audits the samplers.
+Sections~\ref{sec:mechanism} and~\ref{sec:artifacts} present the mechanism verification with its null-model controls and the three evaluation artifacts.
+Section~\ref{sec:boundary} characterizes the boundary where genuine gains exist, Section~\ref{sec:runtime} reports runtime behavior, and Section~\ref{sec:discussion} concludes.

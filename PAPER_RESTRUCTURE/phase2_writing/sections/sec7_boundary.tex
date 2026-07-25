@@ -1,0 +1,41 @@
+\section{The Boundary: Where Genuine Gains Exist}
+\label{sec:boundary}
+
+Having removed the artifacts, we ask what remains.
+The one effect that survives all three controls is \emph{seeded refinement}: run Leiden on the sparsified graph, transfer the partition to the original graph, and continue optimizing there.
+This uses sparsification not as a replacement for the graph but as a perturbation of the optimizer's search trajectory; the final quantity is modularity on the original graph, so Artifact~I does not arise, and we compare against runtime-matched restarts, so Artifact~III does not arise.
+
+\subsection{Runtime-Matched Seeded Refinement}
+\label{sec:boundary-seeded}
+
+\input{tables/tab_boundary}
+
+Table~\ref{tab:boundary} reports the outcome on 15 networks at calibrated retention $0.9$.
+The seeded pipeline beats the runtime-matched baseline beyond twice the baseline's seed deviation on exactly \textbf{2 of 15} networks: \texttt{email-Enron} ($+0.0077$) and \texttt{com-Youtube} ($+0.0086$).
+The \texttt{email-Enron} result is robust in every direction we probed: it holds for both sampler variants, at every retention level tested ($0.7$--$0.95$), against best-of-five as well as best-of-two baselines, and it strengthens under \emph{harsher} sparsification (up to $+0.0149$ under the with-replacement sampler)---indicating that the gain flows from aggressive hub-edge removal reshaping the optimization landscape, not from mild denoising.
+On \texttt{email-Enron} the raw transferred partition itself (before refinement) already exceeds baseline at true retention $\ge 0.8$, the only network in the suite where the transfer loss of Section~\ref{sec:artifact-modularity} changes sign.
+
+\subsection{No Tested Statistic Predicts the Gains}
+\label{sec:boundary-predictor}
+
+\input{tables/tab_predictors}
+
+Can one tell in advance where seeding will pay?
+Table~\ref{tab:predictors} correlates fourteen candidate statistics---$\delta$, its configuration-null value and excess $\delta^{*} = \delta_{\mathrm{real}} - \delta_{\mathrm{null}}$, the fixed-gain ratio against the null, hub-bridging and its excess, degree heterogeneity, size, and density---with the runtime-matched outcome.
+None is significant at $n = 15$ (best: network size, Spearman $\rho = 0.47$, $p = 0.079$; the significance threshold after correcting for fourteen candidates is $|\rho| \ge 0.70$).
+The null-corrected excess $\delta^{*}$, superficially the principled choice, is in fact \emph{anti}-correlated with the outcome ($r = -0.36$): because $\delta_{\mathrm{null}}$ exceeds $\delta_{\mathrm{real}}$ on 16 of 17 networks and tracks degree heterogeneity, $\delta^{*}$ behaves as a negated heavy-tail statistic.
+Its proper role is diagnostic---quantifying how much of a reported $\delta$ the configuration model already explains---not predictive.
+
+One near-miss deserves record as a methodological caution.
+Over the first fourteen networks measured, degree heterogeneity predicted the outcome with textbook significance ($r = 0.69$, $p = 0.006$).
+The fifteenth, \texttt{wiki-Talk}---the most degree-heterogeneous network in the suite ($\mathrm{CV} = 26.3$, hub-bridging $10.5$)---returned a \emph{negative} outcome and collapsed the correlation to $r = 0.12$ ($p = 0.66$).
+A single network eliminated an apparently significant fourteen-point correlation.
+The earlier version of this work reported a cross-network correlation of $r = 0.92$ between $\delta$ and fixed-partition gains as a headline validation; beyond being mechanically induced (Section~\ref{sec:mech-null}), such small-sample correlations are fragile in exactly the way exhibited here.
+Predictor claims in this regime require samples of order $10^2$ networks and pre-registered statistics.
+
+\subsection{Retention Dependence}
+\label{sec:boundary-retention}
+
+Under calibrated sampling, the transfer loss of Artifact~I is governed by \emph{true} retention: it shrinks roughly tenfold from retention $0.7$ to $0.95$ (e.g., \texttt{ca-HepTh}: $-0.037 \to -0.0035$; \texttt{com-DBLP}: $-0.027 \to -0.0010$) and extrapolates to zero only at retention one.
+On five of six networks examined across the sweep, no retention level yields a positive raw transfer; \texttt{email-Enron} again is the exception, crossing between $0.7$ and $0.8$.
+Mild sparsification is thus not a free lunch that stronger sparsification spoils: on the fixed objective it is a strictly smaller loss, vanishing only when nothing is removed---except where the (unpredicted) seeding effect operates.

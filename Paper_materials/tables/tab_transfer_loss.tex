@@ -1,0 +1,72 @@
+\begin{table*}[t]
+\centering
+\setlength{\tabcolsep}{5pt}
+\caption{Artifact I --- cross-graph modularity. $Q_{\mathrm{sparse}}$ is the modularity of the
+partition found on the sparsified graph, \emph{scored on that sparsified graph}; $Q_{\mathrm{orig}}$
+is the same partition scored on the original graph; the transfer loss is
+$Q_{\mathrm{sparse}}-Q_{\mathrm{orig}}$. It is positive for all 15 datasets at both $\alpha$ values,
+i.e.\ the headline ``modularity gain'' of the sparsify-then-cluster pipeline is an artifact of
+comparing scores computed on two different graphs. $Q_{\mathrm{final}}$ is Leiden seeded with the
+sparse-graph partition and run on the original graph, and $\Delta Q$ is that value minus the
+unsparsified baseline; the honest gain is $\le 0.008$ everywhere.
+Realized retention is $m'/m$ (\texttt{paper} sampler, with replacement), not the nominal $\alpha$.
+The $\alpha=1.0$ rows of the source file are \emph{not} baselines --- the sampler still ran
+(realized retention $0.350$--$0.589$) --- and are excluded here; the unsparsified reference is the
+run's own $Q_{\mathrm{base}}$, embedded in $\Delta Q$.
+5 seeds per cell; $\pm$ is the standard deviation over seeds ($\Delta Q$ and the transfer loss are
+reported without one, as the source file stores no standard deviation for them).
+Source: \texttt{PAPER\_EXPERIMENTS/results/exp4\_comprehensive/comprehensive\_alpha\_results.csv}.}
+\label{tab:transfer_loss}
+\footnotesize
+\begin{tabular}{llrrrrrr}
+\toprule
+Dataset & $\alpha$ & realized ret. & $Q_{\mathrm{sparse}}$ & $Q_{\mathrm{orig}}$
+ & transfer loss & $Q_{\mathrm{final}}$ & $\Delta Q$ \\
+\midrule
+\multirow{2}{*}{ca-AstroPh} & 0.8 & 0.417 & 0.6902 $\pm$ 0.0011 & 0.6019 $\pm$ 0.0033 & 0.0334 & 0.6360 $\pm$ 0.0015 & +0.0006 \\
+ & 0.9 & 0.446 & 0.6853 $\pm$ 0.0014 & 0.6047 $\pm$ 0.0035 & 0.0307 & 0.6358 $\pm$ 0.0012 & +0.0004 \\
+\addlinespace[2pt]
+\multirow{2}{*}{ca-CondMat} & 0.8 & 0.473 & 0.8310 $\pm$ 0.0004 & 0.6597 $\pm$ 0.0017 & 0.0752 & 0.7348 $\pm$ 0.0013 & $-$0.0000 \\
+ & 0.9 & 0.506 & 0.8234 $\pm$ 0.0006 & 0.6721 $\pm$ 0.0023 & 0.0628 & 0.7350 $\pm$ 0.0014 & +0.0001 \\
+\addlinespace[2pt]
+\multirow{2}{*}{ca-GrQc} & 0.8 & 0.456 & 0.9002 $\pm$ 0.0003 & 0.7797 $\pm$ 0.0018 & 0.0722 & 0.8517 $\pm$ 0.0005 & $-$0.0002 \\
+ & 0.9 & 0.485 & 0.8947 $\pm$ 0.0006 & 0.7924 $\pm$ 0.0024 & 0.0595 & 0.8518 $\pm$ 0.0005 & $-$0.0001 \\
+\addlinespace[2pt]
+\multirow{2}{*}{ca-HepPh} & 0.8 & 0.339 & 0.7634 $\pm$ 0.0009 & 0.6209 $\pm$ 0.0056 & 0.0408 & 0.6610 $\pm$ 0.0008 & $-$0.0006 \\
+ & 0.9 & 0.360 & 0.7605 $\pm$ 0.0010 & 0.6279 $\pm$ 0.0027 & 0.0338 & 0.6615 $\pm$ 0.0009 & $-$0.0001 \\
+\addlinespace[2pt]
+\multirow{2}{*}{ca-HepTh} & 0.8 & 0.475 & 0.8825 $\pm$ 0.0005 & 0.6324 $\pm$ 0.0031 & 0.1320 & 0.7645 $\pm$ 0.0008 & +0.0002 \\
+ & 0.9 & 0.507 & 0.8681 $\pm$ 0.0005 & 0.6532 $\pm$ 0.0031 & 0.1111 & 0.7644 $\pm$ 0.0009 & +0.0001 \\
+\addlinespace[2pt]
+\multirow{2}{*}{cit-HepPh} & 0.8 & 0.460 & 0.7512 $\pm$ 0.0020 & 0.7220 $\pm$ 0.0039 & 0.0123 & 0.7349 $\pm$ 0.0009 & +0.0007 \\
+ & 0.9 & 0.493 & 0.7486 $\pm$ 0.0022 & 0.7222 $\pm$ 0.0032 & 0.0121 & 0.7355 $\pm$ 0.0010 & +0.0012 \\
+\addlinespace[2pt]
+\multirow{2}{*}{cit-HepTh} & 0.8 & 0.433 & 0.7178 $\pm$ 0.0013 & 0.6486 $\pm$ 0.0027 & 0.0143 & 0.6629 $\pm$ 0.0026 & +0.0000 \\
+ & 0.9 & 0.465 & 0.7148 $\pm$ 0.0015 & 0.6509 $\pm$ 0.0018 & 0.0120 & 0.6624 $\pm$ 0.0026 & $-$0.0005 \\
+\addlinespace[2pt]
+\multirow{2}{*}{com-Amazon} & 0.8 & 0.516 & 0.9519 $\pm$ 0.0001 & 0.8502 $\pm$ 0.0004 & 0.0815 & 0.9324 $\pm$ 0.0001 & +0.0007 \\
+ & 0.9 & 0.554 & 0.9480 $\pm$ 0.0001 & 0.8728 $\pm$ 0.0004 & 0.0589 & 0.9325 $\pm$ 0.0001 & +0.0008 \\
+\addlinespace[2pt]
+\multirow{2}{*}{com-DBLP} & 0.8 & 0.469 & 0.9090 $\pm$ 0.0003 & 0.7429 $\pm$ 0.0018 & 0.0879 & 0.8338 $\pm$ 0.0004 & +0.0031 \\
+ & 0.9 & 0.501 & 0.9024 $\pm$ 0.0002 & 0.7599 $\pm$ 0.0011 & 0.0709 & 0.8337 $\pm$ 0.0004 & +0.0029 \\
+\addlinespace[2pt]
+\multirow{2}{*}{com-Youtube} & 0.8 & 0.410 & 0.8901 $\pm$ 0.0005 & 0.5483 $\pm$ 0.0043 & 0.1801 & 0.7281 $\pm$ 0.0002 & $-$0.0003 \\
+ & 0.9 & 0.434 & 0.8789 $\pm$ 0.0002 & 0.5811 $\pm$ 0.0019 & 0.1472 & 0.7281 $\pm$ 0.0003 & $-$0.0003 \\
+\addlinespace[2pt]
+\multirow{2}{*}{email-Enron} & 0.8 & 0.389 & 0.7942 $\pm$ 0.0006 & 0.5683 $\pm$ 0.0026 & 0.0464 & 0.6219 $\pm$ 0.0021 & +0.0072 \\
+ & 0.9 & 0.413 & 0.7860 $\pm$ 0.0009 & 0.5739 $\pm$ 0.0031 & 0.0408 & 0.6225 $\pm$ 0.0017 & +0.0078 \\
+\addlinespace[2pt]
+\multirow{2}{*}{facebook-combined} & 0.8 & 0.436 & 0.8625 $\pm$ 0.0003 & 0.8314 $\pm$ 0.0009 & 0.0043 & 0.8357 $\pm$ 0.0001 & +0.0000 \\
+ & 0.9 & 0.467 & 0.8624 $\pm$ 0.0003 & 0.8313 $\pm$ 0.0009 & 0.0044 & 0.8355 $\pm$ 0.0005 & $-$0.0002 \\
+\addlinespace[2pt]
+\multirow{2}{*}{soc-Epinions1} & 0.8 & 0.317 & 0.6931 $\pm$ 0.0021 & 0.3225 $\pm$ 0.0115 & 0.1283 & 0.4500 $\pm$ 0.0033 & $-$0.0008 \\
+ & 0.9 & 0.334 & 0.6783 $\pm$ 0.0019 & 0.3439 $\pm$ 0.0114 & 0.1068 & 0.4514 $\pm$ 0.0034 & +0.0006 \\
+\addlinespace[2pt]
+\multirow{2}{*}{wiki-Talk} & 0.8 & 0.455 & 0.8974 $\pm$ 0.0000 & 0.4169 $\pm$ 0.0004 & 0.1852 & 0.6027 $\pm$ 0.0001 & +0.0006 \\
+ & 0.9 & 0.483 & 0.8860 $\pm$ 0.0000 & 0.4373 $\pm$ 0.0004 & 0.1648 & 0.6028 $\pm$ 0.0002 & +0.0007 \\
+\addlinespace[2pt]
+\multirow{2}{*}{wiki-Vote} & 0.8 & 0.333 & 0.5119 $\pm$ 0.0055 & 0.4004 $\pm$ 0.0065 & 0.0244 & 0.4250 $\pm$ 0.0033 & +0.0002 \\
+ & 0.9 & 0.357 & 0.5104 $\pm$ 0.0039 & 0.4081 $\pm$ 0.0027 & 0.0168 & 0.4255 $\pm$ 0.0034 & +0.0007 \\
+\bottomrule
+\end{tabular}
+\end{table*}

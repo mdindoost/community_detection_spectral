@@ -1,0 +1,138 @@
+\section{The Mechanism and Its Null Models}
+\label{sec:mechanism}
+
+This section verifies the fixed-partition theory quantitatively (\S\ref{sec:mech-verify}), then asks what the verified signals mean, using degree-preserving configuration models (\S\ref{sec:mech-null}) and partition-provenance controls (\S\ref{sec:mech-provenance}).
+
+\subsection{Fixed-Partition Decomposition on Real Networks}
+\label{sec:mech-verify}
+
+\paragraph{Setup.}
+For each network we obtain a partition with the Leiden algorithm~\cite{traag2019louvain} on the original graph and hold it \emph{fixed}; all quantities below are changes induced by sparsification alone, with no re-optimization.
+We apply the with-replacement DSpar sampler at nominal $\alpha = 0.8$ (realized retention $0.33$--$0.52$; Section~\ref{sec:sampler}), 10 independent runs, and evaluate the fixed partition on the sparsified graph.
+Writing $Q = F - G$ for modularity, with $F$ the intra-community edge fraction and $G$ the null-model penalty, we verify the identity $\Delta Q_{\mathrm{fixed}} = \Delta F_{\mathrm{obs}} - \Delta G_{\mathrm{obs}}$ to machine precision on every run.
+
+\begin{table*}[t]
+\centering
+\caption{Fixed-partition modularity changes under with-replacement DSpar at nominal $\alpha = 0.8$ (realized retention $0.33$--$0.52$).
+\textbf{Both $\Delta Q$ columns are evaluated on the sparsified graph}; Section~\ref{sec:artifacts} shows why such cross-graph quantities must not be read as detection improvements.}
+\label{tab:exp1_2_modularity}
+\begin{tabular}{lrrrr}
+\toprule
+Dataset & $m$ & $Q_{\mathrm{orig}}$ & $\Delta Q_{\mathrm{fixed}}$ & $\Delta Q_{\mathrm{Leiden}}^{\mathrm{(sp)}}$ \\
+\midrule
+ca-AstroPh\cite{leskovec2007graph} & 198,050 & $0.6393$ & $0.0423 \pm 0.0008$ & $0.0571 \pm 0.0016$ \\
+ca-CondMat\cite{leskovec2007graph}& 93,439 & $0.7410$ & $0.0638 \pm 0.0016$ & $0.1018 \pm 0.0012$ \\
+ca-GrQc\cite{leskovec2007graph} & 14,484 & $0.8664$ & $0.0257 \pm 0.0022$ & $0.0628 \pm 0.0022$ \\
+ca-HepPh\cite{leskovec2007graph} & 118,489 & $0.6631$ & $0.0844 \pm 0.0012$ & $0.1089 \pm 0.0029$ \\
+ca-HepTh\cite{leskovec2007graph} & 25,973 & $0.7760$ & $0.0609 \pm 0.0023$ & $0.1212 \pm 0.0022$ \\
+cit-HepPh\cite{leskovec2007graph} & 420,877 & $0.7349$ & $0.0136 \pm 0.0004$ & $0.0182 \pm 0.0019$ \\
+cit-HepTh\cite{leskovec2007graph} & 352,285 & $0.6637$ & $0.0469 \pm 0.0009$ & $0.0546 \pm 0.0022$ \\
+email-Enron\cite{leskovec2009community} & 183,831 & $0.6248$ & $0.1507 \pm 0.0009$ & $0.1853 \pm 0.0008$ \\
+facebook-combined\cite{leskovec2012learning} & 88,234 & $0.8357$ & $0.0259 \pm 0.0008$ & $0.0273 \pm 0.0008$ \\
+wiki-Vote\cite{leskovec2010signed} & 100,762 & $0.4175$ & $0.0694 \pm 0.0011$ & $0.0932 \pm 0.0062$ \\
+email-Eu-core\cite{yin2017local} & 16,064 & $0.4174$ & $0.0789 \pm 0.0041$ & $0.0912 \pm 0.0029$ \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\begin{table*}[t]
+\centering
+\caption{Modularity decomposition verification at nominal $\alpha = 0.8$.
+For all datasets and runs, the identity $\Delta Q_{\mathrm{fixed}} = \Delta F_{\mathrm{obs}} - \Delta G_{\mathrm{obs}}$ holds up to machine precision (maximum absolute reconstruction error $\le 10^{-14}$).}
+\label{tab:exp1_2_decomposition}
+\begin{tabular}{lrrr}
+\toprule
+Dataset & $\Delta Q_{\mathrm{fixed}}$ & $\Delta F_{\mathrm{obs}}$ & $-\Delta G_{\mathrm{obs}}$  \\
+\midrule
+ca-AstroPh & $0.0423 \pm 0.0008$ & $0.0350 \pm 0.0008$ & $0.0072 \pm 0.0001$  \\
+ca-CondMat & $0.0638 \pm 0.0016$ & $0.0588 \pm 0.0016$ & $0.0051 \pm 0.0001$ \\
+ca-GrQc & $0.0257 \pm 0.0022$ & $0.0142 \pm 0.0022$ & $0.0115 \pm 0.0003$ \\
+ca-HepPh & $0.0844 \pm 0.0012$ & $0.0030 \pm 0.0011$ & $0.0814 \pm 0.0002$ \\
+ca-HepTh & $0.0609 \pm 0.0023$ & $0.0518 \pm 0.0023$ & $0.0091 \pm 0.0003$  \\
+cit-HepPh & $0.0136 \pm 0.0004$ & $0.0078 \pm 0.0004$ & $0.0058 \pm 0.0001$ \\
+cit-HepTh & $0.0469 \pm 0.0009$ & $0.0318 \pm 0.0009$ & $0.0152 \pm 0.0001$  \\
+email-Enron & $0.1507 \pm 0.0009$ & $0.1186 \pm 0.0009$ & $0.0321 \pm 0.0003$  \\
+facebook-combined & $0.0259 \pm 0.0008$ & $-0.0008 \pm 0.0007$ & $0.0268 \pm 0.0002$  \\
+wiki-Vote & $0.0694 \pm 0.0011$ & $0.0671 \pm 0.0016$ & $0.0023 \pm 0.0007$  \\
+email-Eu-core & $0.0789 \pm 0.0041$ & $0.0681 \pm 0.0040$ & $0.0108 \pm 0.0009$ \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\paragraph{The theory's predictions hold.}
+Table~\ref{tab:exp1_2_modularity} shows positive $\Delta Q_{\mathrm{fixed}}$ on all eleven networks, and Table~\ref{tab:exp1_2_decomposition} confirms the exact decomposition into $\Delta F_{\mathrm{obs}}$ and $-\Delta G_{\mathrm{obs}}$.
+Two regimes appear, exactly as Theorem~\ref{thm:modularity}(b) permits: in networks such as \texttt{cit-HepTh} and \texttt{ca-CondMat} the intra-community fraction rises ($\Delta F_{\mathrm{obs}} > 0$), consistent with preferential inter-community removal under $\delta > 0$; in networks such as \texttt{facebook-combined} ($\delta \approx 0$) the entire change is carried by the null-model term ($\Delta F_{\mathrm{obs}} \le 0$, $-\Delta G_{\mathrm{obs}} > 0$).
+Figures~\ref{fig:fixed_vs_leiden} and~\ref{fig:decomposition_cit_hepth} illustrate both quantities across retention levels; all effects vanish smoothly as $\alpha \to 1$.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.85\linewidth]{figures/cit-HepTh_figure_A_modularity_no_alpha1.png}
+  \caption{Fixed-partition and re-optimized modularity changes under DSpar sparsification on \texttt{cit-HepTh}, both evaluated on the sparsified graph.}
+  \label{fig:fixed_vs_leiden}
+\end{figure}
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.85\linewidth]{figures/cit-HepTh_figure_B_decomposition_no_alpha1.png}
+ \caption{Modularity decomposition under DSpar sparsification on \texttt{cit-HepTh}: $\Delta Q_{\mathrm{fixed}}$ alongside the null-model contribution $-\Delta G_{\mathrm{obs}}$ across sparsification levels; the remainder is $\Delta F_{\mathrm{obs}}$ (Table~\ref{tab:exp1_2_decomposition}).}
+  \label{fig:decomposition_cit_hepth}
+\end{figure}
+
+\paragraph{What is \emph{not} shown.}
+These measurements verify the mechanism of Section~\ref{sec:theory}: degree-biased sampling shifts edge composition and null-model mass exactly as predicted.
+They do not show that community detection improved.
+Both $\Delta Q$ columns compare modularity \emph{across different graphs}---the fixed partition scored on $G$ versus on the sparsified $G'$---and Section~\ref{sec:artifacts} demonstrates that this comparison is invalid as a quality metric.
+An earlier version of this work presented these same measurements as evidence of improvement; the controls below explain why that reading fails.
+
+\subsection{Configuration-Model Controls}
+\label{sec:mech-null}
+
+If $\delta > 0$ and $\Delta Q_{\mathrm{fixed}} > 0$ reflected community structure, they should weaken or vanish on graphs whose communities have been destroyed.
+We test this directly: each network is degree-preservingly rewired ($10m$ edge swaps), Leiden is run on the rewired graph to obtain its fixed partition, and the identical pipeline is applied.
+Rewiring collapses modularity itself (base $Q$ drops from $0.60$--$0.93$ to $0.11$--$0.49$, the residue a maximizer extracts from degree noise~\cite{guimera2004modularity}), so any surviving signal is attributable to the degree sequence alone.
+
+\input{tables/tab_null_control}
+
+Table~\ref{tab:null_control} shows the result: the null reproduces \emph{both} signals on every network.
+DSpar separation is positive on $17/17$ rewired graphs and \emph{exceeds} the real graph's value on $16/17$; fixed-partition modularity gains are positive on $17/17$ and exceed the real graph's on $15/17$, with median ratio $1.24$.
+The sharpest cases are those where the real graph's signal is weakest: \texttt{com-Amazon} (real $\Delta Q_{\mathrm{fixed}} = 1.5\times10^{-5}$, null $0.059$), \texttt{cit-Patents} ($0.005$ vs.\ $0.077$), and \texttt{facebook-combined}, whose real $\delta$ is \emph{negative} ($-0.0014$) while its null is positive.
+Hub-bridging behaves identically: the ratio exceeds one on $17/17$ nulls---reaching $105.6$ on rewired \texttt{wiki-Talk}---while on the real graphs it is erratic ($0.48$--$10.5$), falling below one on three networks.
+
+The interpretation is unavoidable.
+A degree-biased sampler preferentially thins hub-incident edges, which raises fixed-partition modularity for \emph{any} partition on \emph{any} degree-heterogeneous graph, whether or not the partition reflects communities.
+Positive $\delta$, positive $\Delta Q_{\mathrm{fixed}}$, and hub-bridging above one are properties of heavy-tailed degree sequences interacting with modularity optimization---degree statistics, not community statistics.
+Consequently, correlations between $\delta$ and $\Delta Q_{\mathrm{fixed}}$ across networks (however strong) validate only the arithmetic of Theorems~\ref{thm:ratio}--\ref{thm:sparsification}, not any claim about community structure: the two quantities are linked mechanically through the same score distribution.
+
+\subsection{Partition Provenance}
+\label{sec:mech-provenance}
+
+A second confound concerns \emph{which partition} $\delta$ is measured against.
+On standard LFR benchmarks~\cite{lancichinetti2008benchmark} ($n = 10^4$, $\mu \in \{0.1,\dots,0.5\}$), $\delta$ is negative with respect to the \emph{planted} partition at every mixing level ($-0.003$ to $-0.010$).
+Measured instead against a \emph{Leiden} partition of the same graph, $\delta$ shifts systematically positive at every $\mu$, and the shift grows exactly as Leiden departs from the planted truth (at $\mu = 0.5$: NMI to planted $0.67$, planted communities merged from $236$ to $48$, shift $+0.0032$).
+The shift does not flip the sign on LFR---whose degree distribution is nearly homogeneous under standard parameterizations (coefficient of variation $\approx 0.4$)---but on heavy-tailed real networks it can: on \texttt{com-Amazon}, $\delta = -0.004$ against the ground-truth communities and $+0.011$ against the Leiden partition of the same graph.
+Positive DSpar separation, as reported in practice, is therefore a joint property of heavy-tailed degrees \emph{and} of partitions produced by modularity optimization; comparisons between $\delta$ values measured against planted partitions (synthetic benchmarks) and detected partitions (real networks) are not like-for-like.
+
+\subsection{Controlled Hub-Bridging in Synthetic Benchmarks}
+\label{sec:mech-lfr}
+
+Finally, we retain a controlled-synthetic result from the earlier version of this work, now stated with the caveats above.
+Standard LFR graphs exhibit hub-bridging ratios below one and negative $\delta$ (planted partition), and sparsification lowers fixed-partition modularity ($\Delta Q_{\mathrm{fixed}} = -0.011$ at $\mu = 0.3$, $n = 10^4$).
+We then rewire $70\%$ of inter-community edges, re-attaching endpoints within their communities with probability proportional to $d^{\,h}$, where $h \ge 1$ controls the strength of degree preference; this preserves the number of inter-community edges (hence $\mu$) while inducing controllable hub-bridging.
+At $h = 4$ the hub-bridging ratio reaches $\approx 15.9$, $\delta$ turns positive ($+0.051$), and fixed-partition modularity change turns strongly positive ($+0.116$), with $\Delta Q_{\mathrm{fixed}}$ tightly coupled to the hub-bridging ratio across all configurations (Figure~\ref{fig:lfr_dq_vs_hubratio}).
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.85\linewidth]{figures/plot3_dQ_vs_hub_ratio_n10000_r0.8.png}
+\caption{Fixed-partition modularity change under DSpar as a function of induced hub-bridging on LFR graphs ($n = 10^4$, nominal $\alpha = 0.8$, planted partitions). The controlled rewiring operator ($h$: endpoint choice $\propto d^{\,h}$) restores the coupling between hub-bridging, $\delta$, and $\Delta Q_{\mathrm{fixed}}$.}
+  \label{fig:lfr_dq_vs_hubratio}
+\end{figure}
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.85\linewidth]{figures/plot1_delta_vs_mu.png}
+\caption{DSpar separation $\delta$ (planted partitions) versus mixing parameter $\mu$ for standard ($h=1$) and hub-bridged ($h>1$) LFR graphs ($n=10^4$).}
+  \label{fig:lfr_delta_vs_mu}
+\end{figure}
+
+Read through the lens of \S\ref{sec:mech-null}, this experiment demonstrates \emph{controllability of the mechanism}---degree--community coupling is the knob that turns fixed-partition gains on and off---rather than any statement about detection quality.
+It also identifies a genuine limitation of LFR as a benchmark for sparsification studies: standard LFR lacks both the heavy-tailed degree profile and the degree--community coupling that real networks and their configuration models exhibit.

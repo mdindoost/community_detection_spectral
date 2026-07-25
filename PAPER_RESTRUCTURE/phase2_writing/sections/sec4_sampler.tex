@@ -1,0 +1,27 @@
+\section{Sampler Audit: Nominal versus Realized Retention}
+\label{sec:sampler}
+
+Before presenting experiments, we audit what DSpar-style samplers actually retain, because the retention parameter $\alpha$ has been used in the literature---and in an earlier version of this work---with three mutually inconsistent meanings.
+
+\paragraph{With-replacement sampling collapses retention.}
+The originally published DSpar procedure~\cite{liu2023dspar} draws $q = \lceil \alpha m \rceil$ edge samples \emph{with replacement} from the distribution proportional to $s(e)$, reweights, and keeps the union of sampled edges.
+Because high-score edges are drawn repeatedly, the number of \emph{distinct} retained edges is far below $\alpha m$: across our 17-network suite, nominal $\alpha = 0.8$ realizes only $0.33$--$0.52$ of the edges (Table~\ref{tab:sampler_audit}).
+Results reported at ``$\alpha = 0.8$'' under this sampler are, in fact, roughly half-density experiments.
+
+\paragraph{Probability clipping causes saturation.}
+A natural no-replacement variant retains edge $e$ independently with probability proportional to its score, clipped at one.
+Because a substantial fraction of low-degree edges clips (13--35\% in our measurements), the expected retention falls strictly below $\alpha m$ at every setting and \emph{saturates}: on \texttt{email-Eu-core} this sampler cannot retain more than $66\%$ of edges even at $\alpha = 1.0$.
+True mild sparsification (e.g., retaining $90\%$ of edges) is unreachable under either published variant.
+
+\paragraph{Calibration closes the gap.}
+Definition~\ref{def:calibrated} instead solves for the proportionality constant $\lambda_\alpha$ by bisection so that expected retention equals $\alpha m$ exactly.
+Measured realized retention under the calibrated sampler matches the nominal value to within $\pm 0.001$ at all tested settings ($\alpha \in \{0.7, 0.8, 0.9, 0.95\}$).
+We verified our implementations of the with-replacement variant to be bit-identical to the original reference code before use.
+
+\input{tables/tab_sampler_audit}
+
+\paragraph{Consequences.}
+Three practices follow, which we adopt throughout.
+First, realized retention $m'/m$ is reported alongside nominal $\alpha$ in every experiment.
+Second, comparisons across sampler variants are made at matched \emph{realized} retention, not matched nominal $\alpha$.
+Third, we reserve $\alpha = 1.0$ strictly as the no-sparsification baseline; note that under the with-replacement variant even $\alpha = 1.0$ removes roughly half the edges, so pipelines that treat it as a baseline must bypass the sampler explicitly.

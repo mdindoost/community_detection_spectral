@@ -1,0 +1,18 @@
+\section{Runtime Considerations}
+\label{sec:runtime}
+
+Sparsification's traditional justification is speed, so we report the runtime picture honestly; it is less favorable than commonly assumed.
+
+\paragraph{Clustering time does not track edge count.}
+At realized retention near one half (nominal $\alpha = 0.8$, with-replacement sampler), Leiden on the sparsified graph was \emph{slower} than on the original on four of six large networks in our measurements (speedup $0.58$--$0.88$), with genuine speedups only on the two largest (\texttt{cit-Patents}, \texttt{wiki-topcats}).
+The cause is structural: sparsification fragments the graph and inflates the number of detected communities (by factors of $20$--$40$ in the ground-truth experiments of Section~\ref{sec:artifact-granularity}), and Leiden's per-community bookkeeping grows accordingly.
+At aggressive retention the fragmentation regime dominates and runtime \emph{increases} despite the smaller edge set.
+Speedup claims should therefore be read jointly with fragmentation diagnostics (component counts, largest-component fraction, community counts), and the fragmented regime treated as out of scope for quality claims of any kind.
+
+\paragraph{Pipeline accounting.}
+DSpar scoring itself is genuinely cheap---$4$--$8\%$ of end-to-end pipeline time in our measurements, consistent with its $O(m)$ design---so the pipeline cost is dominated by clustering, and the seeded-refinement pipeline of Section~\ref{sec:boundary} costs $1.55$--$1.90\times$ a single baseline run.
+This is exactly why Artifact~III matters: the honest comparison for any such pipeline is against a baseline granted the same budget.
+
+\paragraph{Spectral baselines.}
+We do not report effective-resistance sparsification comparisons.
+In auditing the earlier version of this work we found its spectral branch had silently returned the original graph unmodified (identical edge counts and clustering times), invalidating the previously reported comparison; a corrected implementation is left to future work, with the protocol of Section~\ref{sec:protocol} defining what such a comparison must control for.
