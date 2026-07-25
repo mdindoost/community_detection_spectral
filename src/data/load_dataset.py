@@ -48,7 +48,7 @@ def load_edges(name: str) -> np.ndarray:
             raise FileNotFoundError(f"Dataset not found and no download URL: {edge_file}")
 
     # Determine separator based on dataset (wiki-topcats uses space, others use tab)
-    separator = " " if name in ["wiki-topcats"] else "\t"
+    separator = " " if name in ["wiki-topcats", "facebook-combined"] else "\t"
     
     df = pl.read_csv(
         edge_file,

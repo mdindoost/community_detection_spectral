@@ -10,11 +10,12 @@ def run_leiden(
     g: ig.Graph,
     objective: str = "modularity",
     resolution: float = 1.0,
-    n_iterations: int = 2
+    n_iterations: int = 2,
+    initial_membership: Optional[List[int]] = None
 ) -> Tuple[List[int], float, int]:
     """
     Run Leiden clustering using igraph's built-in method.
-    
+
     Parameters
     ----------
     g : ig.Graph
@@ -25,7 +26,9 @@ def run_leiden(
         Resolution parameter. Default 1.0 to match paper experiments.
     n_iterations : int
         Number of iterations. Default 2 to match paper experiments.
-        
+    initial_membership : list of int, optional
+        Initial community assignment to seed Leiden with.
+
     Returns
     -------
     membership : list
@@ -35,23 +38,20 @@ def run_leiden(
     n_communities : int
         Number of communities found
     """
-    if objective == "modularity":
-        partition = g.community_leiden(
-            objective_function="modularity",
-            resolution=resolution,
-            n_iterations=n_iterations
-        )
-    else:
-        partition = g.community_leiden(
-            objective_function="CPM",
-            resolution=resolution,
-            n_iterations=n_iterations
-        )
-    
+    kwargs = dict(
+        objective_function=objective,
+        resolution=resolution,
+        n_iterations=n_iterations,
+    )
+    if initial_membership is not None:
+        kwargs['initial_membership'] = initial_membership
+
+    partition = g.community_leiden(**kwargs)
+
     membership = partition.membership
-    modularity = partition.modularity  # Use pre-computed modularity from partition
+    modularity = partition.modularity
     n_communities = len(partition)
-    
+
     return membership, modularity, n_communities
 
 
