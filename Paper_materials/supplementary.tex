@@ -1,0 +1,99 @@
+\documentclass[10pt,journal,compsoc]{IEEEtran}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath,amssymb,amsfonts,amsthm}
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}{Lemma}
+
+\title{Supplementary Material for\\``When Does Sparsification Help Community Detection? Separating Genuine Gains from Degree-Mechanical Artifacts''}
+
+\author{Mohammad~Dindoost, Bavan~DivaaniAazar, and~David~A.~Bader}
+
+\begin{document}
+\maketitle
+
+\section{Omitted Proofs}
+
+Notation follows the main text: $s(e) = 1/d_u + 1/d_v$; $E_{\text{intra}}, E_{\text{inter}}$ with $n_1, n_2$, $m = n_1 + n_2$; mean scores $\mu_{\text{intra}}, \mu_{\text{inter}}$, global mean $\bar{s}$; separation $\delta = \mu_{\text{intra}} - \mu_{\text{inter}} > 0$; retention probabilities $p(e) = \alpha\, s(e)/\bar{s}$ in the unclipped regime.
+Theorem numbers refer to the main text.
+
+\subsection{Theorem 1, parts (b) and (c)}
+
+\begin{proof}
+\textbf{Part (c):} Let $Y = |E' \cap E_{\text{inter}}| = \sum_{e \in E_{\text{inter}}} X_e$ where $X_e = \mathbf{1}[e \in E']$ are independent Bernoulli random variables.
+Then
+\begin{equation}
+\text{Var}(Y) = \sum_{e \in E_{\text{inter}}} p(e)(1 - p(e)) \leq \sum_{e \in E_{\text{inter}}} p(e) = \frac{\alpha n_2 \mu_{\text{inter}}}{\bar{s}},
+\end{equation}
+and Chebyshev's inequality gives
+\begin{equation}
+\mathbb{P}[|Y - \mathbb{E}[Y]| > n_2 \epsilon] \leq \frac{\text{Var}(Y)}{n_2^2 \epsilon^2} \leq \frac{\alpha \mu_{\text{inter}}}{n_2 \bar{s} \epsilon^2}.
+\end{equation}
+The intra-community bound is identical.
+
+\textbf{Part (b):} Define empirical preservation rates $\hat{p}_{\text{inter}} = Y/n_2$ and $\hat{p}_{\text{intra}} = |E' \cap E_{\text{intra}}|/n_1$.
+By part (c), for any $\epsilon > 0$,
+\begin{equation}
+\mathbb{P}\left[|\hat{p}_{\text{inter}} - \mathbb{E}[\hat{p}_{\text{inter}}]| > \epsilon\right] \leq \frac{\alpha \mu_{\text{inter}}}{n_2 \bar{s} \epsilon^2} \to 0
+\end{equation}
+as $n_2 \to \infty$, and similarly for $\hat{p}_{\text{intra}}$.
+Hence $\hat{p}_{\text{inter}} = \frac{\alpha \mu_{\text{inter}}^{(n)}}{\bar{s}^{(n)}}\bigl(1 + o_P(1)\bigr)$ and $\hat{p}_{\text{intra}} = \frac{\alpha \mu_{\text{intra}}^{(n)}}{\bar{s}^{(n)}}\bigl(1 + o_P(1)\bigr)$; note that $\bar{s}^{(n)}$, a convex combination of $\mu_{\text{intra}}^{(n)}$ and $\mu_{\text{inter}}^{(n)}$, is bounded in $[\mu_{\min}, \mu_{\max}]$, and it cancels in the ratio.
+
+To apply the continuous mapping theorem to the ratio, we verify that $\hat{p}_{\text{intra}}$ is bounded away from zero with high probability.
+Since $\mu_{\text{intra}} \geq \mu_{\min} > 0$ and $\bar{s} \leq 2$ (as $s(e) \leq 2$ for any edge), $\mathbb{E}[\hat{p}_{\text{intra}}] \geq \alpha \mu_{\min}/2 > 0$.
+Taking $\epsilon = \alpha \mu_{\min}/4$, the concentration bound gives
+\begin{equation}
+\mathbb{P}\left[\hat{p}_{\text{intra}} < \frac{\alpha \mu_{\min}}{4}\right] \leq \mathbb{P}\left[|\hat{p}_{\text{intra}} - \mathbb{E}[\hat{p}_{\text{intra}}]| > \frac{\alpha \mu_{\min}}{4}\right] \to 0.
+\end{equation}
+The continuous mapping theorem, applied to $g(x,y) = x/y$ on $\{(x,y) : y > 0\}$, then yields
+\begin{equation}
+\text{Ratio}_n = \frac{\hat{p}_{\text{inter}}}{\hat{p}_{\text{intra}}} \xrightarrow{P} \frac{\mu_{\text{inter}}^*}{\mu_{\text{intra}}^*} < 1. \qedhere
+\end{equation}
+\end{proof}
+
+\subsection{Theorem 2 (full derivation of part (a))}
+
+\begin{proof}
+Under unit weights, $F^{(1)} = n_1/m = n_1/(n_1 + n_2)$.
+Under DSpar weighting with $w_e = s(e)/\bar{s}$, the normalization $\bar{s}$ cancels between numerator and denominator:
+\begin{equation}
+F^{(s)} = \frac{\sum_{e \in E_{\text{intra}}} s(e)}{\sum_{e \in E} s(e)} = \frac{n_1 \mu_{\text{intra}}}{n_1 \mu_{\text{intra}} + n_2 \mu_{\text{inter}}}.
+\end{equation}
+The inequality $F^{(s)} > F^{(1)}$ is equivalent, by cross-multiplication with all terms positive, to
+\begin{align}
+n_1 \mu_{\text{intra}} (n_1 + n_2) &> n_1 (n_1 \mu_{\text{intra}} + n_2 \mu_{\text{inter}}) \\
+n_1 n_2 \mu_{\text{intra}} &> n_1 n_2 \mu_{\text{inter}},
+\end{align}
+which holds by DSpar separation.
+The explicit formula follows by direct subtraction:
+\begin{align}
+F^{(s)} - F^{(1)} &= \frac{n_1 \mu_{\text{intra}}}{n_1 \mu_{\text{intra}} + n_2 \mu_{\text{inter}}} - \frac{n_1}{n_1 + n_2} \\
+&= n_1 \cdot \frac{\mu_{\text{intra}}(n_1 + n_2) - (n_1 \mu_{\text{intra}} + n_2 \mu_{\text{inter}})}{(n_1 \mu_{\text{intra}} + n_2 \mu_{\text{inter}})(n_1 + n_2)} \\
+&= \frac{n_1 n_2 (\mu_{\text{intra}} - \mu_{\text{inter}})}{m(n_1 \mu_{\text{intra}} + n_2 \mu_{\text{inter}})}.
+\end{align}
+Parts (b) and (c) are immediate from $Q = F - G$.
+\end{proof}
+
+\subsection{Theorem 3}
+
+\begin{proof}
+Let $X_{\text{intra}} = |E' \cap E_{\text{intra}}|$ and $X_{\text{inter}} = |E' \cap E_{\text{inter}}|$.
+By linearity of expectation (Theorem 1(a)),
+\begin{equation}
+\mathbb{E}[X_{\text{intra}}] = \frac{\alpha n_1 \mu_{\text{intra}}}{\bar{s}}, \qquad
+\mathbb{E}[X_{\text{inter}}] = \frac{\alpha n_2 \mu_{\text{inter}}}{\bar{s}}.
+\end{equation}
+By the concentration bound of Theorem 1(c), both $X_{\text{intra}}/n_1$ and $X_{\text{inter}}/n_2$ converge in probability to their expectations.
+Writing
+\begin{equation}
+F' = \frac{X_{\text{intra}}/n_1}{X_{\text{intra}}/n_1 + (n_2/n_1)(X_{\text{inter}}/n_2)},
+\end{equation}
+part (a) follows from the continuous mapping theorem, with $X_{\text{intra}}/n_1$ bounded away from zero in probability exactly as in the proof of Theorem 1(b); the target quantity in part (a) is centered at finite-$n$ values, so no convergence of $n_2/n_1$ is required.
+
+For part (b), the assumed convergence $n_2/n_1 \to \rho$ gives
+\begin{equation}
+F'_n \xrightarrow{P} \frac{\mu_{\text{intra}}^*}{\mu_{\text{intra}}^* + \rho\, \mu_{\text{inter}}^*}.
+\end{equation}
+Since $F^{(1)}_n = 1/(1 + n_2/n_1) \to 1/(1+\rho)$ and $\mu_{\text{intra}}^* > \mu_{\text{inter}}^*$, the claimed inequality follows.
+\end{proof}
+
+\end{document}

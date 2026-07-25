@@ -1,0 +1,266 @@
+\section{Theoretical Connections}
+\label{sec:theory}
+
+Modularity maximization, normalized-cut partitioning, and inference under the degree-corrected stochastic block model admit closely related spectral relaxations, each solved by leading eigenvectors of a degree-normalized operator such as $\mathcal{A} = D^{-1/2} A D^{-1/2}$~\cite{newman2013spectral, karrer2011stochastic, shi2000normalized}.
+These frameworks, together with resistance-based spectral sparsification and DSpar, encode a common structural bias: edges between high-degree nodes are systematically down-weighted---by the null-model term $k_i k_j / 2m$, by degree normalization, by the low effective resistance of edges in densely connected regions, or by the score $s(u,v) = 1/d_u + 1/d_v$.
+This does not make hub--hub edges uninformative; it means all four frameworks discount edges that are expected under degree-driven null models.
+The spectral perspective supplies intuition only, and none of our formal results depends on it: in the idealized limit in which all inter-community edges are removed, $\mathcal{A}$ becomes block-diagonal with repeated unit eigenvalues, so preferential inter-community removal moves the spectrum toward the signature of separated communities.
+
+%===========================================================================
+\subsection{The Hub--Bridge Condition}
+\label{sec:hub-bridge}
+
+The connections above identify a structural condition under which degree-based sparsification biases edge removal toward inter-community edges. We state it as a premise about a graph \emph{together with} a partition; whether it reflects community structure or degree structure alone is an empirical question, answered in Section~\ref{sec:mechanism} with configuration-model controls.
+
+\begin{hypothesis}[Hub--Bridge Condition]
+\label{hyp:hub-bridge}
+A graph--partition pair $(G, \mathcal{C})$ exhibits \emph{hub-bridging} if
+inter-community edges connect higher-degree endpoints on average than
+intra-community edges:
+\begin{equation}
+\mathbb{E}\!\left[d_u d_v \mid (u,v)\in E_{\mathrm{inter}}\right]
+>
+\mathbb{E}\!\left[d_u d_v \mid (u,v)\in E_{\mathrm{intra}}\right].
+\label{eq:hub-bridge}
+\end{equation}
+\end{hypothesis}
+
+Two mechanisms can generate hub-bridging in real networks.
+\textit{Combinatorial:} a node of degree $d$ in a community of $n_c$ nodes has at least $d - n_c + 1$ external edges whenever $d \ge n_c$, so in heavy-tailed networks with finite communities, hubs overflow their communities.
+\textit{Functional:} in social and information networks, hubs often play bridging roles across groups~\cite{granovetter1973strength,newman2001structure}.
+When the condition holds, degree-based sparsification assigns lower retention probability to inter-community edges, since such edges connect high-degree endpoints; the condition is unlikely to hold when the degree distribution is homogeneous or when inter-community edges do not preferentially involve hubs.
+Whether it holds depends on the partition used and, as Section~\ref{sec:mech-null} shows, is not by itself informative about community structure: three networks in our suite violate it under Leiden partitions while retaining $\delta > 0$, and every rewired null satisfies it.
+
+%==============================================================================
+\subsection{Fixed-Partition Analysis}
+
+Our theoretical results characterize how degree-based weighting and sparsification bias edge retention for a fixed partition. They make no claim that positive DSpar separation indicates community structure, and no claim about optimized detection outcomes: Section~\ref{sec:mechanism} shows that the premise $\delta>0$ (and the resulting fixed-partition gains) arises equally on configuration-model graphs without communities, and Section~\ref{sec:artifacts} analyzes why fixed-partition gains must not be read as detection improvements. The theory is thus a quantitative account of a mechanism; its interpretation is settled empirically.
+Proofs not given inline appear in the supplementary material.
+
+\begin{definition}[DSpar Score]
+For an edge $e = (u,v)$ in graph $G = (V, E)$, the \emph{DSpar score} is:
+\begin{equation}
+s(e) = \frac{1}{d_u} + \frac{1}{d_v}
+\end{equation}
+where $d_u, d_v$ denote the degrees of nodes $u$ and $v$ respectively.
+\end{definition}
+
+\begin{definition}[Edge Classification]
+Given a partition $\mathcal{C} = \{C_1, \ldots, C_k\}$ of $V$, let $E_{\text{intra}}$ denote the edges with both endpoints in one community and $E_{\text{inter}}$ the edges crossing communities, with $n_1 = |E_{\text{intra}}|$, $n_2 = |E_{\text{inter}}|$, and $m = n_1 + n_2$.
+\end{definition}
+
+\begin{definition}[Mean DSpar Scores]
+The mean DSpar scores for each edge type are:
+\begin{equation}
+\mu_{\text{intra}} = \frac{1}{n_1} \sum_{e \in E_{\text{intra}}} s(e), \qquad
+\mu_{\text{inter}} = \frac{1}{n_2} \sum_{e \in E_{\text{inter}}} s(e)
+\end{equation}
+The global mean is $\bar{s} = \frac{1}{m}\sum_{e \in E} s(e) = \frac{n_1 \mu_{\text{intra}} + n_2 \mu_{\text{inter}}}{m}$.
+\end{definition}
+
+\begin{definition}[DSpar Separation]
+A partition $\mathcal{C}$ exhibits \emph{DSpar separation} with gap $\delta > 0$ if:
+\begin{equation}
+\mu_{\text{intra}} - \mu_{\text{inter}} = \delta > 0
+\end{equation}
+\end{definition}
+
+\begin{definition}[Calibrated DSpar Sparsification]
+\label{def:calibrated}
+DSpar sparsification with retention parameter $\alpha \in (0,1]$ retains each edge $e$ independently with probability
+\begin{equation}
+p(e) = \min\bigl(1,\; \lambda_\alpha\, s(e)\bigr),
+\end{equation}
+where $\lambda_\alpha$ solves $\sum_{e \in E} \min(1, \lambda_\alpha s(e)) = \alpha m$, so that the expected number of retained edges equals $\alpha m$ exactly. When $\lambda_\alpha s_{\max} \le 1$ (no probability clips), this reduces to $p(e) = \alpha\, s(e)/\bar{s}$. For $\alpha \in (0,1)$ the map $\lambda \mapsto \sum_e \min(1, \lambda s(e))$ is continuous and strictly increasing below saturation, so $\lambda_\alpha$ exists and is unique; $\alpha = 1$ denotes the identity (no sparsification).
+\end{definition}
+
+\begin{remark}[Clipping]
+\label{rem:clipping}
+Our formal results assume the unclipped regime $\lambda_\alpha s_{\max} \le 1$, in which retention probabilities are exactly proportional to scores. The condition is stringent on real networks: it requires $\alpha \le \bar{s}/s_{\max}$, roughly $0.05$ on \texttt{email-Eu-core}; at the retention levels used in practice, and in our experiments, a majority of low-degree edges can clip at $p(e)=1$ (about $65\%$ on \texttt{email-Eu-core} at calibrated $\alpha=0.9$). Because $\min(1,\lambda s)$ is concave in $s$, $\delta>0$ alone then no longer implies even the direction of preferential removal; a sufficient additional hypothesis is first-order stochastic dominance of the intra-community score distribution over the inter-community one, under which any nondecreasing retention rule preserves the direction. The formal results below therefore describe the score-proportional regime. Section~\ref{sec:sampler} audits this gap, together with the larger gap between nominal and realized retention in previously published sampler variants; the direction of preferential removal is confirmed empirically on all networks whose $\Delta F_{\mathrm{obs}}$ is distinguishable from zero (Section~\ref{sec:mech-verify}).
+\end{remark}
+
+\begin{definition}[Edge Preservation Ratio]
+After sparsification, let $E' \subseteq E$ denote the retained edges. The \emph{edge preservation ratio} is:
+\begin{equation}
+\text{Ratio} = \frac{|E' \cap E_{\text{inter}}| / n_2}{|E' \cap E_{\text{intra}}| / n_1}
+\end{equation}
+A ratio less than 1 indicates preferential removal of inter-community edges; the ratio is defined whenever some intra-community edge is retained.
+\end{definition}
+
+\begin{assumption}[Non-degeneracy]
+\label{ass:nondegen}
+We assume throughout that $n_1 \geq 1$ and $n_2 \geq 1$, i.e., the partition places at least one edge inside a community and at least one edge between communities; positivity of the mean scores is then automatic since $s(e) > 0$ for every edge.
+\end{assumption}
+
+\begin{theorem}[DSpar Separation Implies Preferential Removal]
+\label{thm:ratio}
+Let $G$ be a graph with partition $\mathcal{C}$ exhibiting DSpar separation with gap $\delta > 0$. Under DSpar sparsification in the unclipped regime ($\lambda_\alpha s_{\max} \le 1$, Remark~\ref{rem:clipping}):
+
+\textbf{(a)} The ratio of expected preservation rates satisfies:
+\begin{equation}
+\frac{\mathbb{E}[|E' \cap E_{\text{inter}}|] / n_2}{\mathbb{E}[|E' \cap E_{\text{intra}}|] / n_1} = \frac{\mu_{\text{inter}}}{\mu_{\text{intra}}} < 1
+\end{equation}
+
+\textbf{(b) Asymptotic Convergence:} Consider a sequence of graphs $\{G_n\}_{n=1}^\infty$ with partitions $\{\mathcal{C}_n\}$ satisfying:
+\begin{enumerate}
+    \item[(i)] $n_1^{(n)}, n_2^{(n)} \to \infty$ as $n \to \infty$
+    \item[(ii)] The mean scores converge: $\mu_{\text{intra}}^{(n)} \to \mu_{\text{intra}}^*$ and $\mu_{\text{inter}}^{(n)} \to \mu_{\text{inter}}^*$ for constants $\mu_{\text{intra}}^* > \mu_{\text{inter}}^* > 0$ (which supplies uniform bounds $\mu_{\min}, \mu_{\max}$ and a maintained separation $\delta_0 > 0$)
+    \item[(iii)] The unclipped condition holds along the sequence: $\lambda_\alpha^{(n)} s_{\max}^{(n)} \le 1$ for all $n$
+\end{enumerate}
+Then the edge preservation ratio converges in probability:
+\begin{equation}
+\text{Ratio}_n \xrightarrow{P} \frac{\mu_{\text{inter}}^*}{\mu_{\text{intra}}^*} < 1
+\end{equation}
+
+\textbf{(c) Concentration Bound:} For any $\epsilon > 0$:
+\begin{equation}
+\mathbb{P}\left[ \left| \frac{|E' \cap E_{\text{inter}}|}{n_2} - \frac{\alpha \mu_{\text{inter}}}{\bar{s}} \right| > \epsilon \right] \leq \frac{\alpha \mu_{\text{inter}}}{n_2 \bar{s} \epsilon^2}
+\end{equation}
+and similarly for the intra-community preservation rate.
+\end{theorem}
+
+\begin{proof}[Proof of part (a)]
+With $p(e) = \alpha\, s(e)/\bar{s}$, linearity of expectation gives $\mathbb{E}[|E' \cap E_{\text{inter}}|]/n_2 = \alpha \mu_{\text{inter}}/\bar{s}$ and $\mathbb{E}[|E' \cap E_{\text{intra}}|]/n_1 = \alpha \mu_{\text{intra}}/\bar{s}$; the ratio is $\mu_{\text{inter}}/\mu_{\text{intra}} < 1$ by DSpar separation. Part (c) is Chebyshev's inequality for the sum of independent Bernoulli indicators, and part (b) follows from (c) and the continuous mapping theorem (supplementary material).
+\end{proof}
+
+\begin{corollary}[Quantifying Preferential Removal]
+The ratio of expected preservation rates in Theorem~\ref{thm:ratio}(a) equals
+\begin{equation}
+1 - \frac{\delta}{\mu_{\text{intra}}},
+\end{equation}
+where $\delta = \mu_{\text{intra}} - \mu_{\text{inter}}$ is the DSpar separation gap; under the hypotheses of Theorem~\ref{thm:ratio}(b), the empirical ratio converges in probability to the corresponding limiting value. Larger gaps yield smaller ratios and stronger preferential removal.
+\end{corollary}
+
+\begin{proof}
+Immediate from Theorem~\ref{thm:ratio}(a) by substituting $\mu_{\text{inter}} = \mu_{\text{intra}} - \delta$.
+\end{proof}
+
+\begin{remark}[Relationship to Hub-Bridging]
+Hub-bridging and DSpar separation are related but distinct: the former concerns degree products, the latter inverse-degree sums. The two frequently co-occur but can dissociate: Section~\ref{sec:mechanism} reports real networks with hub-bridging ratio below one yet $\delta > 0$, and configuration-model graphs exhibiting both conditions despite having no community structure.
+\end{remark}
+
+\begin{definition}[Weighted Modularity]
+For a graph with edge weights $w_e \geq 0$, the modularity with respect to partition $\mathcal{C}$ is:
+\begin{equation}
+Q^{(w)} = \frac{W_{\text{intra}}}{W} - \sum_{c \in \mathcal{C}} \left( \frac{D_c^{(w)}}{2W} \right)^2
+\end{equation}
+where $W = \sum_{e \in E} w_e$, $W_{\text{intra}} = \sum_{e \in E_{\text{intra}}} w_e$, and $D_c^{(w)} = \sum_{i \in c} d_i^{(w)}$ is the total weighted degree of community $c$, with $d_i^{(w)} = \sum_{j: (i,j) \in E} w_{(i,j)}$.
+We write $Q^{(w)} = F^{(w)} - G^{(w)}$ where $F^{(w)} = W_{\text{intra}}/W$ and $G^{(w)} = \sum_c (D_c^{(w)}/2W)^2$.
+\end{definition}
+
+\begin{definition}[DSpar Weighting]
+The \emph{DSpar weighting} assigns weight $w_e = s(e)/\bar{s}$ to each edge, where $s(e)$ is the DSpar score and $\bar{s}$ is the mean. This normalizes the total weight to equal the edge count: $W = m$.
+\end{definition}
+
+\begin{theorem}[Modularity Improvement under DSpar]
+\label{thm:modularity}
+Let $G$ be a graph with partition $\mathcal{C}$ exhibiting DSpar separation. Let $Q^{(1)}$ denote modularity under unit weights and $Q^{(s)}$ denote modularity under DSpar weighting.
+
+\textbf{(a) Intra-Community Fraction Improvement:} The weighted intra-community fraction strictly increases:
+\begin{equation}
+F^{(s)} - F^{(1)} = \frac{n_1 n_2 (\mu_{\text{intra}} - \mu_{\text{inter}})}{m(n_1 \mu_{\text{intra}} + n_2 \mu_{\text{inter}})} > 0
+\end{equation}
+
+\textbf{(b) Modularity Decomposition:} The modularity change decomposes as:
+\begin{equation}
+Q^{(s)} - Q^{(1)} = \underbrace{(F^{(s)} - F^{(1)})}_{> 0 \text{ by part (a)}} - \underbrace{(G^{(s)} - G^{(1)})}_{\text{sign depends on network}}
+\end{equation}
+
+\textbf{(c) Sufficient Condition:} $Q^{(s)} > Q^{(1)}$ if and only if $G^{(s)} - G^{(1)} < F^{(s)} - F^{(1)}$.
+In particular, $Q^{(s)} > Q^{(1)}$ whenever $G^{(s)} \leq G^{(1)}$.
+\end{theorem}
+
+\begin{proof}[Proof sketch]
+For part (a), the normalization $\bar{s}$ cancels in $F^{(s)}$, giving $F^{(s)} = n_1 \mu_{\text{intra}} / (n_1 \mu_{\text{intra}} + n_2 \mu_{\text{inter}})$, and cross-multiplication reduces $F^{(s)} > F^{(1)} = n_1/m$ to $\mu_{\text{intra}} > \mu_{\text{inter}}$; the explicit formula follows by direct subtraction. Parts (b) and (c) are immediate from $Q = F - G$. Full derivation in the supplementary material.
+\end{proof}
+
+\begin{lemma}[Characterization of $G$ Change]
+\label{lem:G_change}
+Under DSpar weighting (which by construction preserves total weight: $W^{(s)} = W^{(1)} = m$):
+\begin{equation}
+G^{(s)} - G^{(1)} = \frac{1}{4m^2} \left[ \sum_c (D_c^{(s)})^2 - \sum_c (D_c^{(1)})^2 \right]
+\end{equation}
+Thus $G^{(s)} \leq G^{(1)}$ if and only if $\sum_c (D_c^{(s)})^2 \leq \sum_c (D_c^{(1)})^2$.
+\end{lemma}
+
+\begin{proof}
+Immediate from $G^{(w)} = \sum_c (D_c^{(w)}/2W)^2$ with $W^{(s)} = W^{(1)} = m$.
+\end{proof}
+
+%------------------------------------------------------------------------------
+\subsection{\texorpdfstring{Sufficient Conditions for $G^{(s)} \leq G^{(1)}$}{Sufficient Conditions for G(s) <= G(1)}}
+%------------------------------------------------------------------------------
+
+By Theorem~\ref{thm:modularity}(c), modularity improves whenever $G^{(s)} \leq G^{(1)}$; by Lemma~\ref{lem:G_change}, this is equivalent to $\sum_c (D_c^{(s)})^2 \leq \sum_c (D_c^{(1)})^2$.
+
+\begin{proposition}[Verifiable Conditions for $G^{(s)} \leq G^{(1)}$]
+\label{prop:alternatives}
+
+\textbf{(A) Direct Verification:} Compute $D_c^{(s)} = \sum_{i \in c} d_i^{(s)}$ for each community, where
+\begin{equation}
+d_i^{(s)} = \sum_{j \in N(i)} \frac{s(i,j)}{\bar{s}} = \frac{1}{\bar{s}}\left(1 + \sum_{j \in N(i)} \frac{1}{d_j}\right);
+\end{equation}
+then $G^{(s)} \leq G^{(1)}$ if and only if $\sum_{c} (D_c^{(s)})^2 \leq \sum_{c} (D_c^{(1)})^2$, checkable numerically for any graph and partition.
+
+\textbf{(B) Variance Form:} Equivalently, since the total degree is fixed under both weightings, the sum of squares does not increase if and only if the variance of community degree sums does not increase: $\text{Var}_c(D_c^{(s)}) \leq \text{Var}_c(D_c^{(1)})$.
+
+\textbf{(C) Perfectly Balanced Communities:} If $D_c^{(1)} = 2m/k$ for all $c$, then $G^{(1)} = 1/k$; if additionally $D_c^{(s)} = 2m/k$ for all $c$, then $G^{(s)} = G^{(1)} = 1/k$. The second condition rarely holds exactly, but approximate weighted balance yields $G^{(s)} \approx G^{(1)}$.
+\end{proposition}
+
+\begin{proof}
+(A) is Lemma~\ref{lem:G_change}. (B) follows from $\sum_c x_c^2 = k \cdot \text{Var}_c(x_c) + S^2/k$ at fixed $S = \sum_c x_c = 2m$. (C) is direct substitution.
+\end{proof}
+
+\begin{remark}[Why $G^{(s)} \leq G^{(1)}$ Often Holds]
+DSpar weighting reduces the weighted degrees of hubs whose neighbors are themselves hubs. Where hubs concentrate in few communities, this compresses the spread of $D_c^{(s)}$ across communities, satisfying condition (B). We observe $G^{(s)} \leq G^{(1)}$ on every network tested.
+\end{remark}
+
+\begin{corollary}[Quantitative Improvement Bound]
+Assume communities are balanced under both weightings, i.e., $D_c^{(1)} = D_c^{(s)} = 2m/k$ for all $c$. Then the modularity improvement satisfies:
+\begin{equation}
+Q^{(s)} - Q^{(1)} \geq \frac{n_1 n_2 \delta}{m(n_1 \mu_{\text{intra}} + n_2 \mu_{\text{inter}})}
+\end{equation}
+where $\delta = \mu_{\text{intra}} - \mu_{\text{inter}}$ is the DSpar separation gap.
+\end{corollary}
+
+\begin{proof}
+Under the stated assumption, $G^{(s)} = G^{(1)} = 1/k$, so $Q^{(s)} - Q^{(1)} = F^{(s)} - F^{(1)}$, and the result follows from Theorem~\ref{thm:modularity}(a).
+\end{proof}
+
+\noindent The weighted-balance assumption is restrictive and rarely holds exactly (Proposition~\ref{prop:alternatives}(C)); we use this corollary for intuition rather than practice.
+
+While Theorems~\ref{thm:ratio} and~\ref{thm:modularity} analyze DSpar weighting, our experiments use DSpar \emph{sparsification} (edge removal). The following theorem addresses sparsification directly:
+
+\begin{theorem}[Sparsification Improves Intra-Community Fraction (Asymptotically)]
+\label{thm:sparsification}
+Let $G$ be a graph with partition $\mathcal{C}$ exhibiting DSpar separation, and
+let $G'$ denote the DSpar-sparsified graph (unclipped regime, Remark~\ref{rem:clipping}).
+
+\textbf{(a) High-Probability Approximation:}
+Along any sequence of graphs satisfying conditions (i)--(ii) of Theorem~\ref{thm:ratio}(b), for every $\varepsilon > 0$,
+\begin{equation}
+\mathbb{P}\!\left(
+\left| F' -
+\frac{n_1 \mu_{\text{intra}}}{n_1 \mu_{\text{intra}} + n_2 \mu_{\text{inter}}}
+\right| > \varepsilon
+\right) \longrightarrow 0 \quad \text{as } n_1, n_2 \to \infty.
+\end{equation}
+In particular, $F' = F^{(s)} + o_p(1)$.
+
+\textbf{(b) Asymptotic Improvement:}
+Consider a sequence of graphs $\{G_n\}$ satisfying the conditions of
+Theorem~\ref{thm:ratio}(b), and assume additionally that
+$n_2^{(n)}/n_1^{(n)} \to \rho > 0$. Then
+\begin{equation}
+F'_n \xrightarrow{P}
+\frac{\mu_{\text{intra}}^*}{\mu_{\text{intra}}^* + \rho \mu_{\text{inter}}^*}
+>
+\frac{1}{1+\rho}
+= \lim_{n \to \infty} F^{(1)}_n,
+\end{equation}
+where the inequality follows from preserved DSpar separation
+($\mu_{\text{intra}}^* > \mu_{\text{inter}}^*$).
+\end{theorem}
+
+\noindent The proof (supplementary material) combines the concentration bound of Theorem~\ref{thm:ratio}(c) with the continuous mapping theorem.
+Sparsification thus reproduces, with high probability in large graphs, the intra-community fraction of the deterministic weighting, linking Theorem~\ref{thm:modularity} to the randomized procedure used in our experiments.
