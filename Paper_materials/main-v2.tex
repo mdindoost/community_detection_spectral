@@ -55,7 +55,7 @@ E-mail: md724@njit.edu, bd344@njit.edu, bader@njit.edu}%
 % inside \IEEEtitleabstractindextext{} BEFORE \begin{document}/\maketitle.
 \IEEEtitleabstractindextext{%
 \begin{abstract}
-Graph sparsification is increasingly reported to not merely accelerate community detection but to improve it. We show that, for degree-based sparsification, the standard evidence for such improvements is largely an artifact of evaluation methodology, and we characterize the narrow conditions under which genuine gains exist. We first develop a fixed-partition theory of degree-based edge sampling: when intra-community edges receive higher DSpar scores than inter-community edges (positive separation, $\delta > 0$), sparsification provably removes inter-community edges preferentially and increases the intra-community edge fraction. We then show empirically that this mechanism operates independently of community structure: on 17 real-world networks, degree-preserving configuration-model nulls reproduce both $\delta > 0$ and fixed-partition modularity gains on every network, typically exceeding the real graph (median ratio 1.24), so neither signal distinguishes a network from its own null model. We further identify three evaluation artifacts that generate apparent improvements: (i) comparing modularity across different graphs---partitions optimized on sparsified graphs lose $0.01$--$0.19$ modularity when evaluated on the original network, on all 15 networks tested; (ii) partition granularity---apparent ground-truth-recovery gains vanish against resolution-matched controls run on the unsparsified graph, on all eight labeled datasets tested; and (iii) unmatched computation---gains attributed to sparsification-seeded optimization disappear against runtime-matched restart baselines on most networks. After controlling for all three, a genuine benefit remains on 2 of 15 networks, where seeding Leiden with the sparsified-graph partition and refining on the original graph beats runtime-matched baselines by small but robust margins ($+0.008$ modularity); no structural statistic we tested predicts where these gains occur. Our results yield a practical evaluation protocol---null-model, resolution-matched, and runtime-matched controls---for any claim that preprocessing improves community detection.
+Graph sparsification is increasingly reported to improve community detection rather than simply accelerate it. We show that, for degree-based sparsification, the standard evidence for such improvements is largely an artifact of evaluation methodology, and we characterize the narrow conditions under which genuine gains exist. We first develop a fixed-partition theory of degree-based edge sampling: when intra-community edges receive higher DSpar scores than inter-community edges (positive separation, $\delta > 0$), sparsification provably removes inter-community edges preferentially and increases the intra-community edge fraction. We then show empirically that this mechanism operates independently of community structure: on 17 real-world networks, degree-preserving configuration-model nulls reproduce both $\delta > 0$ and fixed-partition modularity gains on every network, typically exceeding the real graph (median ratio 1.24), so neither signal distinguishes a network from its own null model. We further identify three evaluation artifacts that generate apparent improvements: (i) comparing modularity across different graphs: partitions optimized on sparsified graphs lose $0.01$--$0.19$ modularity when evaluated on the original network, on all 15 networks tested; (ii) partition granularity: apparent ground-truth-recovery gains vanish against resolution-matched controls run on the unsparsified graph, on all eight labeled datasets tested; and (iii) unmatched computation: gains attributed to sparsification-seeded optimization disappear against runtime-matched restart baselines on most networks. After controlling for all three, a genuine benefit remains on 2 of 15 networks, where seeding Leiden with the sparsified-graph partition and refining on the original graph beats runtime-matched baselines by small but robust margins ($+0.008$ modularity); no structural statistic we tested predicts where these gains occur. Our results yield a practical evaluation protocol (null-model, resolution-matched, and runtime-matched controls) for any claim that preprocessing improves community detection.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -69,47 +69,47 @@ Graph sparsification, community detection, modularity maximization, null models,
 
 \IEEEraisesectionheading{\section{Introduction}\label{sec:introduction}}
 \IEEEPARstart{C}{ommunity} detection, the task of identifying densely connected groups of nodes, is a fundamental problem in network science~\cite{fortunato202220, karatacs2018application}.
-As networks scale to millions of nodes and edges, graph sparsification---removing edges while approximately preserving structural properties---has become a standard preprocessing step, classically justified by computational savings alone~\cite{spielman2008graph, benczur2015randomized}.
+As networks scale to millions of nodes and edges, graph sparsification, the removal of edges while approximately preserving structural properties, has become a standard preprocessing step, classically justified by computational savings alone~\cite{spielman2008graph, benczur2015randomized}.
 Recently, a more ambitious claim has emerged: that sparsification can \emph{improve} downstream community detection rather than merely accelerate it.
 Similarity-based sparsification has been reported to sharpen cluster structure~\cite{satuluri2011local}; degree-based schemes such as DSpar~\cite{liu2023dspar} preferentially remove edges between high-degree hubs, which are intuitively the edges most likely to blur community boundaries~\cite{granovetter1973strength, newman2001structure}; and, in an earlier version of this work, we ourselves reported consistent modularity improvements from DSpar preprocessing across a broad collection of real-world networks.
 
 This paper subjects that class of claims to controlled evaluation, and the result is largely negative: \emph{for degree-based sparsification, the standard evidence of improved community detection is dominated by measurement artifacts rather than genuine structural gains}.
-At the same time, the underlying mechanism is real and provable, and a small genuine benefit survives the strictest controls we could devise---on 2 of 15 networks.
-Characterizing precisely which part is real and which is artifact, and providing the controls that separate them, is the contribution of this paper.
+At the same time, the underlying mechanism is real and provable, and a small genuine benefit survives the strictest controls we could devise, on 2 of 15 networks.
+Determining which part is real and which is artifact, and providing the controls that separate them, is the contribution of this paper.
 
 \paragraph{The mechanism is real.}
 Degree-based sparsification assigns each edge $(u,v)$ a score $s(u,v) = 1/d_u + 1/d_v$ and retains edges with probability increasing in this score, so edges between high-degree nodes are removed preferentially.
-When intra-community edges receive higher scores on average than inter-community edges---a condition we call \emph{DSpar separation}, $\delta > 0$---we prove that sparsification removes inter-community edges preferentially and increases the intra-community edge fraction of any fixed partition (Section~\ref{sec:theory}).
+When intra-community edges receive higher scores on average than inter-community edges, a condition we call \emph{DSpar separation} ($\delta > 0$), we prove that sparsification removes inter-community edges preferentially and increases the intra-community edge fraction of any fixed partition (Section~\ref{sec:theory}).
 These results hold under both deterministic edge weighting and randomized edge removal, and our experiments verify their quantitative predictions to high accuracy.
 
 \paragraph{The evidence is confounded.}
 The mechanism, however, does not imply improved community detection, because the standard ways of measuring improvement are confounded by three distinct artifacts.
 First, \emph{modularity is not comparable across graphs}: sparsification changes the edge set and the configuration null model simultaneously, and sparser graphs support higher modularity for purely combinatorial reasons~\cite{guimera2004modularity}.
-When partitions optimized on sparsified graphs are evaluated on the \emph{original} network, they \emph{lose} $0.01$--$0.19$ modularity---on every one of the 15 networks we test.
+When partitions optimized on sparsified graphs are evaluated on the \emph{original} network, they \emph{lose} $0.01$--$0.19$ modularity, on every one of the 15 networks we test.
 Second, \emph{partition granularity}: sparsification fragments graphs, detection algorithms return finer partitions, and popular agreement measures reward finer partitions against small ground-truth communities~\cite{vinh2010information}.
-A resolution-matched control---the same detection algorithm run on the \emph{unsparsified} graph, tuned to the same number of clusters---matches or beats sparsification on all eight labeled datasets we test.
+A resolution-matched control, meaning the same detection algorithm run on the \emph{unsparsified} graph and tuned to the same number of clusters, matches or beats sparsification on all eight labeled datasets we test.
 Third, \emph{unmatched computation}: sparsify-cluster-refine pipelines spend more optimization effort than the single-run baselines they are compared against; when baselines are granted equal wall-clock time via restarts, most apparent gains disappear.
 
 \paragraph{The certifying signals are degree statistics.}
 More fundamentally, we show that the structural signals used to certify the mechanism carry no information about community structure per se.
-On all 17 networks in our suite, degree-preserving configuration-model rewiring---which destroys community structure while retaining the degree sequence---reproduces both $\delta > 0$ and positive fixed-partition modularity change under sparsification, typically at \emph{larger} magnitude than the real graph (median ratio $1.24$).
+On all 17 networks in our suite, degree-preserving configuration-model rewiring, which destroys community structure while retaining the degree sequence, reproduces both $\delta > 0$ and positive fixed-partition modularity change under sparsification, typically at \emph{larger} magnitude than the real graph (median ratio $1.24$).
 Hub-bridging behaves identically: the degree-product ratio between inter- and intra-community edges exceeds one on every rewired null, while it is erratic on the real graphs.
 Both quantities are properties of heavy-tailed degree sequences interacting with modularity optimization, not of community structure; neither can distinguish a real network from its own configuration model.
 
 \paragraph{What survives.}
 After all three controls, one genuine effect remains: seeding the Leiden algorithm~\cite{traag2019louvain} with the partition found on the sparsified graph and \emph{refining on the original graph} beats runtime-matched restart baselines on 2 of 15 networks (email-Enron and com-Youtube; $+0.008$ modularity, $5$--$8$ baseline standard deviations).
-No structural statistic we tested---including $\delta$, its null-corrected excess, hub-bridging strength, degree heterogeneity, and graph size---predicts where these gains occur.
-Notably, the strongest candidate correlation appeared statistically significant over 14 networks ($r = 0.69$, $p = 0.006$) and was eliminated by the fifteenth ($r = 0.12$): a cautionary illustration of small-sample correlation claims in this literature, including one made in the earlier version of this work.
+None of the structural statistics we tested ($\delta$, its null-corrected excess, hub-bridging strength, degree heterogeneity, graph size) predicts where these gains occur.
+The strongest candidate correlation appeared statistically significant over 14 networks ($r = 0.69$, $p = 0.006$) and was eliminated by the fifteenth ($r = 0.12$), a cautionary illustration of small-sample correlation claims in this literature, including one made in the earlier version of this work.
 
 \noindent\textbf{Contributions.}
 \begin{itemize}
     \item \textbf{A fixed-partition theory of degree-based sparsification} (Section~\ref{sec:theory}): DSpar separation provably yields preferential inter-community edge removal and intra-community fraction gains, under a corrected sampler formulation whose realized retention matches its nominal rate exactly.
 
-    \item \textbf{A null-model characterization} showing that DSpar separation and fixed-partition modularity gains are reproduced---usually amplified---by degree-preserving configuration models on 17/17 real networks, and are therefore degree statistics rather than community statistics.
+    \item \textbf{A null-model characterization} showing that DSpar separation and fixed-partition modularity gains are reproduced, and usually amplified, by degree-preserving configuration models on 17/17 real networks, and are therefore degree statistics rather than community statistics.
 
     \item \textbf{A three-control evaluation protocol} for preprocessing claims in community detection: score partitions on the original graph (not the preprocessed one), compare against resolution-matched controls, and grant baselines matched computation. Each control is paired with the artifact it exposes, with open implementations.
 
-    \item \textbf{A boundary characterization}: genuine runtime-matched gains exist on 2 of 15 networks, and no tested structural statistic predicts them---an existence proof, an open problem, and a demonstration of why predictor claims in this regime require far larger samples.
+    \item \textbf{A boundary characterization}: genuine runtime-matched gains exist on 2 of 15 networks, and no tested structural statistic predicts them: an existence proof, an open problem, and a demonstration that predictor claims in this regime require far larger samples.
 
     \item \textbf{A sampler audit} showing that the nominal retention parameter $\alpha$ of published DSpar-style samplers differs systematically from realized edge retention (by up to a factor of two), with a calibrated sampler that closes the gap.
 \end{itemize}
@@ -276,7 +276,7 @@ single pass over the edge list. In contrast, effective-resistance sampling requi
 Beyond spectral sparsification, several lines of work remove edges to aid analysis.
 Satuluri et al.~\cite{satuluri2011local} sparsify by local structural similarity explicitly to improve scalable clustering, and backbone-extraction methods retain statistically significant edges in weighted networks~\cite{serrano2009extracting, coscia2017backboning}.
 Our results complement this literature by identifying which evaluation designs can and cannot certify such improvements.
-A second line concerns the behavior of modularity itself: random graphs without community structure exhibit substantial modularity~\cite{guimera2004modularity}, and modularity maximization has a resolution limit tied to the total edge count~\cite{fortunato2007resolution}---both directly relevant when scores are compared across graphs of different density, as sparsification pipelines implicitly do.
+A second line concerns the behavior of modularity itself: random graphs without community structure exhibit substantial modularity~\cite{guimera2004modularity}, and modularity maximization has a resolution limit tied to the total edge count~\cite{fortunato2007resolution}. Both facts bear directly on comparisons of scores across graphs of different density, which sparsification pipelines perform implicitly.
 For comparing partitions against reference labels, information-theoretic measures require correction for chance, since uncorrected NMI is biased toward fine partitions~\cite{vinh2010information}, and metadata labels are imperfect proxies for structural communities~\cite{hric2014community, peel2017ground}.
 Finally, post-processing methods that repair poorly connected clusters~\cite{park_cm_2024-journal, ramavarapu2024cm++, dindoost2025optimization} address a related failure mode of modularity pipelines from the opposite direction; connecting the pre- and post-processing perspectives remains open.
 
@@ -463,7 +463,7 @@ where $\lambda_\alpha$ solves $\sum_{e \in E} \min(1, \lambda_\alpha s(e)) = \al
 
 \begin{remark}[Clipping]
 \label{rem:clipping}
-Our formal results assume the unclipped regime $\lambda_\alpha s_{\max} \le 1$, in which retention probabilities are exactly proportional to scores. At practical retention levels on real networks a fraction of low-degree edges clips at $p(e)=1$; proportionality then holds only below the clip point and the exact ratio statements become approximate. Section~\ref{sec:sampler} audits this gap---together with the larger gap between nominal and realized retention in previously published sampler variants; the preferential-removal direction is confirmed empirically in all tested configurations.
+Our formal results assume the unclipped regime $\lambda_\alpha s_{\max} \le 1$, in which retention probabilities are exactly proportional to scores. At practical retention levels on real networks a fraction of low-degree edges clips at $p(e)=1$; proportionality then holds only below the clip point and the exact ratio statements become approximate. Section~\ref{sec:sampler} audits this gap, together with the larger gap between nominal and realized retention in previously published sampler variants; the preferential-removal direction is confirmed empirically in all tested configurations.
 \end{remark}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -946,7 +946,7 @@ additional intuition but is not required for the formal results.
 \section{Sampler Audit: Nominal versus Realized Retention}
 \label{sec:sampler}
 
-Before presenting experiments, we audit what DSpar-style samplers actually retain, because the retention parameter $\alpha$ has been used in the literature---and in an earlier version of this work---with three mutually inconsistent meanings.
+Before presenting experiments, we audit what DSpar-style samplers actually retain, because the retention parameter $\alpha$ has been used with three mutually inconsistent meanings in the literature, including in an earlier version of this work.
 
 \paragraph{With-replacement sampling collapses retention.}
 The originally published DSpar procedure~\cite{liu2023dspar} draws $q = \lceil \alpha m \rceil$ edge samples \emph{with replacement} from the distribution proportional to $s(e)$, reweights, and keeps the union of sampled edges.
@@ -1055,7 +1055,7 @@ Figures~\ref{fig:fixed_vs_leiden} and~\ref{fig:decomposition_cit_hepth} illustra
 \paragraph{What is \emph{not} shown.}
 These measurements verify the mechanism of Section~\ref{sec:theory}: degree-biased sampling shifts edge composition and null-model mass exactly as predicted.
 They do not show that community detection improved.
-Both $\Delta Q$ columns compare modularity \emph{across different graphs}---the fixed partition scored on $G$ versus on the sparsified $G'$---and Section~\ref{sec:artifacts} demonstrates that this comparison is invalid as a quality metric.
+Both $\Delta Q$ columns compare modularity \emph{across different graphs} (the fixed partition scored on $G$ versus on the sparsified $G'$), and Section~\ref{sec:artifacts} demonstrates that this comparison is invalid as a quality metric.
 An earlier version of this work presented these same measurements as evidence of improvement; the controls below explain why that reading fails.
 
 \subsection{Configuration-Model Controls}
@@ -1070,11 +1070,10 @@ Rewiring collapses modularity itself (base $Q$ drops from $0.60$--$0.93$ to $0.1
 Table~\ref{tab:null_control} shows the result: the null reproduces \emph{both} signals on every network.
 DSpar separation is positive on $17/17$ rewired graphs and \emph{exceeds} the real graph's value on $16/17$; fixed-partition modularity gains are positive on $17/17$ and exceed the real graph's on $15/17$, with median ratio $1.24$.
 The sharpest cases are those where the real graph's signal is weakest: \texttt{com-Amazon} (real $\Delta Q_{\mathrm{fixed}} = 1.5\times10^{-5}$, null $0.059$), \texttt{cit-Patents} ($0.005$ vs.\ $0.077$), and \texttt{facebook-combined}, whose real $\delta$ is \emph{negative} ($-0.0014$) while its null is positive.
-Hub-bridging behaves identically: the ratio exceeds one on $17/17$ nulls---reaching $105.6$ on rewired \texttt{wiki-Talk}---while on the real graphs it is erratic ($0.48$--$10.5$), falling below one on three networks.
+Hub-bridging behaves identically: the ratio exceeds one on $17/17$ nulls, reaching $105.6$ on rewired \texttt{wiki-Talk}, while on the real graphs it is erratic ($0.48$--$10.5$), falling below one on three networks.
 
-The interpretation is unavoidable.
 A degree-biased sampler preferentially thins hub-incident edges, which raises fixed-partition modularity for \emph{any} partition on \emph{any} degree-heterogeneous graph, whether or not the partition reflects communities.
-Positive $\delta$, positive $\Delta Q_{\mathrm{fixed}}$, and hub-bridging above one are properties of heavy-tailed degree sequences interacting with modularity optimization---degree statistics, not community statistics.
+Positive $\delta$, positive $\Delta Q_{\mathrm{fixed}}$, and hub-bridging above one are properties of heavy-tailed degree sequences interacting with modularity optimization; they are degree statistics, not community statistics.
 Consequently, correlations between $\delta$ and $\Delta Q_{\mathrm{fixed}}$ across networks (however strong) validate only the arithmetic of Theorems~\ref{thm:ratio}--\ref{thm:sparsification}, not any claim about community structure: the two quantities are linked mechanically through the same score distribution.
 
 \subsection{Partition Provenance}
@@ -1083,7 +1082,7 @@ Consequently, correlations between $\delta$ and $\Delta Q_{\mathrm{fixed}}$ acro
 A second confound concerns \emph{which partition} $\delta$ is measured against.
 On standard LFR benchmarks~\cite{lancichinetti2008benchmark} ($n = 10^4$, $\mu \in \{0.1,\dots,0.5\}$), $\delta$ is negative with respect to the \emph{planted} partition at every mixing level ($-0.003$ to $-0.010$).
 Measured instead against a \emph{Leiden} partition of the same graph, $\delta$ shifts systematically positive at every $\mu$, and the shift grows exactly as Leiden departs from the planted truth (at $\mu = 0.5$: NMI to planted $0.67$, planted communities merged from $236$ to $48$, shift $+0.0032$).
-The shift does not flip the sign on LFR---whose degree distribution is nearly homogeneous under standard parameterizations (coefficient of variation $\approx 0.4$)---but on heavy-tailed real networks it can: on \texttt{com-Amazon}, $\delta = -0.004$ against the ground-truth communities and $+0.011$ against the Leiden partition of the same graph.
+The shift does not flip the sign on LFR, whose degree distribution is nearly homogeneous under standard parameterizations (coefficient of variation $\approx 0.4$), but on heavy-tailed real networks it can: on \texttt{com-Amazon}, $\delta = -0.004$ against the ground-truth communities and $+0.011$ against the Leiden partition of the same graph.
 Positive DSpar separation, as reported in practice, is therefore a joint property of heavy-tailed degrees \emph{and} of partitions produced by modularity optimization; comparisons between $\delta$ values measured against planted partitions (synthetic benchmarks) and detected partitions (real networks) are not like-for-like.
 
 \subsection{Controlled Hub-Bridging in Synthetic Benchmarks}
@@ -1108,7 +1107,7 @@ At $h = 4$ the hub-bridging ratio reaches $\approx 15.9$, $\delta$ turns positiv
   \label{fig:lfr_delta_vs_mu}
 \end{figure}
 
-Read through the lens of \S\ref{sec:mech-null}, this experiment demonstrates \emph{controllability of the mechanism}---degree--community coupling is the knob that turns fixed-partition gains on and off---rather than any statement about detection quality.
+Read through the lens of \S\ref{sec:mech-null}, this experiment demonstrates \emph{controllability of the mechanism}: degree--community coupling is the knob that turns fixed-partition gains on and off. It makes no statement about detection quality.
 It also identifies a genuine limitation of LFR as a benchmark for sparsification studies: standard LFR lacks both the heavy-tailed degree profile and the degree--community coupling that real networks and their configuration models exhibit.
 
 
@@ -1128,8 +1127,8 @@ A quality claim requires a fixed objective: \emph{score every partition on the o
 \input{tables/tab_transfer_loss}
 
 Table~\ref{tab:transfer_loss} applies this control across 15 networks.
-The partition obtained by running Leiden on the sparsified graph scores far above baseline on the sparsified graph (e.g., \texttt{wiki-Talk}: $0.897$ vs.\ $0.599$)---and \emph{below} baseline once evaluated on the original graph ($0.417$), a transfer loss of $0.185$.
-The pattern is universal: transfer loss is positive on all 15 networks at every tested retention, ranging from $0.004$ to $0.185$.
+The partition obtained by running Leiden on the sparsified graph scores far above baseline on the sparsified graph (e.g., \texttt{wiki-Talk}: $0.897$ vs.\ $0.599$), and \emph{below} baseline once evaluated on the original graph ($0.417$), a transfer loss of $0.185$.
+Transfer loss is positive on all 15 networks at every tested retention, from $0.004$ to $0.185$.
 Cross-graph comparison thus reverses the sign of the conclusion on every dataset: what appears as a gain of $+0.05$ to $+0.30$ is, on the fixed objective, a loss of $0.01$ to $0.19$.
 Refining the transferred partition on the original graph (column $Q_{\mathrm{final}}$) recovers the baseline almost exactly, leaving residuals of $-0.001$ to $+0.008$; Section~\ref{sec:boundary} examines when those residuals are genuine.
 
@@ -1137,21 +1136,21 @@ Refining the transferred partition on the original graph (column $Q_{\mathrm{fin
 \label{sec:artifact-granularity}
 
 Sparsification fragments graphs, and detection on fragmented graphs returns finer partitions.
-Against reference communities that are small---as ground-truth sets in common benchmarks are---finer partitions score better on popular agreement measures for reasons unrelated to the preprocessing: uncorrected NMI is biased toward many clusters~\cite{vinh2010information}, and set-matching scores such as average $F_1$ reward granularity against small targets.
+Against small reference communities, as ground-truth sets in common benchmarks are, finer partitions score better on popular agreement measures for reasons unrelated to the preprocessing: uncorrected NMI is biased toward many clusters~\cite{vinh2010information}, and set-matching scores such as average $F_1$ reward granularity against small targets.
 The control is to grant the \emph{baseline} the same granularity: run the same algorithm on the \emph{unsparsified} graph with the resolution parameter tuned to match the sparsified pipeline's cluster count.
 
 \paragraph{At scale.}
-On SNAP networks with functional ground truth (top-5000 communities; median size 7--8 nodes), the with-replacement DSpar pipeline at nominal $\alpha=0.8$ appears to help on two of three datasets (average $F_1$, mean of both matching directions: \texttt{com-Amazon} $0.211 \to 0.285$; \texttt{com-Youtube} $0.010 \to 0.050$; \texttt{com-DBLP} $0.146 \to 0.100$)---while inflating cluster counts $20$--$40\times$.
+On SNAP networks with functional ground truth (top-5000 communities; median size 7--8 nodes), the with-replacement DSpar pipeline at nominal $\alpha=0.8$ appears to help on two of three datasets (average $F_1$, mean of both matching directions: \texttt{com-Amazon} $0.211 \to 0.285$; \texttt{com-Youtube} $0.010 \to 0.050$; \texttt{com-DBLP} $0.146 \to 0.100$), while inflating cluster counts $20$--$40\times$.
 The resolution-matched control, using every edge, beats the sparsified pipeline everywhere, by wide margins: $0.404$ on \texttt{com-Amazon}, $0.293$ on \texttt{com-DBLP}, $0.129$ on \texttt{com-Youtube}.
 The apparent recovery gain is obtainable, doubled, without discarding a single edge; the discarded edges are pure loss.
-Calibrated mild pruning (true retention $0.9$) moves recovery by $-0.037$ to $+0.001$---indistinguishable from nothing.
+Calibrated mild pruning (true retention $0.9$) moves recovery by $-0.037$ to $+0.001$, indistinguishable from zero.
 
 \paragraph{On classical labeled graphs.}
 \input{tables/tab_gt_recheck}
 Table~\ref{tab:gt_recheck} repeats the analysis on the five classical datasets used in the earlier version of this work, adding chance-corrected AMI~\cite{vinh2010information} as the primary measure.
 The four datasets previously reported as unfavorable remain negative under every metric, and become \emph{more} negative under AMI (e.g., Karate $\Delta\mathrm{AMI} = -0.19$).
 The single previously reported positive, \texttt{email-Eu-core}, does not survive: its $\Delta\mathrm{AMI} = +0.007 \pm 0.019$ is statistically indistinguishable from zero, and the resolution-matched control exceeds the sparsified pipeline on all three metrics.
-Under calibrated true-$0.9$ retention the effect is negative even nominally---the residual positive depended on the with-replacement sampler discarding $56\%$ of edges, not on the degree scores.
+Under calibrated true-$0.9$ retention the effect is negative even nominally; the residual positive depended on the with-replacement sampler discarding $56\%$ of edges, not on the degree scores.
 We note additionally that reference labels are themselves imperfect proxies for structural communities~\cite{peel2017ground, hric2014community}, and that one dataset's conventional labels proved on inspection to be an algorithmic surrogate rather than observed metadata (Table~\ref{tab:gt_recheck}, footnote).
 
 \subsection{Artifact III: Unmatched Computation}
@@ -1160,7 +1159,7 @@ We note additionally that reference labels are themselves imperfect proxies for 
 A sparsify--cluster--refine pipeline performs more optimization than the single baseline run it is typically compared against.
 The control is to grant the baseline equal wall-clock time, spent on independent restarts, and compare against the best.
 In our measurements the pipeline costs $1.55$--$1.90\times$ a single Leiden run (sparsification itself is only $4$--$8\%$ of the total), so the matched baseline is best-of-two restarts.
-The correction is not cosmetic: on \texttt{wiki-Vote}, the seeded pipeline beats the \emph{mean} baseline in six of eight configurations---and loses to the runtime-matched baseline in all eight.
+The correction is not cosmetic: on \texttt{wiki-Vote}, the seeded pipeline beats the \emph{mean} baseline in six of eight configurations and loses to the runtime-matched baseline in all eight.
 Comparisons against single-run means manufacture false positives whenever the optimizer's seed variance is nonzero.
 
 \subsection{The Resulting Protocol}
@@ -1189,7 +1188,7 @@ This uses sparsification not as a replacement for the graph but as a perturbatio
 
 Table~\ref{tab:boundary} reports the outcome on 15 networks at calibrated retention $0.9$.
 The seeded pipeline beats the runtime-matched baseline beyond twice the baseline's seed deviation on exactly \textbf{2 of 15} networks: \texttt{email-Enron} ($+0.0077$) and \texttt{com-Youtube} ($+0.0086$).
-The \texttt{email-Enron} result is robust in every direction we probed: it holds for both sampler variants, at every retention level tested ($0.7$--$0.95$), against best-of-five as well as best-of-two baselines, and it strengthens under \emph{harsher} sparsification (up to $+0.0149$ under the with-replacement sampler)---indicating that the gain flows from aggressive hub-edge removal reshaping the optimization landscape, not from mild denoising.
+The \texttt{email-Enron} result is robust in every direction we probed: it holds for both sampler variants, at every retention level tested ($0.7$--$0.95$), against best-of-five as well as best-of-two baselines, and it strengthens under \emph{harsher} sparsification (up to $+0.0149$ under the with-replacement sampler). The gain therefore stems from aggressive hub-edge removal changing the optimizer's search space, not from mild denoising.
 On \texttt{email-Enron} the raw transferred partition itself (before refinement) already exceeds baseline at true retention $\ge 0.8$, the only network in the suite where the transfer loss of Section~\ref{sec:artifact-modularity} changes sign.
 
 \subsection{No Tested Statistic Predicts the Gains}
@@ -1198,14 +1197,14 @@ On \texttt{email-Enron} the raw transferred partition itself (before refinement)
 \input{tables/tab_predictors}
 
 Can one tell in advance where seeding will pay?
-Table~\ref{tab:predictors} correlates fourteen candidate statistics---$\delta$, its configuration-null value and excess $\delta^{*} = \delta_{\mathrm{real}} - \delta_{\mathrm{null}}$, the fixed-gain ratio against the null, hub-bridging and its excess, degree heterogeneity, size, and density---with the runtime-matched outcome.
+Table~\ref{tab:predictors} correlates fourteen candidate statistics with the runtime-matched outcome: $\delta$, its configuration-null value and excess $\delta^{*} = \delta_{\mathrm{real}} - \delta_{\mathrm{null}}$, the fixed-gain ratio against the null, hub-bridging and its excess, degree heterogeneity, size, and density.
 None is significant at $n = 15$ (best: network size, Spearman $\rho = 0.47$, $p = 0.079$; the significance threshold after correcting for fourteen candidates is $|\rho| \ge 0.70$).
 The null-corrected excess $\delta^{*}$, superficially the principled choice, is in fact \emph{anti}-correlated with the outcome ($r = -0.36$): because $\delta_{\mathrm{null}}$ exceeds $\delta_{\mathrm{real}}$ on 16 of 17 networks and tracks degree heterogeneity, $\delta^{*}$ behaves as a negated heavy-tail statistic.
-Its proper role is diagnostic---quantifying how much of a reported $\delta$ the configuration model already explains---not predictive.
+Its proper role is diagnostic, quantifying how much of a reported $\delta$ the configuration model already explains; it is not predictive.
 
-One near-miss deserves record as a methodological caution.
-Over the first fourteen networks measured, degree heterogeneity predicted the outcome with textbook significance ($r = 0.69$, $p = 0.006$).
-The fifteenth, \texttt{wiki-Talk}---the most degree-heterogeneous network in the suite ($\mathrm{CV} = 26.3$, hub-bridging $10.5$)---returned a \emph{negative} outcome and collapsed the correlation to $r = 0.12$ ($p = 0.66$).
+One near-miss is worth recording as a methodological caution.
+Over the first fourteen networks measured, degree heterogeneity predicted the outcome at conventional significance ($r = 0.69$, $p = 0.006$).
+The fifteenth, \texttt{wiki-Talk}, the most degree-heterogeneous network in the suite ($\mathrm{CV} = 26.3$, hub-bridging $10.5$), returned a \emph{negative} outcome and collapsed the correlation to $r = 0.12$ ($p = 0.66$).
 A single network eliminated an apparently significant fourteen-point correlation.
 The earlier version of this work reported a cross-network correlation of $r = 0.92$ between $\delta$ and fixed-partition gains as a headline validation; beyond being mechanically induced (Section~\ref{sec:mech-null}), such small-sample correlations are fragile in exactly the way exhibited here.
 Predictor claims in this regime require samples of order $10^2$ networks and pre-registered statistics.
@@ -1215,7 +1214,7 @@ Predictor claims in this regime require samples of order $10^2$ networks and pre
 
 Under calibrated sampling, the transfer loss of Artifact~I is governed by \emph{true} retention: it shrinks roughly tenfold from retention $0.7$ to $0.95$ (e.g., \texttt{ca-HepTh}: $-0.037 \to -0.0035$; \texttt{com-DBLP}: $-0.027 \to -0.0010$) and extrapolates to zero only at retention one.
 On five of six networks examined across the sweep, no retention level yields a positive raw transfer; \texttt{email-Enron} again is the exception, crossing between $0.7$ and $0.8$.
-Mild sparsification is thus not a free lunch that stronger sparsification spoils: on the fixed objective it is a strictly smaller loss, vanishing only when nothing is removed---except where the (unpredicted) seeding effect operates.
+On the fixed objective, milder sparsification is simply a smaller loss, vanishing only when nothing is removed; the exception is the seeding effect above, which no tested statistic anticipates.
 
 
 \section{Runtime Considerations}
@@ -1230,7 +1229,7 @@ At aggressive retention the fragmentation regime dominates and runtime \emph{inc
 Speedup claims should therefore be read jointly with fragmentation diagnostics (component counts, largest-component fraction, community counts), and the fragmented regime treated as out of scope for quality claims of any kind.
 
 \paragraph{Pipeline accounting.}
-DSpar scoring itself is genuinely cheap---$4$--$8\%$ of end-to-end pipeline time in our measurements, consistent with its $O(m)$ design---so the pipeline cost is dominated by clustering, and the seeded-refinement pipeline of Section~\ref{sec:boundary} costs $1.55$--$1.90\times$ a single baseline run.
+DSpar scoring itself is cheap ($4$--$8\%$ of end-to-end pipeline time in our measurements, consistent with its $O(m)$ design), so the pipeline cost is dominated by clustering, and the seeded-refinement pipeline of Section~\ref{sec:boundary} costs $1.55$--$1.90\times$ a single baseline run.
 This is exactly why Artifact~III matters: the honest comparison for any such pipeline is against a baseline granted the same budget.
 
 \paragraph{Spectral baselines.}
@@ -1244,12 +1243,12 @@ In auditing the earlier version of this work we found its spectral branch had si
 \paragraph{What the theory licenses.}
 Our fixed-partition results (Theorems~\ref{thm:ratio}--\ref{thm:sparsification}) are correct and verified to high precision, and they should be read for exactly what they state: degree-biased sampling shifts edge composition and null-model mass in a direction determined by the score gap $\delta$, for whatever partition $\delta$ is measured against.
 The configuration-model controls show that this premise, and therefore the conclusion, holds as readily on graphs without communities as on real networks.
-The theory is a quantitative account of degree mechanics; treating it as a theory of community clarification was an over-interpretation---one we made ourselves, and one the literature on preprocessing-for-clustering is structurally exposed to, since the certifying statistics look meaningful and the standard evaluations all move in the flattering direction.
+The theory is a quantitative account of degree mechanics; treating it as a theory of community clarification was an over-interpretation. We made this over-interpretation ourselves, and the literature on preprocessing for clustering is structurally exposed to it: the certifying statistics look meaningful, and the standard evaluations all move in the flattering direction.
 
 \paragraph{What we recommend.}
-For practitioners: degree-based sparsification remains a legitimate \emph{scaling} tool at mild retention, where the fixed-objective cost is small (Section~\ref{sec:boundary-retention}), and seeded refinement is worth trying when clustering budgets allow a second pass---but no quality improvement should be assumed, and none should be claimed without the controls of Section~\ref{sec:protocol}.
+For practitioners: degree-based sparsification remains a legitimate \emph{scaling} tool at mild retention, where the fixed-objective cost is small (Section~\ref{sec:boundary-retention}), and seeded refinement is worth trying when clustering budgets allow a second pass, but no quality improvement should be assumed, and none should be claimed without the controls of Section~\ref{sec:protocol}.
 For evaluators and reviewers: the three controls (fixed objective, granularity matching, compute matching) plus the configuration-model null are each a few lines of code, and each reversed at least one published-style conclusion in this paper.
-For benchmark designers: standard LFR is doubly unrepresentative for sparsification studies---nearly homogeneous in degree and uncoupled between degree and community membership---and controlled degree--community coupling of the kind used here (or in richer generators) is required for synthetic conclusions to transfer.
+For benchmark designers: standard LFR is doubly unrepresentative for sparsification studies, being nearly homogeneous in degree and uncoupled between degree and community membership; controlled degree--community coupling of the kind used here (or in richer generators) is required for synthetic conclusions to transfer.
 
 \paragraph{Limitations.}
 Our scope is modularity-based detection with Leiden under DSpar-family sparsification; other objectives (description-length, flow-based), other detectors, and similarity- or resistance-based sparsifiers may behave differently, and our protocol is designed to test exactly that.
@@ -1258,16 +1257,16 @@ Reference-label experiments inherit the known gap between metadata and structura
 
 \paragraph{Open problems.}
 Why \texttt{email-Enron} and \texttt{com-Youtube}?
-Both gains are real, robust, and---by every statistic we computed---unforecastable; understanding what landscape property lets hub-edge removal unlock better optima on precisely these graphs is the concrete open question this work leaves.
+Both gains are real and robust, yet none of the statistics we computed forecasts them. What property of these two graphs lets hub-edge removal steer the optimizer to better optima is the concrete open question this work leaves.
 A second is constructive: whether a sparsifier can be \emph{designed} so that its selection signal separates real networks from their configuration models, rather than inheriting the degree sequence's behavior.
 
 \paragraph{Conclusion.}
 We set out to determine when sparsification helps community detection.
 The answer has three parts.
 The mechanism by which degree-based sparsification reshapes graphs is real, provable, and controllable.
-The standard evidence that this mechanism improves detection is artifactual---attributable to cross-graph scoring, granularity, and unmatched computation, and reproduced in full by configuration models without community structure.
+The standard evidence that this mechanism improves detection is artifactual: it is attributable to cross-graph scoring, granularity, and unmatched computation, and it is reproduced in full by configuration models without community structure.
 And a genuine benefit exists but is rare and currently unpredictable: two networks in fifteen, small margins, surviving every control we could construct.
-Sparsification, in short, is a scaling tool that occasionally---and so far inexplicably---doubles as an optimizer's heuristic; it is not a general clarifier of community structure.
+Sparsification is a scaling tool that in rare and so far unpredictable cases also serves as a useful optimizer perturbation; it is not a general clarifier of community structure.
 The evaluation protocol that separates these outcomes costs little, and we hope it becomes routine.
 
 \section*{Acknowledgment}
