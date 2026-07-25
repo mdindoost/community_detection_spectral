@@ -1,0 +1,80 @@
+[
+ {
+  "kind": "base",
+  "seed": 104
+ },
+ {
+  "kind": "base",
+  "seed": 108
+ },
+ {
+  "kind": "seeded",
+  "sampler": "calibrated",
+  "alpha": 0.7,
+  "spar_seed": 202,
+  "leiden_seed": 302
+ },
+ {
+  "kind": "seeded",
+  "sampler": "calibrated",
+  "alpha": 0.8,
+  "spar_seed": 201,
+  "leiden_seed": 301
+ },
+ {
+  "kind": "seeded",
+  "sampler": "calibrated",
+  "alpha": 0.9,
+  "spar_seed": 201,
+  "leiden_seed": 301
+ },
+ {
+  "kind": "seeded",
+  "sampler": "calibrated",
+  "alpha": 0.95,
+  "spar_seed": 200,
+  "leiden_seed": 300
+ },
+ {
+  "kind": "seeded",
+  "sampler": "calibrated",
+  "alpha": 0.95,
+  "spar_seed": 204,
+  "leiden_seed": 304
+ },
+ {
+  "kind": "seeded",
+  "sampler": "repo_noreplace",
+  "alpha": 0.7,
+  "spar_seed": 203,
+  "leiden_seed": 303
+ },
+ {
+  "kind": "seeded",
+  "sampler": "repo_noreplace",
+  "alpha": 0.8,
+  "spar_seed": 202,
+  "leiden_seed": 302
+ },
+ {
+  "kind": "seeded",
+  "sampler": "repo_noreplace",
+  "alpha": 0.9,
+  "spar_seed": 201,
+  "leiden_seed": 301
+ },
+ {
+  "kind": "seeded",
+  "sampler": "repo_noreplace",
+  "alpha": 0.95,
+  "spar_seed": 200,
+  "leiden_seed": 300
+ },
+ {
+  "kind": "seeded",
+  "sampler": "repo_noreplace",
+  "alpha": 0.95,
+  "spar_seed": 204,
+  "leiden_seed": 304
+ }
+]

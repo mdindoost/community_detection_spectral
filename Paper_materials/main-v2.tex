@@ -111,7 +111,7 @@ The strongest candidate correlation appeared statistically significant over 14 n
 
     \item \textbf{A boundary characterization}: genuine runtime-matched gains exist on at most 2 of 15 networks (one robust, one single-configuration candidate), and no tested structural statistic predicts them: an existence proof, an open problem, and a demonstration that predictor claims in this regime require far larger samples.
 
-    \item \textbf{A sampler audit} showing that the nominal retention parameter $\alpha$ of published DSpar-style samplers differs systematically from realized edge retention (by up to a factor of two), with a calibrated sampler that closes the gap.
+    \item \textbf{A sampler audit} showing that the nominal retention parameter $\alpha$ of published DSpar-style samplers differs systematically from realized edge retention (by more than a factor of two), with a calibrated sampler that closes the gap.
 \end{itemize}
 
 The remainder of the paper is organized as follows.
@@ -463,7 +463,7 @@ where $\lambda_\alpha$ solves $\sum_{e \in E} \min(1, \lambda_\alpha s(e)) = \al
 
 \begin{remark}[Clipping]
 \label{rem:clipping}
-Our formal results assume the unclipped regime $\lambda_\alpha s_{\max} \le 1$, in which retention probabilities are exactly proportional to scores. The condition is stringent on real networks: it requires $\alpha \le \bar{s}/s_{\max}$, roughly $0.05$ on \texttt{email-Eu-core}; at the retention levels used in practice, and in our experiments, a majority of low-degree edges can clip at $p(e)=1$ (about $65\%$ on \texttt{email-Eu-core} at calibrated $\alpha=0.9$). Because $\min(1,\lambda s)$ is concave in $s$, $\delta>0$ alone then no longer implies even the direction of preferential removal; a sufficient additional hypothesis is first-order stochastic dominance of the intra-community score distribution over the inter-community one, under which any nondecreasing retention rule preserves the direction. The formal results below therefore describe the score-proportional regime. Section~\ref{sec:sampler} audits this gap, together with the larger gap between nominal and realized retention in previously published sampler variants; the direction of preferential removal is confirmed empirically wherever $\delta$ is materially positive (Section~\ref{sec:mech-verify}).
+Our formal results assume the unclipped regime $\lambda_\alpha s_{\max} \le 1$, in which retention probabilities are exactly proportional to scores. The condition is stringent on real networks: it requires $\alpha \le \bar{s}/s_{\max}$, roughly $0.05$ on \texttt{email-Eu-core}; at the retention levels used in practice, and in our experiments, a majority of low-degree edges can clip at $p(e)=1$ (about $65\%$ on \texttt{email-Eu-core} at calibrated $\alpha=0.9$). Because $\min(1,\lambda s)$ is concave in $s$, $\delta>0$ alone then no longer implies even the direction of preferential removal; a sufficient additional hypothesis is first-order stochastic dominance of the intra-community score distribution over the inter-community one, under which any nondecreasing retention rule preserves the direction. The formal results below therefore describe the score-proportional regime. Section~\ref{sec:sampler} audits this gap, together with the larger gap between nominal and realized retention in previously published sampler variants; the direction of preferential removal is confirmed empirically on all networks whose $\Delta F_{\mathrm{obs}}$ is distinguishable from zero (Section~\ref{sec:mech-verify}).
 \end{remark}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -949,7 +949,7 @@ Before presenting experiments, we audit what DSpar-style samplers actually retai
 
 \paragraph{With-replacement sampling collapses retention.}
 The originally published DSpar procedure~\cite{liu2023dspar} draws $q = \lceil \alpha m \rceil$ edge samples \emph{with replacement} from the distribution proportional to $s(e)$, reweights, and keeps the union of sampled edges.
-Because high-score edges are drawn repeatedly, the number of \emph{distinct} retained edges is far below $\alpha m$: across our 17-network suite, nominal $\alpha = 0.8$ realizes only $0.33$--$0.52$ of the edges (Table~\ref{tab:sampler_audit}).
+Because high-score edges are drawn repeatedly, the number of \emph{distinct} retained edges is far below $\alpha m$: across our 17-network suite, nominal $\alpha = 0.8$ realizes only $0.32$--$0.55$ of the edges (Table~\ref{tab:sampler_audit}).
 Results reported at ``$\alpha = 0.8$'' under this sampler are, in fact, roughly half-density experiments.
 
 \paragraph{Probability clipping causes saturation.}
@@ -959,8 +959,8 @@ True mild sparsification (e.g., retaining $90\%$ of edges) is unreachable under 
 
 \paragraph{Calibration closes the gap.}
 Definition~\ref{def:calibrated} instead solves for the proportionality constant $\lambda_\alpha$ by bisection so that expected retention equals $\alpha m$ exactly.
-Measured realized retention under the calibrated sampler matches the nominal value to within $\pm 0.001$ at all tested settings ($\alpha \in \{0.7, 0.8, 0.9, 0.95\}$).
-We verified our implementations of the with-replacement variant to be bit-identical to the original reference code before use.
+Measured realized retention under the calibrated sampler matches the nominal value to within $\pm 0.001$ on the mid-sized networks at every tested setting ($\alpha \in \{0.7, 0.8, 0.9, 0.95\}$), and to within $\pm 0.013$ on the smallest graphs.
+We verified our implementations of the with-replacement variant to be bit-identical to the repository implementation that produced the earlier experiments before use.
 
 \input{tables/tab_sampler_audit}
 
@@ -981,63 +981,19 @@ This section verifies the fixed-partition theory quantitatively (\S\ref{sec:mech
 
 \paragraph{Setup.}
 For each network we obtain a partition with the Leiden algorithm~\cite{traag2019louvain} on the original graph and hold it \emph{fixed}; all quantities below are changes induced by sparsification alone, with no re-optimization.
-We apply the with-replacement DSpar sampler at nominal $\alpha = 0.8$ (realized retention $0.33$--$0.52$; Section~\ref{sec:sampler}), 10 independent runs, and evaluate the fixed partition on the sparsified graph.
+We apply the with-replacement DSpar sampler at nominal $\alpha = 0.8$ (realized retention $0.33$--$0.48$ on these eleven networks; Section~\ref{sec:sampler}), 10 independent runs, and evaluate the fixed partition on the sparsified graph.
 Writing $Q = F - G$ for modularity, with $F$ the intra-community edge fraction and $G$ the null-model penalty, we verify the identity $\Delta Q_{\mathrm{fixed}} = \Delta F_{\mathrm{obs}} - \Delta G_{\mathrm{obs}}$ to machine precision on every run.
-Tables~\ref{tab:exp1_2_modularity}--\ref{tab:exp1_2_decomposition} retain the full graphs as downloaded, matching the pipeline that produced them; every subsequent experiment in this paper uses the largest connected component of each simple undirected graph, so edge counts differ slightly between these tables and later ones. The Artifact~I sweep (Section~\ref{sec:artifact-modularity}) and the boundary study (Section~\ref{sec:boundary}) likewise use overlapping but not identical 15-network subsets of the 17-network suite; each table lists its own membership.
+All experiments in this paper use the largest connected component of each simple undirected graph. The Artifact~I sweep (Section~\ref{sec:artifact-modularity}) and the boundary study (Section~\ref{sec:boundary}) likewise use overlapping but not identical 15-network subsets of the 17-network suite; each table lists its own membership.
 
-\begin{table*}[t]
-\centering
-\caption{Fixed-partition modularity changes under with-replacement DSpar at nominal $\alpha = 0.8$ (realized retention $0.33$--$0.52$).
-\textbf{Both $\Delta Q$ columns are evaluated on the sparsified graph}; Section~\ref{sec:artifacts} shows why such cross-graph quantities must not be read as detection improvements.}
-\label{tab:exp1_2_modularity}
-\begin{tabular}{lrrrr}
-\toprule
-Dataset & $m$ & $Q_{\mathrm{orig}}$ & $\Delta Q_{\mathrm{fixed}}$ & $\Delta Q_{\mathrm{Leiden}}^{\mathrm{(sp)}}$ \\
-\midrule
-ca-AstroPh\cite{leskovec2007graph} & 198,050 & $0.6393$ & $0.0423 \pm 0.0008$ & $0.0571 \pm 0.0016$ \\
-ca-CondMat\cite{leskovec2007graph}& 93,439 & $0.7410$ & $0.0638 \pm 0.0016$ & $0.1018 \pm 0.0012$ \\
-ca-GrQc\cite{leskovec2007graph} & 14,484 & $0.8664$ & $0.0257 \pm 0.0022$ & $0.0628 \pm 0.0022$ \\
-ca-HepPh\cite{leskovec2007graph} & 118,489 & $0.6631$ & $0.0844 \pm 0.0012$ & $0.1089 \pm 0.0029$ \\
-ca-HepTh\cite{leskovec2007graph} & 25,973 & $0.7760$ & $0.0609 \pm 0.0023$ & $0.1212 \pm 0.0022$ \\
-cit-HepPh\cite{leskovec2007graph} & 420,877 & $0.7349$ & $0.0136 \pm 0.0004$ & $0.0182 \pm 0.0019$ \\
-cit-HepTh\cite{leskovec2007graph} & 352,285 & $0.6637$ & $0.0469 \pm 0.0009$ & $0.0546 \pm 0.0022$ \\
-email-Enron\cite{leskovec2009community} & 183,831 & $0.6248$ & $0.1507 \pm 0.0009$ & $0.1853 \pm 0.0008$ \\
-facebook-combined\cite{leskovec2012learning} & 88,234 & $0.8357$ & $0.0259 \pm 0.0008$ & $0.0273 \pm 0.0008$ \\
-wiki-Vote\cite{leskovec2010signed} & 100,762 & $0.4175$ & $0.0694 \pm 0.0011$ & $0.0932 \pm 0.0062$ \\
-email-Eu-core\cite{yin2017local} & 16,064 & $0.4174$ & $0.0789 \pm 0.0041$ & $0.0912 \pm 0.0029$ \\
-\bottomrule
-\end{tabular}
-\end{table*}
+\input{tables/tab_exp1_modularity_lcc}
 
-\begin{table*}[t]
-\centering
-\caption{Modularity decomposition verification at nominal $\alpha = 0.8$.
-For all datasets and runs, the identity $\Delta Q_{\mathrm{fixed}} = \Delta F_{\mathrm{obs}} - \Delta G_{\mathrm{obs}}$ holds up to machine precision (maximum absolute reconstruction error $\le 10^{-14}$).}
-\label{tab:exp1_2_decomposition}
-\begin{tabular}{lrrr}
-\toprule
-Dataset & $\Delta Q_{\mathrm{fixed}}$ & $\Delta F_{\mathrm{obs}}$ & $-\Delta G_{\mathrm{obs}}$  \\
-\midrule
-ca-AstroPh & $0.0423 \pm 0.0008$ & $0.0350 \pm 0.0008$ & $0.0072 \pm 0.0001$  \\
-ca-CondMat & $0.0638 \pm 0.0016$ & $0.0588 \pm 0.0016$ & $0.0051 \pm 0.0001$ \\
-ca-GrQc & $0.0257 \pm 0.0022$ & $0.0142 \pm 0.0022$ & $0.0115 \pm 0.0003$ \\
-ca-HepPh & $0.0844 \pm 0.0012$ & $0.0030 \pm 0.0011$ & $0.0814 \pm 0.0002$ \\
-ca-HepTh & $0.0609 \pm 0.0023$ & $0.0518 \pm 0.0023$ & $0.0091 \pm 0.0003$  \\
-cit-HepPh & $0.0136 \pm 0.0004$ & $0.0078 \pm 0.0004$ & $0.0058 \pm 0.0001$ \\
-cit-HepTh & $0.0469 \pm 0.0009$ & $0.0318 \pm 0.0009$ & $0.0152 \pm 0.0001$  \\
-email-Enron & $0.1507 \pm 0.0009$ & $0.1186 \pm 0.0009$ & $0.0321 \pm 0.0003$  \\
-facebook-combined & $0.0259 \pm 0.0008$ & $-0.0008 \pm 0.0007$ & $0.0268 \pm 0.0002$  \\
-wiki-Vote & $0.0694 \pm 0.0011$ & $0.0671 \pm 0.0016$ & $0.0023 \pm 0.0007$  \\
-email-Eu-core & $0.0789 \pm 0.0041$ & $0.0681 \pm 0.0040$ & $0.0108 \pm 0.0009$ \\
-\bottomrule
-\end{tabular}
-\end{table*}
+\input{tables/tab_exp1_decomposition_lcc}
 
 \paragraph{What the measurements show.}
 Table~\ref{tab:exp1_2_modularity} shows positive $\Delta Q_{\mathrm{fixed}}$ on all eleven networks; Table~\ref{tab:exp1_2_decomposition} reports the decomposition into $\Delta F_{\mathrm{obs}}$ and $-\Delta G_{\mathrm{obs}}$. The identity itself is algebraic; the content lies in the sizes and signs of the two terms.
-Two regimes appear, consistent with Theorem~\ref{thm:modularity}(b): in networks such as \texttt{cit-HepTh} and \texttt{ca-CondMat} the intra-community fraction rises ($\Delta F_{\mathrm{obs}} > 0$), consistent with preferential inter-community removal under $\delta > 0$; in networks such as \texttt{facebook-combined} ($\delta \approx 0$) the entire change is carried by the null-model term ($\Delta F_{\mathrm{obs}} \le 0$, $-\Delta G_{\mathrm{obs}} > 0$).
+Two regimes appear, consistent with Theorem~\ref{thm:modularity}(b): in networks such as \texttt{cit-HepTh} and \texttt{ca-CondMat} the intra-community fraction rises ($\Delta F_{\mathrm{obs}} > 0$), consistent with preferential inter-community removal under $\delta > 0$; in \texttt{facebook-combined} ($\delta \approx 0$) and \texttt{ca-HepPh} the change is carried almost entirely by the null-model term, with $\Delta F_{\mathrm{obs}}$ statistically indistinguishable from zero.
 Figures~\ref{fig:fixed_vs_leiden} and~\ref{fig:decomposition_cit_hepth} illustrate both quantities across retention levels; all effects vanish smoothly as $\alpha \to 1$.
-Because these runs use the with-replacement sampler, the Bernoulli-model ratio of Corollary~1 is not expected to hold exactly, and it does not: measured preservation ratios are systematically closer to one than predicted, by $0.07$ to $0.30$ across datasets, which is the quantitative signature of that sampler's concave retention profile (Section~\ref{sec:sampler}). The direction of preferential removal agrees with the prediction wherever $\delta$ is materially positive.
+Because these runs use the with-replacement sampler, the Bernoulli-model ratio of Corollary~1 is not expected to hold exactly, and it does not: measured preservation ratios are closer to one than predicted on all eleven networks, by $0.01$ to $0.29$, which is the quantitative signature of that sampler's concave retention profile (Section~\ref{sec:sampler}). The direction of preferential removal agrees with the prediction on nine of eleven networks; the two exceptions are exactly the two networks whose $\Delta F_{\mathrm{obs}}$ is indistinguishable from zero.
 
 \begin{figure}[t]
   \centering
@@ -1064,7 +1020,7 @@ Presented without controls, such measurements read as evidence of improvement; t
 
 If $\delta > 0$ and $\Delta Q_{\mathrm{fixed}} > 0$ reflected community structure, they should weaken or vanish on graphs whose communities have been destroyed.
 We test this directly: each network is degree-preservingly rewired ($10m$ edge swaps), Leiden is run on the rewired graph to obtain its fixed partition, and the identical pipeline is applied.
-Rewiring collapses modularity itself (base $Q$ drops from $0.60$--$0.93$ to $0.11$--$0.49$, the residue a maximizer extracts from degree noise~\cite{guimera2004modularity}), so any surviving signal is attributable to the degree sequence alone.
+Rewiring collapses modularity itself (base $Q$ drops from $0.42$--$0.93$ to $0.11$--$0.49$, the residue a maximizer extracts from degree noise~\cite{guimera2004modularity}), so any surviving signal is attributable to the degree sequence alone.
 
 \input{tables/tab_null_control}
 
@@ -1079,22 +1035,24 @@ Consequently, correlations between $\delta$ and $\Delta Q_{\mathrm{fixed}}$ acro
 
 The control also yields a sharper observation: the signals are not merely reproduced but systematically \emph{stronger} on the rewired graphs ($\delta$ larger on $16/17$, $\Delta Q_{\mathrm{fixed}}$ larger on $15/17$). Real community structure evidently suppresses both quantities relative to pure degree noise, so the pair $(\delta, \delta_{\mathrm{null}})$ does separate real networks from their configuration models, with the opposite sign from the naive reading; why real structure has this effect is an open question (Section~\ref{sec:discussion}).
 
+Uniform random sparsification provides the complementary control: its fixed-partition change is zero within $\pm 0.001$ on real and rewired graphs alike, even at DSpar's realized retention, where DSpar registers $+0.04$ to $+0.14$; in expectation, unbiased edge deletion scales both modularity terms equally. The fixed-partition inflation therefore requires degree-\emph{biased} removal specifically, while the cross-graph inflation of Section~\ref{sec:artifact-modularity} requires only edge removal. The two artifacts are distinct mechanisms, and the two controls (configuration-model null; fixed-objective scoring) detect different failure modes: neither substitutes for the other.
+
 \subsection{Partition Provenance}
 \label{sec:mech-provenance}
 
 A second confound concerns \emph{which partition} $\delta$ is measured against.
 On standard LFR benchmarks~\cite{lancichinetti2008benchmark} ($n = 10^4$, $\mu \in \{0.1,\dots,0.5\}$), $\delta$ is negative with respect to the \emph{planted} partition at every mixing level ($-0.003$ to $-0.010$).
 Measured instead against a \emph{Leiden} partition of the same graph, $\delta$ shifts systematically positive at every $\mu$, and the shift grows exactly as Leiden departs from the planted truth (at $\mu = 0.5$: NMI to planted $0.67$, planted communities merged from $236$ to $48$, shift $+0.0032$).
-The shift does not flip the sign on LFR, whose degree distribution is nearly homogeneous under standard parameterizations (coefficient of variation $\approx 0.4$, versus $1.0$--$26$ on the real networks in our suite), but on heavy-tailed real networks it can: on \texttt{com-Amazon}, $\delta = -0.004$ against the ground-truth communities and $+0.011$ against the Leiden partition of the same graph.
+The shift does not flip the sign on LFR, whose degree distribution is nearly homogeneous under standard parameterizations (coefficient of variation $\approx 0.4$, versus $1.0$--$26$ on the real networks in our suite), but on heavy-tailed real networks it can: on \texttt{com-Amazon}, $\delta = -0.004$ against the ground-truth communities and $+0.01$ against the Leiden partition of the same graph.
 Positive DSpar separation, as reported in practice, is therefore a joint property of heavy-tailed degrees \emph{and} of partitions produced by modularity optimization; comparisons between $\delta$ values measured against planted partitions (synthetic benchmarks) and detected partitions (real networks) are not like-for-like.
 
 \subsection{Controlled Hub-Bridging in Synthetic Benchmarks}
 \label{sec:mech-lfr}
 
 Finally, we include a controlled synthetic experiment, stated with the caveats above.
-Standard LFR graphs exhibit hub-bridging ratios below one and negative $\delta$ (planted partition), and sparsification lowers fixed-partition modularity ($\Delta Q_{\mathrm{fixed}} = -0.011$ at $\mu = 0.3$, $n = 10^4$).
+Standard LFR graphs exhibit hub-bridging ratios below one and negative $\delta$ (planted partition), and sparsification lowers fixed-partition modularity ($\Delta Q_{\mathrm{fixed}} = -0.009$ at $\mu = 0.3$, $n = 10^4$, nominal $\alpha = 0.8$).
 We then rewire $70\%$ of inter-community edges, re-attaching endpoints within their communities with probability proportional to $d^{\,h}$, where $h \ge 1$ controls the strength of degree preference; this preserves the number of inter-community edges (hence $\mu$) while inducing controllable hub-bridging.
-At $h = 4$ the hub-bridging ratio reaches $\approx 15.9$, $\delta$ turns positive ($+0.051$), and fixed-partition modularity change turns strongly positive ($+0.116$), with $\Delta Q_{\mathrm{fixed}}$ tightly coupled to the hub-bridging ratio across all configurations (Figure~\ref{fig:lfr_dq_vs_hubratio}).
+At $h = 4$ the hub-bridging ratio reaches $\approx 15.9$, $\delta$ turns positive ($+0.051$), and fixed-partition modularity change turns strongly positive ($+0.106$), with $\Delta Q_{\mathrm{fixed}}$ tightly coupled to the hub-bridging ratio across all configurations (Figure~\ref{fig:lfr_dq_vs_hubratio}).
 
 \begin{figure}[t]
   \centering
@@ -1131,10 +1089,11 @@ A quality claim requires a fixed objective: \emph{score every partition on the o
 
 Table~\ref{tab:transfer_loss} applies this control across 15 networks.
 We define the \emph{transfer loss} as $Q_{\mathrm{base}} - Q_{G}(P_\alpha)$: the unsparsified baseline minus the transferred partition's modularity on the original graph.
-The partition obtained by running Leiden on the sparsified graph scores far above baseline on the sparsified graph (e.g., \texttt{wiki-Talk}: $0.897$ vs.\ $0.599$), and \emph{below} baseline once evaluated on the original graph ($0.417$), a transfer loss of $0.185$.
+The partition obtained by running Leiden on the sparsified graph scores far above baseline on the sparsified graph (e.g., \texttt{wiki-Talk}: $0.897$ vs.\ $0.602$), and \emph{below} baseline once evaluated on the original graph ($0.417$), a transfer loss of $0.185$.
 Transfer loss is positive on all 15 networks at every tested retention, from $0.004$ to $0.185$.
-Cross-graph comparison thus reverses the sign of the conclusion on every dataset: what appears as a gain of $+0.05$ to $+0.30$ is, on the fixed objective, a loss of $0.01$ to $0.19$.
+Cross-graph comparison thus reverses the sign of the conclusion on every dataset: what appears as a gain of $+0.01$ to $+0.30$ is, on the fixed objective, a loss of $0.004$ to $0.19$.
 Refining the transferred partition on the original graph (column $Q_{\mathrm{final}}$) recovers the baseline almost exactly, leaving residuals of $-0.001$ to $+0.008$; Section~\ref{sec:boundary} examines when those residuals are genuine.
+The artifact is not specific to DSpar: uniform random edge deletion, a sampler with no structural intelligence at all, reproduces the same sign flip on every configuration we tested (three networks, two retention levels: apparent gains of $+0.001$ to $+0.011$ on the sparsified graph, losses of $0.006$--$0.025$ on the original). Cross-graph inflation is a property of the scoring convention, not of any particular sparsifier.
 
 \subsection{Artifact II: Partition Granularity}
 \label{sec:artifact-granularity}
@@ -1144,10 +1103,10 @@ Against small reference communities, as ground-truth sets in common benchmarks a
 The control is to grant the \emph{baseline} the same granularity: run the same algorithm on the \emph{unsparsified} graph with the resolution parameter tuned to match the sparsified pipeline's cluster count.
 
 \paragraph{At scale.}
-On SNAP networks with functional ground truth (top-5000 communities; median size 7--8 nodes), the with-replacement DSpar pipeline at nominal $\alpha=0.8$ appears to help on two of three datasets (average $F_1$, mean of both matching directions: \texttt{com-Amazon} $0.211 \to 0.285$; \texttt{com-Youtube} $0.010 \to 0.050$; \texttt{com-DBLP} $0.146 \to 0.100$), while inflating cluster counts $20$--$40\times$.
+On SNAP networks with functional ground truth (top-5000 communities; median size 7--8 nodes), the with-replacement DSpar pipeline at nominal $\alpha=0.8$ appears to help on two of three datasets (average $F_1$, mean of both matching directions: \texttt{com-Amazon} $0.211 \to 0.285$; \texttt{com-Youtube} $0.010 \to 0.050$; \texttt{com-DBLP} $0.146 \to 0.100$), while inflating cluster counts $21$--$42\times$.
 The resolution-matched control, using every edge, beats the sparsified pipeline everywhere, by wide margins: $0.404$ on \texttt{com-Amazon}, $0.293$ on \texttt{com-DBLP}, $0.129$ on \texttt{com-Youtube}.
 The apparent recovery gain is obtainable, doubled, without discarding a single edge; the discarded edges are pure loss.
-Calibrated mild pruning (true retention $0.9$) moves recovery by $-0.037$ to $+0.001$, indistinguishable from zero.
+Mild pruning via the clipped no-replacement sampler at nominal $0.9$ (true retention $0.52$--$0.76$) moves recovery by $-0.037$ to $+0.001$, indistinguishable from zero.
 
 \paragraph{On classical labeled graphs.}
 \input{tables/tab_gt_recheck}
@@ -1162,7 +1121,7 @@ We note additionally that reference labels are themselves imperfect proxies for 
 
 A sparsify--cluster--refine pipeline performs more optimization than the single baseline run it is typically compared against.
 The control is to grant the baseline equal wall-clock time, spent on independent restarts, and compare against the best.
-In our measurements the pipeline costs $1.55$--$1.90\times$ a single Leiden run (sparsification itself is only $4$--$8\%$ of the total), so the matched baseline is best-of-two restarts. Best-of-two costs $2.0\times$ a single run, slightly more than the pipeline's $1.55$--$1.90\times$; the slack favors the baseline, which is conservative for reported gains and mildly anti-conservative for reported losses.
+In our measurements the pipeline costs $1.5$--$2.0\times$ a single Leiden run (sparsification itself is $2$--$10\%$ of the total), so the matched baseline is best-of-two restarts. Best-of-two costs $2.0\times$ a single run, at or slightly above the pipeline's cost; the slack favors the baseline, which is conservative for reported gains and mildly anti-conservative for reported losses.
 The correction is not cosmetic: on \texttt{wiki-Vote}, the seeded pipeline beats the \emph{mean} baseline in six of eight configurations and loses to the runtime-matched baseline in all eight.
 Comparisons against single-run means manufacture false positives whenever the optimizer's seed variance is nonzero.
 
@@ -1193,7 +1152,7 @@ This uses sparsification not as a replacement for the graph but as a perturbatio
 Table~\ref{tab:boundary} reports the outcome on 15 networks at calibrated retention $0.9$.
 The seeded pipeline beats the runtime-matched baseline beyond twice the baseline's seed deviation on exactly \textbf{2 of 15} networks: \texttt{email-Enron} ($+0.0077$, $4.1$ baseline standard deviations) and \texttt{com-Youtube} ($+0.0086$, $2.5$).
 The \texttt{com-Youtube} entry warrants caution: it rests on a single configuration, and its matched baseline is a single best-of-two realization that landed one standard deviation below the baseline mean; measured against the baseline mean the gain is $+0.0051$, and against the expected best-of-two roughly $+0.003$, under the two-deviation bar. No multiplicity correction is applied across the 15 networks; at this threshold roughly half a false positive is expected. We therefore report one robust gain and one candidate.
-The \texttt{email-Enron} result is robust in every direction we probed: it holds for both sampler variants tested there (calibrated and clipped no-replacement), at every retention level ($0.7$--$0.95$), against best-of-five as well as best-of-two baselines, and it strengthens under \emph{harsher} sparsification (up to $+0.0149$ under the clipped no-replacement sampler at retention $0.7$). The gain therefore stems from aggressive hub-edge removal changing the optimizer's search space, not from mild denoising.
+The \texttt{email-Enron} result is robust in every direction we probed: it holds for both sampler variants tested there (calibrated and clipped no-replacement), at every retention level ($0.7$--$0.95$), against best-of-five as well as best-of-two baselines, and it strengthens under \emph{harsher} sparsification (up to $+0.0149$ under the clipped no-replacement sampler at nominal $\alpha = 0.7$, true retention $0.45$). The gain therefore stems from aggressive hub-edge removal changing the optimizer's search space, not from mild denoising.
 On \texttt{email-Enron} the raw transferred partition itself (before refinement) already exceeds baseline at true retention $\ge 0.8$, the only network in the suite where the transfer loss of Section~\ref{sec:artifact-modularity} changes sign.
 
 \subsection{No Tested Statistic Predicts the Gains}
@@ -1228,18 +1187,18 @@ On the fixed objective, milder sparsification is simply a smaller loss, vanishin
 Sparsification's traditional justification is speed, so we report the runtime picture honestly; it is less favorable than commonly assumed.
 
 \paragraph{Clustering time does not track edge count.}
-At realized retention near one half (nominal $\alpha = 0.8$, with-replacement sampler), Leiden on the sparsified graph was \emph{slower} than on the original on four of six large networks in our measurements (speedup $0.58$--$0.88$), with genuine speedups only on the two largest (\texttt{cit-Patents}, \texttt{wiki-topcats}).
-The cause is structural: sparsification fragments the graph and inflates the number of detected communities (by factors of $20$--$40$ in the ground-truth experiments of Section~\ref{sec:artifact-granularity}), and Leiden's per-community bookkeeping grows accordingly.
+At realized retention near one half (nominal $\alpha = 0.8$, with-replacement sampler), Leiden on the sparsified graph was \emph{slower} than on the original on six of eight large networks in our measurements, spanning up to 117M edges (speedup $0.48$--$0.89$); the exceptions were \texttt{wiki-topcats} ($1.26$) and, marginally, \texttt{com-Orkut} ($1.00$).
+The cause is structural: sparsification fragments the graph and inflates the number of detected communities (by factors of $21$--$42$ in the ground-truth experiments of Section~\ref{sec:artifact-granularity}), and Leiden's per-community bookkeeping grows accordingly.
 At aggressive retention the fragmentation regime dominates and runtime \emph{increases} despite the smaller edge set.
 Speedup claims should therefore be read jointly with fragmentation diagnostics (component counts, largest-component fraction, community counts), and the fragmented regime treated as out of scope for quality claims of any kind. Timing scripts and per-run logs for the measurements quoted in this section are included in the supplementary repository.
 
 \paragraph{Pipeline accounting.}
-DSpar scoring itself is cheap ($4$--$8\%$ of end-to-end pipeline time in our measurements, consistent with its $O(m)$ design), so the pipeline cost is dominated by clustering, and the seeded-refinement pipeline of Section~\ref{sec:boundary} costs $1.55$--$1.90\times$ a single baseline run.
+DSpar scoring itself is cheap ($2$--$10\%$ of the seeded-refinement pipeline's time in our measurements, consistent with its $O(m)$ design), so the pipeline cost is dominated by clustering, and the seeded-refinement pipeline of Section~\ref{sec:boundary} costs $1.5$--$2.0\times$ a single baseline run.
 This is exactly why Artifact~III matters: the honest comparison for any such pipeline is against a baseline granted the same budget.
 
 \paragraph{Spectral baselines.}
 We do not report effective-resistance sparsification comparisons.
-In auditing the earlier version of this work we found its spectral branch had silently returned the original graph unmodified (identical edge counts and clustering times), invalidating the previously reported comparison; a corrected implementation is left to future work, with the protocol of Section~\ref{sec:protocol} defining what such a comparison must control for.
+In auditing the earlier version of this work we found its spectral branch had silently returned the original graph essentially unmodified (identical or near-identical edge counts, $99.8$--$100\%$, and clustering times). The cause is instructive: the map from the retention parameter to the sparsifier's $\epsilon$ was miscalibrated by roughly two orders of magnitude, leaving the effective-resistance keep-probabilities, which scale as $1/\epsilon^2$ and clip at one, saturated for four of its five settings; the reweighting required by the spectral guarantee was additionally discarded. Nothing in the pipeline verified realized retention, so the defect was invisible in every quality metric. This failure mode is precisely why we recommend logging realized retention as part of the protocol; a corrected spectral comparison is left to future work.
 
 
 \section{Discussion and Conclusion}

@@ -1,0 +1,23 @@
+\begin{table*}[t]
+\centering
+\caption{Fixed-partition modularity changes under with-replacement DSpar at nominal $\alpha = 0.8$, computed on the largest connected component of each simple undirected graph (realized retention $0.33$--$0.48$).
+\textbf{Both $\Delta Q$ columns are evaluated on the sparsified graph}; Section~\ref{sec:artifacts} shows why such cross-graph quantities must not be read as detection improvements.}
+\label{tab:exp1_2_modularity}
+\begin{tabular}{lrrrrr}
+\toprule
+Dataset & $m$ & $m'/m$ & $Q_{\mathrm{orig}}$ & $\Delta Q_{\mathrm{fixed}}$ & $\Delta Q_{\mathrm{Leiden}}^{\mathrm{(sp)}}$ \\
+\midrule
+ca-AstroPh\cite{leskovec2007graph} & 196,972 & $0.4166$ & $0.6343$ & $0.0399 \pm 0.0007$ & $0.0529 \pm 0.0012$ \\
+ca-CondMat\cite{leskovec2007graph} & 91,286 & $0.4715$ & $0.7312$ & $0.0614 \pm 0.0015$ & $0.0999 \pm 0.0014$ \\
+ca-GrQc\cite{leskovec2007graph} & 13,422 & $0.4545$ & $0.8514$ & $0.0187 \pm 0.0022$ & $0.0540 \pm 0.0024$ \\
+ca-HepPh\cite{leskovec2007graph} & 117,619 & $0.3399$ & $0.6512$ & $0.0848 \pm 0.0008$ & $0.1092 \pm 0.0015$ \\
+ca-HepTh\cite{leskovec2007graph} & 24,806 & $0.4766$ & $0.7619$ & $0.0542 \pm 0.0015$ & $0.1134 \pm 0.0019$ \\
+cit-HepPh\cite{leskovec2007graph} & 420,784 & $0.4593$ & $0.7314$ & $0.0120 \pm 0.0004$ & $0.0188 \pm 0.0022$ \\
+cit-HepTh\cite{leskovec2007graph} & 352,021 & $0.4332$ & $0.6567$ & $0.0467 \pm 0.0007$ & $0.0582 \pm 0.0021$ \\
+email-Enron\cite{leskovec2009community} & 180,811 & $0.3886$ & $0.6124$ & $0.1429 \pm 0.0012$ & $0.1798 \pm 0.0020$ \\
+facebook-combined\cite{leskovec2012learning} & 88,234 & $0.4360$ & $0.8355$ & $0.0253 \pm 0.0005$ & $0.0277 \pm 0.0010$ \\
+wiki-Vote\cite{leskovec2010signed} & 100,736 & $0.3328$ & $0.4240$ & $0.0734 \pm 0.0012$ & $0.0827 \pm 0.0077$ \\
+email-Eu-core\cite{yin2017local} & 16,064 & $0.4429$ & $0.4159$ & $0.0819 \pm 0.0025$ & $0.0919 \pm 0.0034$ \\
+\bottomrule
+\end{tabular}
+\end{table*}

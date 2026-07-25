@@ -1,0 +1,144 @@
+================================================================================
+exp_G -- UNIFORM RANDOM SPARSIFICATION THROUGH THE PHASE-1 CONTROLS
+================================================================================
+Date: 2026-07-25
+Raw data: results.csv (88 rows)
+Forensics on the paper's broken spectral baseline: forensics.txt (separate)
+
+Question: the Phase-1 controls were developed against DSpar. Are their verdicts
+DSpar-specific, or do they hold for any sparsifier? This runs the SAME two
+controls on plain UNIFORM Bernoulli edge sampling.
+
+Setup
+-----
+Datasets (LCC, simple, undirected, self-loops removed):
+    ca-CondMat    n =  21,363   m =    91,286
+    email-Enron   n =  33,696   m =   180,811
+    com-DBLP      n = 317,080   m = 1,049,866
+Sparsifier: uniform Bernoulli, each edge kept independently w.p. alpha.
+            alpha in {0.8, 0.9}; measured retention matched target to <0.2%.
+Clustering: leidenalg ModularityVertexPartition, n_iterations=2.
+Baseline:   Q_base = mean of 5 plain-Leiden seeds on the ORIGINAL graph.
+Arm (a):    3 seeds per alpha. Leiden is run ON the sparsified graph; the
+            resulting partition is then scored two ways --
+              Q_sparse   : modularity on the SPARSIFIED graph (paper convention)
+              Q_on_orig  : SAME partition, modularity on the ORIGINAL graph
+            paper_delta  = Q_sparse  - Q_base
+            honest_delta = Q_on_orig - Q_base
+Arm (b):    degree-preserving rewire, 10*m double-edge swaps, seed 12345
+            (degree sequence verified identical). A FIXED Leiden partition is
+            computed once per graph (P0 on real, Prw on rewired) and held fixed
+            while that graph is uniformly sparsified; 3 seeds per alpha.
+            dQ_fixed = Q(P, G_sparse) - Q(P, G_full)
+
+
+================================================================================
+TABLE A -- ARTIFACT I (cross-graph inflation) UNDER UNIFORM SPARSIFICATION
+================================================================================
+dataset       alpha  ret     Q_base    Q_sparse   Q_on_orig  paper_delta  honest_delta   gap
+------------------------------------------------------------------------------------------------
+ca-CondMat     0.8  0.8002  0.729235   0.740383   0.712802    +0.011147     -0.016433   0.027580
+ca-CondMat     0.9  0.8995  0.729235   0.734544   0.722827    +0.005309     -0.006408   0.011717
+email-Enron    0.8  0.8002  0.611069   0.616311   0.594859    +0.005242     -0.016210   0.021452
+email-Enron    0.9  0.8998  0.611069   0.612157   0.602474    +0.001087     -0.008595   0.009682
+com-DBLP       0.8  0.8004  0.825782   0.833614   0.801037    +0.007832     -0.024746   0.032577
+com-DBLP       0.9  0.9001  0.825782   0.829744   0.816006    +0.003962     -0.009776   0.013738
+------------------------------------------------------------------------------------------------
+gap = paper_delta - honest_delta (the size of the artifact)
+per-cell std over 3 seeds (see results.csv): paper_delta 0.0004-0.0046,
+honest_delta 0.0003-0.0055; Q_base std 0.0008-0.0020.
+
+READING: paper_delta > 0 in 6/6 cells; honest_delta < 0 in 6/6 cells.
+The sign flips in EVERY cell. Under the paper's convention uniform random edge
+deletion "improves modularity" by up to +0.011; the identical partition scored
+on the graph it is supposed to describe is WORSE than plain Leiden by up to
+-0.025. The artifact grows as alpha falls (gap roughly doubles from 0.9 to 0.8),
+which is the signature of the mechanism: modularity is measured against a null
+model whose expected-edge term shrinks with m, so removing edges inflates Q for
+free, independently of whether the partition got better.
+
+Cross-check against the paper's own exp3 run: uniform_random at alpha=0.8 on
+com-DBLP reported dQ_leiden = +0.0103, +0.0104, +0.0097
+(PAPER_EXPERIMENTS/results/exp3_scalability/scalability_raw.csv). Our
+paper_delta of +0.0078 reproduces that (same sign, same order; the small offset
+is leidenalg vs igraph community_leiden and a 5-seed vs 1-seed baseline).
+
+
+================================================================================
+TABLE B -- CONFIGURATION-MODEL NULL, Delta Q_fixed UNDER UNIFORM SPARSIFICATION
+================================================================================
+dataset       alpha   dQ_fixed(real)        dQ_fixed(rewired)      |real| vs seed noise
+--------------------------------------------------------------------------------------
+ca-CondMat     0.8   -0.000494 +- 0.00037   -0.000861 +- 0.00066   indistinguishable
+ca-CondMat     0.9   +0.000016 +- 0.00027   +0.000115 +- 0.00026   indistinguishable
+email-Enron    0.8   +0.000096 +- 0.00023   +0.000245 +- 0.00030   indistinguishable
+email-Enron    0.9   +0.000189 +- 0.00014   +0.000201 +- 0.00026   indistinguishable
+com-DBLP       0.8   +0.000045 +- 0.00017   +0.000021 +- 0.00014   indistinguishable
+com-DBLP       0.9   -0.000040 +- 0.00008   -0.000093 +- 0.00023   indistinguishable
+--------------------------------------------------------------------------------------
+Q_fixed on the full graphs, for scale:
+   ca-CondMat  real 0.728825  rewired 0.311793
+   email-Enron real 0.612815  rewired 0.241821
+   com-DBLP    real 0.824234  rewired 0.363932
+
+RETENTION-MATCHED COMPARISON WITH DSpar
+(uniform re-run at exactly the retention DSpar achieved in exp_B_config_null,
+ so the two sparsifiers are compared at the same number of surviving edges)
+
+dataset       matched   uniform dQ_fixed          DSpar dQ_fixed        DSpar/uniform
+              alpha     real       rewired        real      rewired     on real graph
+-----------------------------------------------------------------------------------
+ca-CondMat    0.4723   -0.000477   -0.000899      +0.060564  +0.066655      -127x
+email-Enron   0.3889   +0.000026   -0.000966      +0.142247  +0.156214     +5522x
+com-DBLP      0.4688   +0.000013   -0.000853      +0.043729  +0.097967     +3371x
+-----------------------------------------------------------------------------------
+DSpar columns from PAPER_RESTRUCTURE/exp_B_config_null/results.csv.
+
+READING: uniform sparsification has NO Delta Q_fixed signal at all -- not at
+alpha=0.8/0.9, and not at DSpar's own retention of 0.39-0.47. Every value sits
+within +-0.001 of zero, i.e. inside seed noise, on the real graph AND on the
+rewired null. DSpar at the same retention produces +0.044 to +0.142, two to
+three ORDERS OF MAGNITUDE larger.
+
+This is expected analytically and it is the point: under uniform Bernoulli
+sampling both terms of modularity -- the within-community edge count and the
+(sum k_i)^2 / (2m) null term -- scale by alpha in expectation, so E[dQ_fixed] = 0
+for ANY fixed partition, on ANY graph. Uniform sampling is unbiased with respect
+to the modularity null model. DSpar is not: it is degree-biased, and degree bias
+is exactly what the configuration-model null isolates.
+
+So the null arm "reproduces" uniform's dQ_fixed only in the trivial sense that
+both real and rewired are zero. There is no signal for the null to explain away,
+which is itself the informative result: dQ_fixed > 0 is not a generic consequence
+of removing edges, it is specific to degree-biased samplers, and exp_B already
+showed that for those samplers the rewired null reproduces or exceeds it
+(17/17 networks). Uniform closes the loop from the other side.
+
+
+================================================================================
+VERDICT
+================================================================================
+1. Artifact I is SPARSIFIER-AGNOSTIC. Uniform random edge deletion -- a sampler
+   with no structural intelligence whatsoever -- shows paper_delta > 0 in 6/6
+   cells and honest_delta < 0 in 6/6 cells. The "sparsification improves
+   modularity" result is a property of the SCORING CONVENTION (scoring a
+   partition on the graph it was fitted to, which has fewer edges and therefore
+   a weaker null term), not a property of DSpar. Any paper claim of the form
+   "sparsifier X raises Q" must be restated with Q measured on the original
+   graph, or it is reproduced by coin flips.
+
+2. Artifact I and the dQ_fixed phenomenon are DIFFERENT mechanisms and must not
+   be conflated. Artifact I needs only edge removal (uniform reproduces it in
+   full). dQ_fixed > 0 needs DEGREE BIAS (uniform produces exactly zero at
+   matched retention; DSpar produces 100-5000x more). The configuration-model
+   null from exp_B attacks the second mechanism; the score-on-original control
+   attacks the first. Both controls are needed and neither substitutes for the
+   other.
+
+3. Practical consequence for the rewrite: uniform random sampling is the correct
+   null SPARSIFIER, and it is a demanding one. At alpha=0.8 it delivers a 20%
+   edge reduction with an honest modularity cost of only -0.016 to -0.025 and
+   costs essentially nothing to compute. Any proposed sparsifier must beat
+   uniform on honest_delta at matched retention and matched runtime; DSpar's
+   published advantage was measured under the convention that uniform also
+   "wins" under, so it has not yet been shown to clear this bar.

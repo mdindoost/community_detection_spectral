@@ -1,0 +1,189 @@
+================================================================================
+FORENSICS: why the paper's spectral-sparsification baseline returned the graph
+unchanged (m_alpha = m, identical Leiden time, dQ_fixed = 0.000 at alpha=0.8)
+================================================================================
+Date: 2026-07-25
+Repo: /home/md724/community_detection_spectral
+
+--------------------------------------------------------------------------------
+VERDICT (one line)
+--------------------------------------------------------------------------------
+NOT a silent try/except fallback, NOT a missing Julia install, NOT a crash.
+Julia ran successfully every time. The bug is a MISCALIBRATED alpha -> epsilon
+MAP: the epsilon values chosen for the "conservative" retention levels are
+1-2 orders of magnitude too small for Laplacians.jl's edge-keep probability
+formula, which therefore saturates at min(1, ...) = 1 for essentially every
+edge. The Julia routine faithfully returned a copy of the input graph.
+
+--------------------------------------------------------------------------------
+THE EXACT MECHANISM, with file:line
+--------------------------------------------------------------------------------
+(1) The alpha -> epsilon map used by the experiment:
+
+    PAPER_EXPERIMENTS/exp3_scalability.py:91-97
+        SPECTRAL_EPSILON_MAP = {
+            0.2: 3.0,   # Very aggressive sparsification
+            0.4: 1.5,   # Aggressive
+            0.6: 0.8,   # Moderate
+            0.8: 0.3,   # Conservative     <-- the published alpha=0.8 row
+            1.0: 0.0,   # No sparsification (will skip)
+        }
+
+    PAPER_EXPERIMENTS/exp3_scalability.py:351  epsilon = SPECTRAL_EPSILON_MAP.get(alpha)
+
+    Note that `alpha` is ONLY a dictionary key here. sparsify_spectral() never
+    receives, targets, or verifies a retention level. Nothing in the spectral
+    code path enforces m_alpha ~= alpha * m.
+
+(2) The epsilon is passed straight through to Julia:
+
+    PAPER_EXPERIMENTS/exp3_scalability.py:379   spectral_sparsify_direct(edges_indexed, n_nodes, epsilon)
+    experiments/utils.py:1347-1411              builds the julia subprocess cmd (line ~1383)
+    sparsify_graph.jl:43                        As = sparsify(A; ep=epsilon)
+    (src/sparsifiers/spectral.py:109-193 is the packaged twin of the same call;
+     src/sparsifiers/spectral.py:164 passes epsilon as argv[3].)
+
+(3) Laplacians.jl's sparsify() keep-probability, verified against the actual
+    installed source at
+    ~/kazi-backup/sparsification/julia_depot/packages/Laplacians/JMcKl/src/sparsify.jl:15-51
+
+        function sparsify(a; ep=0.3, matrixConcConst=4.0, JLfac=4.0)
+        ...
+    line 41:  prs[h] = min(1, av[h] * (norm(V[i,:]-V[j,:])^2/k) * matrixConcConst * log(n)/ep^2)
+    line 44:  ind = rand(Float64,size(prs)) .< prs
+
+    i.e.  p_e = min( 1,  w_e * R_eff(e) * 4 * log(n) / ep^2 ).
+
+    Two consequences:
+      - ep appears as 1/ep^2. SMALL ep => LARGE p_e => KEEP EVERYTHING.
+      - p_e is CLIPPED at 1. Once the prefactor 4*log(n)/ep^2 exceeds
+        1/R_eff(e), the edge is retained deterministically.
+
+(4) The arithmetic. For a connected unweighted graph, sum_e R_eff(e) = n-1
+    exactly, so mean R_eff = (n-1)/m. Plugging in the exp3 datasets:
+
+    dataset            n           m       log n  meanReff  p at ep=0.3  p at ep=3.0  ep needed
+    com-DBLP           317,080     1,049,866  12.67  0.3020     170.0        1.70        3.91
+    com-Amazon         334,863       925,872  12.72  0.3617     204.5        2.04        4.29
+    com-Youtube      1,134,890     2,987,624  13.94  0.3799     235.4        2.35        4.60
+    wiki-Talk        2,388,953     4,656,682  14.69  0.5130     334.9        3.35        5.49
+    cit-Patents      3,764,117    16,511,740  15.14  0.2280     153.4        1.53        3.72
+    wiki-topcats     1,791,489    25,444,207  14.40  0.0704      45.1        0.45        2.01
+    com-LiveJournal  3,997,962    34,681,189  15.20  0.1153      77.9        0.78        2.65
+    com-Orkut        3,072,441   117,185,083  14.94  0.0262      17.4        0.17        1.25
+    ("p at ep" = unclipped p_e evaluated at the MEAN effective resistance;
+     "ep needed" = sqrt(4 log n * meanReff), the ep at which the median-ish
+     edge finally drops below p=1 and sparsification starts to bite.)
+
+    At ep = 0.3 (the alpha=0.8 setting) the unclipped keep probability is
+    17x - 335x oversubscribed. An edge is dropped only if
+        R_eff(e) < ep^2 / (4 log n) = 0.0018 for com-DBLP.
+    Since sum R_eff = n-1 and the smallest resistances belong to edges inside
+    dense cliques, the fraction of edges below that cut is ~0 for DBLP/Amazon
+    and tiny elsewhere. Hence m_alpha = m EXACTLY.
+
+(5) The observed data confirm the prediction quantitatively.
+
+    PAPER_EXPERIMENTS/results/exp3_scalability/scalability_raw.csv
+    (retention_actual column, spectral rows -- note it does NOT track alpha):
+
+      com-DBLP    alpha=0.2 (ep=3.0) -> retention 0.8419  [predicted: bites, ~0.84]
+                  alpha=0.4 (ep=1.5) -> retention 0.9840
+                  alpha=0.6 (ep=0.8) -> retention 0.9998
+                  alpha=0.8 (ep=0.3) -> retention 1.000000  <-- identity
+      com-Amazon  alpha=0.8 (ep=0.3) -> retention 1.000000  <-- identity
+      cit-Patents alpha=0.8 (ep=0.3) -> retention 1.000000  <-- identity
+
+    PAPER_EXPERIMENTS/results/exp3_scalability/scalability_table_alpha0.8.csv,
+    spectral rows: m_sparse_mean == m_edges_first, m_sparse_std = 0.0,
+    dQ_fixed_mean = 0.0 exactly, speedup_leiden_mean = 0.966 (com-DBLP),
+    1.010 (com-Amazon), 0.943 (cit-Patents) -- i.e. Leiden ran on the SAME
+    graph, so the timing is identical to baseline up to noise. The only
+    non-trivial number in the published spectral row is T_sparsify ~25 s,
+    which is the cost of computing effective resistances and then keeping
+    every edge.
+
+    So the published table is internally consistent: it is a truthful record
+    of Leiden being run on an unsparsified graph, mislabelled as alpha=0.8.
+
+(6) INDEPENDENT CORROBORATION from the cached Julia outputs still on disk in
+    datasets/com-DBLP/ (line counts; these files list each edge twice, so
+    retention = lines / 2099732):
+
+        edges_original.txt          2,099,732   retention 1.0000
+        edges_spectral_eps0.5.txt   2,099,730   retention 0.999999   <-- identity
+        edges_spectral_eps1.0.txt   2,094,490   retention 0.9975
+        edges_spectral_eps2.0.txt   2,002,740   retention 0.9538
+        edges_spectral_eps3.0.txt   1,768,980   retention 0.8425     <-- matches the
+                                                 0.8419 measured in exp3 at ep=3.0
+        edges_spectral_eps5.0.txt   1,120,354   retention 0.5336
+        edges_spectral_eps7.0.txt     646,256   retention 0.3078
+
+    The usable epsilon range for com-DBLP is therefore roughly ep in [2, 8].
+    To hit alpha = 0.8 the map should have used ep ~= 3.2; it used ep = 0.3,
+    which is a factor of ~10 in ep, i.e. ~100x in the 1/ep^2 prefactor.
+    Curve-fitting these seven points also shows the map is not merely
+    mis-scaled but wrongly shaped: retention is flat at 1.0 for all ep < 1
+    and falls off steeply only past ep ~ 2.5, so four of the map's five
+    entries (0.0, 0.3, 0.8, and nearly 1.5) live in the dead zone.
+
+--------------------------------------------------------------------------------
+WHY THE OBVIOUS SUSPECTS ARE NOT THE CAUSE
+--------------------------------------------------------------------------------
+* "Silent try/except fallback": there ARE two silent failure paths, but they
+  did not fire here.
+    - PAPER_EXPERIMENTS/exp3_scalability.py:60-65  bare `except ImportError:`
+      sets SPECTRAL_AVAILABLE=False and only prints a WARNING.
+    - PAPER_EXPERIMENTS/exp3_scalability.py:399-401 bare `except Exception as e:`
+      returns None; run_single_trial then returns None at line 509-510 and the
+      row is silently DROPPED.
+  Neither path can produce m_alpha = m; the first produces no spectral rows at
+  all, the second drops the row. 120 spectral rows are present in
+  scalability_raw.csv with plausible T_sparsify, so Julia genuinely ran.
+  These are still real reporting hazards and should be made fatal, but they
+  are not this bug.
+
+* "Julia missing": the julia-1.10.2/ and julia_depot/ trees in this checkout
+  are now EMPTY (the working install survives at
+  ~/kazi-backup/sparsification/julia_depot). That means the experiment is not
+  currently reproducible in-tree, but at the time the numbers were produced
+  Julia was present and succeeded.
+
+* "epsilon too small": correct, but only when stated precisely -- too small
+  RELATIVE to sqrt(4 log n * meanReff), which is graph-dependent (1.25 for
+  com-Orkut, 5.49 for wiki-Talk). There is no single epsilon that yields a
+  fixed retention across datasets, which is exactly why a constant
+  alpha -> epsilon map cannot work.
+
+--------------------------------------------------------------------------------
+SECONDARY DEFECTS FOUND IN THE SAME CODE PATH
+--------------------------------------------------------------------------------
+(a) Reweighting is discarded, so the spectral guarantee is void even when the
+    sparsifier does bite. Laplacians.jl returns rescaled weights
+    (sparsify.jl:46, av[ind]./prs[ind]); the Julia driver writes only the
+    (i,j) pairs (sparsify_graph.jl:49-59) and the Python side rebuilds an
+    UNWEIGHTED graph (PAPER_EXPERIMENTS/exp3_scalability.py:385-392 and
+    src/sparsifiers/spectral.py:80). A Spielman-Srivastava sparsifier without
+    its weights is not a spectral sparsifier; modularity computed on it is not
+    comparable to the original.
+(b) alpha is a label, not a measurement. The spectral rows in every table are
+    filed under a retention they never achieved. Any table keyed on alpha
+    silently compares "DSpar at 80% edges" against "spectral at 100% edges".
+(c) exp3's spectral path has no retention verification and no assertion that
+    m_sparse < m_edges; a one-line guard would have caught this on day one.
+(d) src/sparsifiers/spectral.py:180 and :184 raise on Julia failure, but the
+    exp3 caller swallows those raises at line 399. Failure is invisible in the
+    aggregated output.
+
+--------------------------------------------------------------------------------
+WHAT A CORRECT SPECTRAL BASELINE WOULD REQUIRE
+--------------------------------------------------------------------------------
+1. Binary-search ep per graph to hit a TARGET retention alpha (ep in roughly
+   [1, 8] for these graphs), or bypass Laplacians.jl's ep and sample edges
+   directly at p_e proportional to R_eff normalised to sum to alpha*m.
+2. Carry the 1/p_e edge weights through Julia -> Python and run weighted
+   Leiden, or explicitly declare the unweighted variant a different (non
+   spectral-guarantee) method.
+3. Assert measured retention is within tolerance of the target; fail loudly
+   otherwise.
+4. Remove the bare `except Exception` at exp3_scalability.py:399.
