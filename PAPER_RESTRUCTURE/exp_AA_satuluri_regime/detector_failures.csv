@@ -1,0 +1,13 @@
+arm,mu,d_nom,lfr_seed,detector,stage,error
+B,0.5,25,2,eigen_proxy,lspar@0.15,InternalError: Error at src/community/leading_eigenvector.c:567: No eigenvalues to sufficient accuracy. -- ARPACK error
+B,0.5,25,3,eigen_proxy,random@0.5,InternalError: Error at src/community/leading_eigenvector.c:567: No eigenvalues to sufficient accuracy. -- ARPACK error
+B,0.5,50,3,eigen_proxy,random@0.2,InternalError: Error at src/community/leading_eigenvector.c:567: No eigenvalues to sufficient accuracy. -- ARPACK error
+B,0.5,50,3,eigen_proxy,random@0.2,InternalError: Error at src/community/leading_eigenvector.c:567: No eigenvalues to sufficient accuracy. -- ARPACK error
+B,0.5,100,1,eigen_proxy,lspar@0.05,InternalError: Error at src/community/leading_eigenvector.c:567: No eigenvalues to sufficient accuracy. -- ARPACK error
+B,0.5,100,2,eigen_proxy,lspar@0.05,InternalError: Error at src/community/leading_eigenvector.c:567: No eigenvalues to sufficient accuracy. -- ARPACK error
+B,0.5,100,2,eigen_proxy,random@0.15,InternalError: Error at src/community/leading_eigenvector.c:567: No eigenvalues to sufficient accuracy. -- ARPACK error
+B,0.5,100,2,eigen_proxy,random@0.15,InternalError: Error at src/community/leading_eigenvector.c:567: No eigenvalues to sufficient accuracy. -- ARPACK error
+B,0.8,10,1,eigen_proxy,baseline,InternalError: Error at src/community/leading_eigenvector.c:567: No eigenvalues to sufficient accuracy. -- ARPACK error
+B,0.8,25,1,eigen_proxy,lspar@0.15,InternalError: Error at src/community/leading_eigenvector.c:567: No eigenvalues to sufficient accuracy. -- ARPACK error
+B,0.8,25,1,eigen_proxy,random@0.5,InternalError: Error at src/community/leading_eigenvector.c:567: No eigenvalues to sufficient accuracy. -- ARPACK error
+B,0.8,25,3,eigen_proxy,dspar@0.5,InternalError: Error at src/community/leading_eigenvector.c:567: No eigenvalues to sufficient accuracy. -- ARPACK error
