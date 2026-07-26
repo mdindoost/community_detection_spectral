@@ -170,13 +170,15 @@ at identical retention, so it is a property of the similarity signal rather than
 of the edge budget. Injecting spurious edges makes the gain grow monotonically,
 which is the signature the denoising explanation predicts.
 
-What decides the outcome is not which sparsifier is used. It is the average
-degree of the graph, the family of the detection algorithm, since fixed-$k$
-balanced partitioners gain where free-granularity modularity optimizers do not,
-and whether quality is measured against an external reference or against an
-objective defined on the graph whose edges were deleted. The mechanism is
-consistent with this. The quantity governing a degree-based sparsifier's effect
-on modularity is the separation between the scores it assigns to within-community
+The outcome is therefore determined by two conditions acting together, and
+neither is sufficient on its own. A fixed-$k$ partitioner applied to a sparse
+graph shows no gain in any configuration we tested, and a free-granularity
+optimizer applied to a dense one shows none either once granularity is
+controlled. The gain appears only where high average degree and a fixed community
+count coincide. Which sparsifier is used matters less than either condition,
+provided its selection signal reflects local structure rather than degree alone.
+The mechanism is consistent with this. The quantity governing a degree-based
+sparsifier's effect on modularity is the separation between the scores it assigns to within-community
 and between-community edges, and we show by direct intervention that this
 quantity is controlled by where high-degree-product edges sit relative to
 community boundaries, at fixed degree sequence, fixed partition and fixed
