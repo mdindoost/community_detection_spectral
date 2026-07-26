@@ -30,20 +30,21 @@ Srivastava~\cite{spielman2008graph} show that sampling each edge with probabilit
 proportional to its effective resistance, and reweighting the retained edges by
 the inverse of that probability, yields a subgraph whose Laplacian quadratic form
 approximates that of the original within a factor $1 \pm
-\epsilon$~\cite{benczur2015randomized, spielman2014nearly}. Because effective
-resistances are themselves expensive to compute, practical variants approximate
-them. DSpar~\cite{liu2023dspar} replaces the resistance of an edge $(u,v)$ by
+\epsilon$~\cite{benczur2015randomized, spielman2014nearly}. Spectral
+approximation is a statement about the Laplacian, and the eigenvectors of the
+Laplacian encode cuts and connectivity~\cite{von2007tutorial,
+shi2000normalized}. Community structure is closely related to those quantities
+without being identical to them. Because effective resistances are themselves
+expensive to compute, practical variants approximate them.
+DSpar~\cite{liu2023dspar} replaces the resistance of an edge $(u,v)$ by
 $1/d_u + 1/d_v$, which bounds it within a factor $2/\alpha$ where $\alpha$ is the
 normalized spectral gap~\cite{lovasz1993random}, and thereby obtains a spectral
-sparsifier at the cost of reading the degree sequence.
+sparsifier at the cost of reading the degree sequence. If the properties
+preserved by sparsification include community structure, then detection can be
+performed on the sparsified graph at lower cost and without loss of quality.
+Whether they do is the question this paper addresses.
 
-Spectral approximation is a statement about the Laplacian, and the eigenvectors
-of the Laplacian encode cuts and connectivity~\cite{von2007tutorial,
-shi2000normalized}. Community structure is closely related to those quantities
-without being identical to them. If the properties preserved by sparsification
-include community structure, then detection can be performed on the sparsified
-graph at lower cost and without loss of quality. Whether they do is the question
-this paper addresses. The answer we obtain is conditional. On the networks and
+The answer we obtain is conditional. On the networks and
 detection algorithms examined here, two conditions have to hold together: the
 algorithm must take the number of communities as an input, and the graph must
 carry edges whose removal does not destroy its community structure. Where either
