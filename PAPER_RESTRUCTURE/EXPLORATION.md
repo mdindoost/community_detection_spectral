@@ -159,6 +159,25 @@ the null arm reproduces the gradient within noise on ≥half the networks, the h
 and the observation stays a descriptive footnote. No rescue tweaks.
 **Output:** PAPER_RESTRUCTURE/exp_O_core_preservation/{DESIGN.md,run.py,results CSVs,SUMMARY.md}.
 
+## After exploration: SYNTHESIS, not writing (Mohammad's rule, 2026-07-25)
+
+When the roster is done, the next phase is NOT tex assembly. It is a deliberate synthesis
+pass over ALL the pieces — we know far more now than when the story was written. Re-ask,
+with the full evidence map on the table:
+1. Does the story still hold, or has it become a different (better) story? The thesis has
+   already moved twice tonight: "sparsification doesn't help" -> "seeing communities is
+   necessary but not sufficient" -> "even a verified signal buys nothing on the objective;
+   what it can rarely buy is recovery, and the objective and recovery dissociate."
+2. What NEW questions did the answers create? (Candidates already visible: why is com-Amazon
+   the network-level exception — H4; what makes weight heterogeneity help Leiden — H3; the
+   δ root cause if Q lands; the objective/recovery dissociation as a phenomenon in itself.)
+3. Which claims are load-bearing vs decorative? Which experiments changed a conclusion vs
+   confirmed one? What would we cut?
+4. "Would we still start this project today?" — and what is the ONE sentence the paper
+   exists to defend?
+5. Only after that conversation with Mohammad: decide research-or-writing, and if writing,
+   what the paper's spine is. Writing decisions are narrative pivots = his sign-off.
+
 ## Session-death recovery (quota end, OOM, restart)
 
 Long runs are launched DETACHED and survive the death of any Claude session. To recover:
