@@ -54,12 +54,6 @@ $\Delta Q_{\mathrm{transfer}}$ throughout; $\Delta Q_{\mathrm{self}}$ appears in
 released benchmark tooling and in recent work in this line, documented in
 Section~\ref{sec:related}.
 
-The requirement is stated in the paper that introduced the pipeline. Measuring
-quality on the sparsified graph, Satuluri et al.\ write, ``would tell us nothing
-about how well the sparsified graph retained the cluster structure in the
-original graph''~\cite[\S4.3]{satuluri2011local}, and their reported conductances
-are computed on the original graph throughout.
-
 The two accountings diverge systematically, and the objective shows why.
 Modularity scores a partition $P$ of a graph with $m$ edges by
 \begin{equation}\label{eq:modularity}
@@ -73,22 +67,66 @@ modularity computed on a sparsified graph rises whether or not the partition has
 improved, and the rise is larger the more edges are removed.
 
 The effect is not small and it is not confined to sparsifiers that select
-intelligently. Uniform random edge deletion, whose selection rule uses no
-information at all, was scored both ways on three networks at two retention
-levels. Modularity measured on the sparsified graph rises in all six cells, by up
-to $+0.011$. The same partitions scored on the original graph fall in all six, by
-up to $-0.025$. The sign of the conclusion is opposite in every cell, and the gap
-between the two accountings roughly doubles when retention falls from $0.9$ to
-$0.8$.
+intelligently. Table~\ref{tab:uniform} scores uniform random edge deletion, whose
+selection rule uses no information at all, both ways on three networks at two
+retention levels. The sign of the conclusion is opposite in every one of the six
+cells, and the gap between the two accountings roughly doubles when retention
+falls from $0.9$ to $0.8$, which is the behaviour \eqref{eq:modularity} predicts.
 
-Across a larger grid the pattern holds under every algorithm we tested. In 63
-configurations spanning three detection algorithms, seven networks and three
-sparsifier settings, modularity read off the sparsified graph is positive in 60
-of them and reaches $+0.537$. The same partitions scored on the original graph
-are positive in 15, and 11 of those survive a compute-matched baseline. Between
-the two accountings the sign of the conclusion differs in 45 of the 63
-configurations, and separately by algorithm in 14 of 21 under Infomap, 20 of 21
-under Louvain, and 11 of 21 under label propagation.
+\begin{table}[t]
+\centering
+\caption{Uniform random edge deletion under the two accountings, Leiden, mean of
+three seeds. $\Delta Q_{\mathrm{self}}$ is positive in every cell and
+$\Delta Q_{\mathrm{transfer}}$ is negative in every cell. Uniform deletion uses
+no structural information, so the inflation comes from the objective rather than
+from any selection rule.}
+\label{tab:uniform}
+\begin{tabular}{@{}lccrr@{}}
+\toprule
+Network & $Q(P_{\mathrm{base}}, G)$ & $\rho$ & $\Delta Q_{\mathrm{self}}$ &
+$\Delta Q_{\mathrm{transfer}}$\\
+\midrule
+ca-CondMat  & 0.729 & 0.800 & $+0.0111$ & $-0.0164$\\
+ca-CondMat  & 0.729 & 0.900 & $+0.0053$ & $-0.0064$\\
+email-Enron & 0.611 & 0.800 & $+0.0052$ & $-0.0162$\\
+email-Enron & 0.611 & 0.900 & $+0.0011$ & $-0.0086$\\
+com-DBLP    & 0.826 & 0.800 & $+0.0078$ & $-0.0247$\\
+com-DBLP    & 0.826 & 0.900 & $+0.0040$ & $-0.0098$\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Across a larger grid the pattern holds under every algorithm we tested.
+Table~\ref{tab:accounting} covers 63 configurations spanning three detection
+algorithms, seven networks and three sparsifier settings. Modularity read off the
+sparsified graph is positive in 60 of them and reaches $+0.537$; the same
+partitions scored on the original graph are positive in 15. The sign of the
+conclusion differs between the two accountings in 45 of the 63 configurations.
+Eleven cells exceed a compute-matched baseline, all of them under label
+propagation, and they are not a subset of the 15: two of them sit below the plain
+baseline mean while beating a matched control that had drawn too few restarts,
+which is the failure Section~\ref{sec:protocol:compute} treats.
+
+\begin{table}[t]
+\centering
+\caption{The two accountings across 63 configurations, seven networks by three
+sparsifier settings under each algorithm. A flip is a cell where
+$\Delta Q_{\mathrm{self}} > 0$ and $\Delta Q_{\mathrm{transfer}} < 0$, so that
+the two accountings disagree on the sign of the conclusion.}
+\label{tab:accounting}
+\begin{tabular}{@{}lccccc@{}}
+\toprule
+Algorithm & Cells & $\Delta Q_{\mathrm{self}}>0$ &
+$\Delta Q_{\mathrm{transfer}}>0$ & Flips & max $\Delta Q_{\mathrm{self}}$\\
+\midrule
+Infomap            & 21 & 20 & 6  & 14 & $+0.312$\\
+Louvain            & 21 & 20 & 0  & 20 & $+0.260$\\
+Label propagation  & 21 & 20 & 9  & 11 & $+0.537$\\
+\midrule
+Total              & 63 & 60 & 15 & 45 & $+0.537$\\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \subsection{Matching granularity}\label{sec:protocol:granularity}
 
