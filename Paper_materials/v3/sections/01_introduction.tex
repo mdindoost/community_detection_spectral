@@ -12,29 +12,21 @@
 
 % [B1: the practical question]
 Community detection is a fundamental task in network
-analysis~\cite{fortunato2010community, fortunato202220}. Given a graph, the goal
-is to partition its vertices into groups that are densely connected internally
-and sparsely connected to the rest of the graph, and the resulting partitions are
-used to summarize structure, to identify functional units, and to organize
-downstream computation. The task is computationally demanding, and the most
-widely used methods, including modularity
+analysis~\cite{fortunato2010community, fortunato202220}, and a computationally
+demanding one. The most widely used methods, including modularity
 optimization~\cite{newman2004finding, blondel2008fast, traag2019louvain} and
 flow-based approaches~\cite{rosvall2008maps}, have running times that scale with
-the number of edges. On the graphs to
-which these methods are now routinely applied, that quantity is
-large~\cite{leskovec2009community}.
+the number of edges, and on the graphs to which they are now routinely applied
+that quantity is large~\cite{leskovec2009community}.
 
 Graph sparsification constructs a subgraph on the same vertex set with
 substantially fewer edges while preserving properties of the original. The
 strongest guarantees are spectral. Spielman and
 Srivastava~\cite{spielman2008graph} show that sampling each edge with probability
 proportional to its effective resistance, and reweighting the retained edges by
-the inverse of that probability, yields a subgraph with
-$O(n \log n / \epsilon^{2})$ edges whose Laplacian quadratic form approximates
-that of the original within a factor $1 \pm \epsilon$; cut sparsifiers with
-comparable guarantees are obtained by related
-sampling~\cite{benczur2015randomized}, and near-linear-time constructions
-followed~\cite{spielman2004nearly, spielman2014nearly}. Because effective
+the inverse of that probability, yields a subgraph whose Laplacian quadratic form
+approximates that of the original within a factor $1 \pm
+\epsilon$~\cite{benczur2015randomized, spielman2014nearly}. Because effective
 resistances are themselves expensive to compute, practical variants approximate
 them. DSpar~\cite{liu2023dspar} replaces the resistance of an edge $(u,v)$ by
 $1/d_u + 1/d_v$, which bounds it within a factor $2/\alpha$ where $\alpha$ is the
@@ -67,9 +59,7 @@ specifically for community detection, and report that clustering accuracy is
 retained while as little as five percent of the edges are kept. Sparsification
 also entered production: the SimClusters system at
 Twitter~\cite{satuluri2020simclusters} prunes its interaction graph before
-community detection at industrial scale. Blagus et al.~\cite{blagus2015sampling}
-report a converse effect, that sampling can promote apparent community structure
-in social and information networks. Most recently, Chen et
+community detection at industrial scale. Most recently, Chen et
 al.~\cite{chen2024demystifying} benchmarked twelve sparsification algorithms
 against sixteen graph properties on fourteen networks, concluding that no single
 sparsifier preserves all properties and that the choice should be matched to the
@@ -80,15 +70,15 @@ they did not travel with it. The two algorithms for which accuracy improved are
 fixed-$k$, balance-constrained cut partitioners, whereas the pipeline is now
 applied to modularity optimizers that choose their own granularity. Accuracy was
 measured as agreement with external ground-truth communities, whereas quality is
-now also reported using objectives computed on the graph itself. The speedups
-were relative to clustering runs requiring hours on graphs of up to
-$1.2 \times 10^8$ edges, and the networks on which the gains were largest have
-average degrees of 65, 76 and 94, two of them derived from high-throughput assays
-known to contain false-positive edges; the pipeline is now applied to sparse
-graphs and to detection algorithms that run in near-linear time. The same paper
-reports a synthetic sweep in which the method begins to outperform clustering on
-the unsparsified graph at an average degree of approximately 50. To our knowledge, 
-no subsequent work examines that threshold.
+now also reported using objectives computed on the graph itself. The networks on
+which the gains were largest have average degrees of 65, 76 and 94, and two of
+them are derived from high-throughput assays known to contain false-positive
+edges, whereas the pipeline is now applied to sparse graphs. The speedups were
+measured against clustering runs lasting hours, whereas the detection algorithms
+now in use run in near-linear time. The same paper reports a synthetic sweep in
+which the method begins to outperform clustering on the unsparsified graph at an
+average degree of approximately 50. To our knowledge, no subsequent work examines
+that threshold.
 
 % [B4: what has to be measured, and the requirements each method class imposes]
 These extensions also change what has to be measured. The question a
@@ -103,15 +93,13 @@ two scores is the effect of sparsification.
 
 The sparsifier classes and detection algorithms described above each impose
 further requirements of the same kind, and several have been noted individually
-in the literature. Similarity-based sparsifiers~\cite{satuluri2011local} retain
-edges whose endpoints share neighbours, and therefore remove between-community
-edges preferentially; these are the edges that modularity and conductance
-penalize, so the sparsifier and the quality measure act on the same quantity.
-Degree-based sparsifiers~\cite{liu2023dspar} select edges by a function of the
-endpoint degrees alone, and a heavy-tailed degree sequence reproduces several of
-the resulting effects without any community structure being present, so
-comparison against a degree-preserving random
-graph~\cite{molloy1995critical} is required to separate the two. Detection
+in the literature. Similarity-based sparsifiers~\cite{satuluri2011local} remove
+between-community edges preferentially, and those are the edges that modularity
+and conductance penalize, so the sparsifier and the quality measure act on the
+same quantity. Degree-based sparsifiers~\cite{liu2023dspar} select on endpoint
+degrees, and a heavy-tailed degree sequence reproduces several of the resulting
+effects with no community structure present, so a degree-preserving random
+graph~\cite{molloy1995critical} is needed to separate the two. Detection
 algorithms that choose their own granularity~\cite{blondel2008fast,
 traag2019louvain} return finer partitions on a sparsified graph: Chen et
 al.~\cite{chen2024demystifying} document community counts rising by three orders
@@ -121,10 +109,9 @@ fragments the graph, recommending chance-corrected indices in its place. Finally
 sparsification is itself a computation, and Gottesb\"{u}ren et
 al.~\cite{gottesburen2025linear} observe that its overhead can counteract the
 speedup it is intended to produce. Each requirement is a property of a specific
-method class rather than a general caveat, and each determines what a comparison
-involving that class is entitled to conclude.
-Section~\ref{sec:protocol} states the resulting requirements and the control that
-establishes each one.
+method class rather than a general caveat, and each bounds what a comparison
+involving that class can conclude. Section~\ref{sec:protocol} states the
+requirements and the control that establishes each one.
 
 % [B5: the study]
 Applying these requirements, we re-examined the question across seven
@@ -132,8 +119,8 @@ sparsifiers, spanning the degree-based and similarity-based families that have
 claimed quality gains, the method of Satuluri et al.\ among them, and a
 connectivity-preserving class that cannot fragment a graph by construction; four
 detection algorithms drawn from the two families identified above; seventeen real
-networks of up to 25 million edges; and a synthetic benchmark in which average degree is swept over an order
-of magnitude while community structure is held fixed. One arm of the synthetic
+networks of up to 25 million edges; and a synthetic benchmark in which average
+degree is swept over an order of magnitude while community structure is held fixed. One arm of the synthetic
 study uses a fixed-$k$ partitioner, so that the number of communities is
 identical in the sparsified and unsparsified conditions and granularity is
 excluded by construction rather than by matching. The study comprises 22
@@ -187,19 +174,19 @@ average degree of 49, and is present in nearly every configuration at 102 and
 above; recovery turns positive at a lower density than the objective does. It
 survives the worst case over ten independent runs of the partitioner, and it is
 not reproduced by degree-based or uniform sparsification at identical retention,
-so it is a property of the similarity signal rather than of the edge budget. Injecting spurious edges makes the gain grow monotonically,
-which is the signature the denoising explanation predicts.
+so it is a property of the similarity signal rather than of the edge budget.
+Injecting spurious edges makes the gain grow monotonically, which is the
+signature the denoising explanation predicts.
 
 The outcome is therefore determined by two conditions acting together, and
 neither is sufficient on its own. A fixed-$k$ partitioner applied to a sparse
 graph shows no gain on the objective in any configuration we tested, and a
 free-granularity optimizer applied to a dense one shows none either once
-granularity is controlled. The gain appears only where sufficient density and a fixed community count
-coincide. Which sparsifier is used matters less than either condition,
-provided its selection signal reflects local structure rather than degree alone.
+granularity is controlled. Which sparsifier is used matters less than either condition, provided its
+selection signal reflects local structure rather than degree alone.
 The mechanism is consistent with this. The quantity governing a degree-based
-sparsifier's effect on modularity is the separation between the scores it assigns to within-community
-and between-community edges, and we show by direct intervention that this
+sparsifier's effect on modularity is the separation between the scores it assigns
+to within-community and between-community edges, and we show by direct intervention that this
 quantity is controlled by where high-degree-product edges sit relative to
 community boundaries, at fixed degree sequence, fixed partition and fixed
 modularity.
@@ -208,8 +195,8 @@ Two qualifications attach to this result. Sparsification repairs a weaker
 detector rather than surpassing a stronger one. On the synthetic benchmarks, a
 resolution-tuned modularity optimizer on the untouched graph outperforms every
 sparsified pipeline we measured, and the same holds on all but one of the real
-networks we test. And with an exact similarity computation the quality gain is not a
-speed gain, because the sparsifier costs more than the detection it accelerates.
+networks we test. And with an exact similarity computation the quality gain is
+not a speed gain, because the sparsifier costs more than the detection it accelerates.
 
 % [B7: contributions]
 This paper contributes the following.
