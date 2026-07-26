@@ -1,0 +1,261 @@
+==============================================================================
+EXP W -- leaf-shedding (H-O1 follow-up).  Machine-generated verdict tables.
+==============================================================================
+
+REPRODUCTION CHECK vs exp_O (re-run is bit-for-bit deterministic)
+  chk_kp_match: 230/230 rows match
+  chk_nfrag_match: 230/230 rows match
+  chk_agree_diff: max = 0.000e+00 over 230 rows
+  chk_fs_maxdiff: max = 0.000e+00 over 230 rows
+  rows in frag_composition.csv: 230
+
+TABLE 0 -- decile tie ceilings (max attainable bottom-2 enrichment).
+  Rank deciles break ties at random, so a fragment set drawn entirely from the
+  minimum-value tied block of mass F >= 0.2 can only reach enrichment 1/F.
+  network          arm         n   F_deg  ceil_deg  F_core  ceil_core   F_emb  ceil_emb
+  email-Eu-core    real      986   0.232      4.31   0.205       4.88   0.222      4.50
+  email-Eu-core    null      986   0.232      4.31   0.201       4.98   0.201      4.98
+  wiki-Vote        real     7066   0.321      3.11   0.323       3.10   0.206      4.86
+  wiki-Vote        null     7066   0.321      3.11   0.322       3.10   0.201      4.98
+  ca-HepTh         real     8638   0.370      2.71   0.430       2.32   0.207      4.82
+  ca-HepTh         null     8638   0.370      2.71   0.422       2.37   0.216      4.62
+  ca-CondMat       real    21363   0.206      4.86   0.229       4.36   0.229      4.36
+  ca-CondMat       null    21363   0.206      4.86   0.221       4.52   0.205      4.88
+  email-Enron      real    33696   0.281      3.56   0.283       3.53   0.223      4.48
+  email-Enron      null    33696   0.281      3.56   0.287       3.49   0.282      3.54
+
+==============================================================================
+P1 -- fragment nodes >=2x over-represented in the bottom-2 DEGREE deciles AND
+      bottom-2 K-CORE deciles, in >= 2/3 of testable fragmentation cells
+      (testable = real-arm sparsifier cell with >= 20 fragment nodes)
+==============================================================================
+  network          cell             nfrag  fracfrag  enr_deg  enr_core  enr_emb  testable   pass
+  email-Eu-core    dspar 0.5            0    0.0000      nan       nan      nan     False  False
+  email-Eu-core    lspar 0.5            0    0.0000      nan       nan      nan     False  False
+  email-Eu-core    lspar 0.2            0    0.0000      nan       nan      nan     False  False
+  wiki-Vote        dspar 0.5            5    0.0007     1.16      3.04     0.09     False  False
+  wiki-Vote        lspar 0.5            9    0.0013     0.56      1.53     0.28     False  False
+  wiki-Vote        lspar 0.2            7    0.0009     0.42      1.39     0.14     False  False
+  ca-HepTh         dspar 0.5          399    0.0462     1.31      1.55     0.46      True  False
+  ca-HepTh         lspar 0.5          900    0.1042     0.83      0.88     0.32      True  False
+  ca-HepTh         lspar 0.2         6733    0.7795     0.91      0.92     0.98      True  False
+  ca-CondMat       dspar 0.5          114    0.0053     1.53      1.66     0.23      True  False
+  ca-CondMat       lspar 0.5         1599    0.0748     0.80      0.98     0.08      True  False
+  ca-CondMat       lspar 0.2        18437    0.8630     0.95      0.96     0.96      True  False
+  email-Enron      dspar 0.5          218    0.0065     0.02      0.00     0.17      True  False
+  email-Enron      lspar 0.5         1316    0.0390     0.11      0.10     0.16      True  False
+  email-Enron      lspar 0.2        18275    0.5423     0.08      0.09     1.15      True  False
+
+  testable cells: 9 / 15
+  cells passing (deg>=2 AND core>=2): 0 / 9
+  cells passing on DEGREE only:  0 / 9
+  cells passing on K-CORE only:   0 / 9
+  per network (pass / testable, and whether >= 2/3):
+    email-Eu-core    no testable cells
+    wiki-Vote        no testable cells
+    ca-HepTh         0/3 = 0.00  FAIL
+    ca-CondMat       0/3 = 0.00  FAIL
+    email-Enron      0/3 = 0.00  FAIL
+  networks with >=2/3 of testable cells passing: 0 / 3
+  sensitivity: with testable = ANY fragments (>=1 node):
+    extra cell wiki-Vote        dspar 0.5: nfrag=5 enr_deg=1.16 enr_core=3.04
+    extra cell wiki-Vote        lspar 0.5: nfrag=9 enr_deg=0.56 enr_core=1.53
+    extra cell wiki-Vote        lspar 0.2: nfrag=7 enr_deg=0.42 enr_core=1.39
+
+TABLE 1 -- tie-robust complement (no decile binning): what fragments ARE.
+  network          cell            degmed_f  degmed_g  coremed_f  coremed_g  p(deg<=2|f)  p(deg<=2)   lift  p(k<=1|f)  p(k<=1)   lift
+  wiki-Vote        dspar 0.5            1.0       4.0        1.0        4.0        0.804      0.411   1.95      0.982    0.323   3.04
+  wiki-Vote        lspar 0.5            1.0       4.0        1.0        4.0        0.750      0.411   1.82      0.750    0.323   2.32
+  wiki-Vote        lspar 0.2            1.0       4.0        1.0        4.0        0.750      0.411   1.82      0.778    0.323   2.41
+  ca-HepTh         dspar 0.5            3.0       3.0        2.0        3.0        0.409      0.370   1.11      0.284    0.183   1.56
+  ca-HepTh         lspar 0.5            3.0       3.0        2.0        3.0        0.373      0.370   1.01      0.150    0.183   0.82
+  ca-HepTh         lspar 0.2            3.0       3.0        3.0        3.0        0.367      0.370   0.99      0.164    0.183   0.90
+  ca-CondMat       dspar 0.5            3.5       5.0        3.0        4.0        0.309      0.206   1.50      0.163    0.082   1.98
+  ca-CondMat       lspar 0.5            4.0       5.0        3.0        4.0        0.167      0.206   0.81      0.057    0.082   0.69
+  ca-CondMat       lspar 0.2            5.0       5.0        4.0        4.0        0.197      0.206   0.96      0.071    0.082   0.86
+  email-Enron      dspar 0.5            4.0       3.0        3.6        3.0        0.077      0.384   0.20      0.005    0.283   0.02
+  email-Enron      lspar 0.5            4.0       3.0        4.0        3.0        0.067      0.384   0.17      0.032    0.283   0.11
+  email-Enron      lspar 0.2            5.0       3.0        4.0        3.0        0.127      0.384   0.33      0.026    0.283   0.09
+
+==============================================================================
+P2 -- registered PREDICTION: the resolution-matched control shows the SAME
+      direction, and sparsification's enrichment exceeds the control's by
+      >=1.5x in FEWER THAN HALF the cells (i.e. NOT sparsification-specific).
+==============================================================================
+  network          cell            spar_deg  res_deg  ratio  spar_core  res_core  ratio  res_nfrag  >=1.5x?
+  ca-HepTh         dspar 0.5           1.31     0.53   2.46       1.55      0.61   2.54        103     True
+  ca-HepTh         lspar 0.5           0.83     0.73   1.14       0.88      0.95   0.93        144    False
+  ca-HepTh         lspar 0.2           0.91     0.97   0.94       0.92      0.97   0.94       7830    False
+  ca-CondMat       dspar 0.5           1.53     1.19   1.28       1.66      0.87   1.90         12    False
+  ca-CondMat       lspar 0.5           0.80     0.70   1.15       0.98      0.67   1.47        102    False
+  ca-CondMat       lspar 0.2           0.95     0.96   0.99       0.96      0.96   1.00      19817    False
+  email-Enron      dspar 0.5           0.02     0.08   0.28       0.00      0.07   0.00        416    False
+  email-Enron      lspar 0.5           0.11     0.15   0.72       0.10      0.15   0.68        258    False
+  email-Enron      lspar 0.2           0.08     0.51   0.15       0.09      0.52   0.18      14609    False
+
+  cells where sparsifier exceeds resmatch by >=1.5x on BOTH axes: 1 / 9
+  cells where sparsifier exceeds resmatch by >=1.5x on DEGREE: 1 / 9
+  cells where sparsifier exceeds resmatch by >=1.5x on K-CORE: 2 / 9
+  cells where resmatch MATCHES OR EXCEEDS the sparsifier (ratio <= 1.0), degree axis: 5 / 9
+  cells where resmatch MATCHES OR EXCEEDS the sparsifier (ratio <= 1.0), k-core axis: 5 / 9
+  mean ratio deg = 1.012  median = 0.989
+  mean ratio core = 1.072  median = 0.944
+  leave-one-network-out jackknife on mean ratio (degree axis):
+    drop email-Eu-core    -> mean ratio 1.012 (n=9 cells)
+    drop wiki-Vote        -> mean ratio 1.012 (n=9 cells)
+    drop ca-HepTh         -> mean ratio 0.761 (n=6 cells)
+    drop ca-CondMat       -> mean ratio 0.948 (n=6 cells)
+    drop email-Enron      -> mean ratio 1.327 (n=6 cells)
+  jitter floor (plain Leiden seeds 101/102, no sparsification, no gamma change):
+    email-Eu-core    jitter nfrag=0 (no test)
+    wiki-Vote        jitter nfrag=0 (no test)
+    ca-HepTh         jitter nfrag=0 (no test)
+    ca-CondMat       jitter nfrag=0 (no test)
+    email-Enron      jitter nfrag=0 (no test)
+
+==============================================================================
+P3 -- config-null arm shows WEAKER degree-selectivity than the real graph.
+==============================================================================
+  network          cell            real_deg  null_deg  real_core  null_core  real_nf  null_nf  weaker?
+  email-Eu-core    dspar 0.5            nan      5.00        nan       5.00        0        2      n/t
+  email-Eu-core    lspar 0.5            nan      5.00        nan       5.00        0        2      n/t
+  email-Eu-core    lspar 0.2            nan      5.00        nan       5.00        0        2      n/t
+  wiki-Vote        dspar 0.5           1.16      3.50       3.04       3.50        5       20      n/t
+  wiki-Vote        lspar 0.5           0.56      3.50       1.53       3.50        9       20      n/t
+  wiki-Vote        lspar 0.2           0.42      3.50       1.39       3.50        7       20      n/t
+  ca-HepTh         dspar 0.5           1.31      1.99       1.55       2.29      399      222    False
+  ca-HepTh         lspar 0.5           0.83      4.44       0.88       4.44      900       63    False
+  ca-HepTh         lspar 0.2           0.91      1.08       0.92       1.14     6733     2507    False
+  ca-CondMat       dspar 0.5           1.53      1.87       1.66       1.87      114       46    False
+  ca-CondMat       lspar 0.5           0.80      4.71       0.98       4.71     1599       17      n/t
+  ca-CondMat       lspar 0.2           0.95      1.05       0.96       1.11    18437     4983    False
+  email-Enron      dspar 0.5           0.02      3.40       0.00       3.34      218      235    False
+  email-Enron      lspar 0.5           0.11      3.36       0.10       3.32     1316      247    False
+  email-Enron      lspar 0.2           0.08      0.86       0.09       0.91    18275     8012    False
+
+  cells testable in BOTH arms (>= 20 fragments each): 8 / 15
+  null weaker on degree axis: 0 / 8
+  null weaker on k-core axis: 0 / 8
+
+==============================================================================
+MEASUREMENT 2 -- agreement gradient by K-CORE / DEGREE decile
+  (analysed from exp_O results.csv columns core_ah_gap / deg_ah_gap / ahc_d* /
+   ahd_d*; positive = high-coreness/high-degree nodes agree MORE with P0)
+==============================================================================
+  network          arm   cell              emb_gap  core_gap  deg_gap
+  email-Eu-core    real  jitter              0.069     0.057    0.052
+  email-Eu-core    real  dspar dspar 0.5     0.214     0.085    0.081
+  email-Eu-core    real  lspar lspar 0.5     0.152     0.065    0.059
+  email-Eu-core    real  lspar lspar 0.2     0.152     0.119    0.109
+  email-Eu-core    real  resmatch dspar 0.5    0.046     0.038    0.035
+  email-Eu-core    real  resmatch lspar 0.5    0.224     0.025    0.027
+  email-Eu-core    real  resmatch lspar 0.2    0.244     0.030    0.032
+  email-Eu-core    null  jitter              0.048    -0.008    0.014
+  email-Eu-core    null  dspar dspar 0.5     0.013     0.007    0.007
+  email-Eu-core    null  lspar lspar 0.5     0.047    -0.003    0.005
+  email-Eu-core    null  lspar lspar 0.2    -0.002     0.063    0.063
+  email-Eu-core    null  resmatch dspar 0.5    0.032    -0.005    0.010
+  email-Eu-core    null  resmatch lspar 0.5    0.032    -0.005    0.010
+  email-Eu-core    null  resmatch lspar 0.2    0.048     0.010    0.011
+  wiki-Vote        real  jitter              0.114     0.007    0.005
+  wiki-Vote        real  dspar dspar 0.5     0.131     0.018    0.022
+  wiki-Vote        real  lspar lspar 0.5     0.157     0.014    0.016
+  wiki-Vote        real  lspar lspar 0.2     0.177     0.057    0.059
+  wiki-Vote        real  resmatch dspar 0.5    0.104     0.001    0.000
+  wiki-Vote        real  resmatch lspar 0.5    0.104     0.001    0.000
+  wiki-Vote        real  resmatch lspar 0.2    0.130     0.033    0.032
+  wiki-Vote        null  jitter              0.037    -0.014   -0.015
+  wiki-Vote        null  dspar dspar 0.5     0.032    -0.014   -0.018
+  wiki-Vote        null  lspar lspar 0.5     0.038    -0.025   -0.026
+  wiki-Vote        null  lspar lspar 0.2     0.038    -0.028   -0.030
+  wiki-Vote        null  resmatch dspar 0.5    0.025    -0.009   -0.010
+  wiki-Vote        null  resmatch lspar 0.5    0.025    -0.009   -0.010
+  wiki-Vote        null  resmatch lspar 0.2    0.039    -0.027   -0.025
+  ca-HepTh         real  jitter              0.050     0.069    0.064
+  ca-HepTh         real  dspar dspar 0.5     0.093     0.042    0.038
+  ca-HepTh         real  lspar lspar 0.5     0.051     0.070    0.069
+  ca-HepTh         real  lspar lspar 0.2     0.032     0.050    0.051
+  ca-HepTh         real  resmatch dspar 0.5    0.085     0.010    0.016
+  ca-HepTh         real  resmatch lspar 0.5    0.072     0.018    0.018
+  ca-HepTh         real  resmatch lspar 0.2    0.065    -0.026   -0.016
+  ca-HepTh         null  jitter              0.025     0.010    0.004
+  ca-HepTh         null  dspar dspar 0.5     0.033    -0.033   -0.029
+  ca-HepTh         null  lspar lspar 0.5     0.032    -0.033   -0.028
+  ca-HepTh         null  lspar lspar 0.2     0.037    -0.029   -0.027
+  ca-HepTh         null  resmatch dspar 0.5    0.037    -0.034   -0.026
+  ca-HepTh         null  resmatch lspar 0.5    0.039    -0.007   -0.010
+  ca-HepTh         null  resmatch lspar 0.2    0.038    -0.037   -0.032
+  ca-CondMat       real  jitter              0.066     0.131    0.095
+  ca-CondMat       real  dspar dspar 0.5     0.092     0.100    0.069
+  ca-CondMat       real  lspar lspar 0.5     0.019     0.115    0.102
+  ca-CondMat       real  lspar lspar 0.2     0.002     0.032    0.029
+  ca-CondMat       real  resmatch dspar 0.5    0.057     0.150    0.111
+  ca-CondMat       real  resmatch lspar 0.5    0.048     0.058    0.044
+  ca-CondMat       real  resmatch lspar 0.2    0.039    -0.038   -0.032
+  ca-CondMat       null  jitter              0.061     0.065    0.061
+  ca-CondMat       null  dspar dspar 0.5     0.007     0.001    0.002
+  ca-CondMat       null  lspar lspar 0.5     0.004     0.009    0.011
+  ca-CondMat       null  lspar lspar 0.2     0.008    -0.013   -0.013
+  ca-CondMat       null  resmatch dspar 0.5    0.006     0.026    0.025
+  ca-CondMat       null  resmatch lspar 0.5    0.020     0.048    0.045
+  ca-CondMat       null  resmatch lspar 0.2    0.006    -0.011   -0.009
+  email-Enron      real  jitter              0.124    -0.021   -0.024
+  email-Enron      real  dspar dspar 0.5     0.141     0.005   -0.000
+  email-Enron      real  lspar lspar 0.5     0.173    -0.128   -0.129
+  email-Enron      real  lspar lspar 0.2     0.153    -0.318   -0.311
+  email-Enron      real  resmatch dspar 0.5    0.057    -0.021   -0.022
+  email-Enron      real  resmatch lspar 0.5    0.191    -0.159   -0.150
+  email-Enron      real  resmatch lspar 0.2    0.099    -0.159   -0.149
+  email-Enron      null  jitter              0.051    -0.044   -0.046
+  email-Enron      null  dspar dspar 0.5     0.062    -0.064   -0.064
+  email-Enron      null  lspar lspar 0.5     0.061    -0.069   -0.071
+  email-Enron      null  lspar lspar 0.2     0.064    -0.074   -0.075
+  email-Enron      null  resmatch dspar 0.5    0.065    -0.058   -0.059
+  email-Enron      null  resmatch lspar 0.5    0.063    -0.064   -0.065
+  email-Enron      null  resmatch lspar 0.2    0.082    -0.090   -0.089
+
+  Per-decile Hungarian agreement by K-CORE decile (real arm, mean over seeds):
+    email-Eu-core    dspar 0.5: 0.731 0.685 0.721 0.771 0.747 0.791 0.822 0.769 0.850 0.772
+    email-Eu-core    lspar 0.5: 0.811 0.606 0.769 0.677 0.752 0.808 0.815 0.816 0.842 0.724
+    email-Eu-core    lspar 0.2: 0.721 0.384 0.605 0.522 0.548 0.667 0.576 0.643 0.700 0.724
+    wiki-Vote        dspar 0.5: 0.718 0.739 0.715 0.647 0.725 0.764 0.781 0.778 0.747 0.701
+    wiki-Vote        lspar 0.5: 0.795 0.802 0.791 0.676 0.763 0.811 0.832 0.819 0.804 0.808
+    wiki-Vote        lspar 0.2: 0.643 0.626 0.629 0.515 0.546 0.639 0.696 0.720 0.687 0.663
+    ca-HepTh         dspar 0.5: 0.248 0.263 0.273 0.278 0.250 0.259 0.268 0.272 0.257 0.380
+    ca-HepTh         lspar 0.5: 0.289 0.298 0.289 0.267 0.256 0.266 0.246 0.270 0.315 0.501
+    ca-HepTh         lspar 0.2: 0.110 0.079 0.042 0.046 0.038 0.036 0.047 0.061 0.080 0.240
+    ca-CondMat       dspar 0.5: 0.250 0.239 0.238 0.255 0.257 0.279 0.285 0.297 0.342 0.389
+    ca-CondMat       lspar 0.5: 0.221 0.195 0.157 0.159 0.187 0.176 0.204 0.217 0.292 0.409
+    ca-CondMat       lspar 0.2: 0.051 0.021 0.014 0.013 0.011 0.023 0.025 0.032 0.049 0.101
+    email-Enron      dspar 0.5: 0.553 0.553 0.534 0.473 0.482 0.500 0.528 0.536 0.568 0.552
+    email-Enron      lspar 0.5: 0.690 0.689 0.661 0.582 0.563 0.526 0.492 0.503 0.562 0.591
+    email-Enron      lspar 0.2: 0.358 0.368 0.309 0.081 0.082 0.065 0.044 0.035 0.033 0.014
+
+  Per-decile Hungarian agreement by DEGREE decile (real arm, mean over seeds):
+    email-Eu-core    dspar 0.5: 0.746 0.680 0.735 0.761 0.736 0.778 0.818 0.799 0.820 0.786
+    email-Eu-core    lspar 0.5: 0.822 0.606 0.759 0.687 0.741 0.818 0.825 0.718 0.889 0.755
+    email-Eu-core    lspar 0.2: 0.721 0.404 0.592 0.529 0.534 0.582 0.684 0.592 0.710 0.741
+    wiki-Vote        dspar 0.5: 0.698 0.726 0.738 0.649 0.733 0.760 0.783 0.765 0.746 0.717
+    wiki-Vote        lspar 0.5: 0.792 0.795 0.793 0.681 0.767 0.805 0.840 0.807 0.808 0.814
+    wiki-Vote        lspar 0.2: 0.620 0.634 0.641 0.507 0.553 0.638 0.701 0.707 0.684 0.680
+    ca-HepTh         dspar 0.5: 0.248 0.270 0.276 0.273 0.255 0.257 0.261 0.264 0.277 0.367
+    ca-HepTh         lspar 0.5: 0.286 0.296 0.294 0.274 0.279 0.248 0.238 0.279 0.318 0.487
+    ca-HepTh         lspar 0.2: 0.104 0.082 0.047 0.044 0.038 0.037 0.041 0.083 0.087 0.216
+    ca-CondMat       dspar 0.5: 0.243 0.237 0.264 0.258 0.268 0.298 0.307 0.303 0.311 0.339
+    ca-CondMat       lspar 0.5: 0.217 0.197 0.162 0.161 0.183 0.202 0.212 0.247 0.277 0.359
+    ca-CondMat       lspar 0.2: 0.051 0.022 0.019 0.010 0.012 0.020 0.031 0.042 0.058 0.077
+    email-Enron      dspar 0.5: 0.553 0.544 0.538 0.488 0.480 0.508 0.531 0.529 0.548 0.559
+    email-Enron      lspar 0.5: 0.688 0.682 0.671 0.585 0.559 0.522 0.498 0.520 0.533 0.599
+    email-Enron      lspar 0.2: 0.360 0.360 0.315 0.078 0.072 0.064 0.043 0.043 0.028 0.029
+
+==============================================================================
+KILL CRITERION (registered):
+  (a) if P1 fails (no >=2x bottom-2 enrichment in a MAJORITY of testable cells),
+      H-O1 is dead outright.
+  (b) if P1 holds but the resmatch control matches or exceeds the enrichment in
+      >= half the cells, the finding is a GRANULARITY fact, not a sparsification
+      fact.
+==============================================================================
+  (a) majority of testable cells with >=2x on BOTH axes: 0/9 -> P1 FAILS
+  (b) resmatch matches-or-exceeds on degree axis in 5/9 cells -> YES
+  (b) resmatch matches-or-exceeds on k-core axis in 5/9 cells -> YES
