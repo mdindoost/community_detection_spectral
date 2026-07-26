@@ -132,32 +132,33 @@ controlled experiments. Predictions and stopping rules were fixed before each
 experiment was run, and several of our own hypotheses did not survive them.
 
 % [B6: the boundary]
-The density condition has a location, and that location is not universal. The
-transition is sharp within a given family of graphs. On the LFR benchmark
-graphs~\cite{lancichinetti2008benchmark} we generate it falls near an average
-degree of 50, which is also the threshold reported in the original synthetic
-sweep. On the real networks we test it has already occurred at an average degree
-of 29, the lowest density at which we tested a fixed-$k$ partitioner. We
-therefore state a condition rather than a threshold.
+Of the two conditions, the second has a location. Average degree is the correlate
+we can vary under control, and measured against it the transition between the two
+regimes is sharp within a given family of graphs while its location is not
+universal. On the LFR benchmark graphs~\cite{lancichinetti2008benchmark} we
+generate it falls near an average degree of 50, which is also the threshold
+reported in the original synthetic sweep. On the real networks we test it has
+already occurred at an average degree of 29, the lowest density at which we
+tested a fixed-$k$ partitioner. We therefore state a condition rather than a
+threshold. Density itself is unlikely to be the operative variable. Injecting
+spurious edges into a graph makes sparsification more effective, which points
+instead to how many edges can be removed without destroying community structure.
+Degree heterogeneity and the noise present in how a graph was collected are
+further correlates of that quantity, and we do not separate them here.
 
-Density is unlikely to be the operative variable. Injecting spurious edges into a
-graph makes the gain grow, which points instead to how many edges can be removed
-without destroying community structure. Average degree is one correlate of that
-quantity, degree heterogeneity and the noise present in how a graph was collected
-are others, and we do not separate them here.
-
-Where either condition fails, no benefit of any kind is present. For
-modularity-family detectors with free granularity, on the sparse real networks we
-test, no sparsifier we tested improves modularity measured on the original graph
-beyond run-to-run variation, at any retention that preserves quality, and the
-same holds under every detection algorithm we tested. There is no speed benefit
-either. Measured end to end, including the cost of the sparsifier, the pipeline
-is no faster than clustering the original graph directly, and at aggressive
-retention it is slower, because a fragmented graph presents the optimizer with
-more work rather than less. Every apparent gain we found in this regime dissolves
-when granularity is matched, when chance is subtracted, or when the baseline is
-given an equal compute budget, including the gain produced by the one sparsifier
-whose selection signal is demonstrably structure-aware.
+Where either condition fails, no benefit of any kind is present. For detection
+algorithms that choose their own granularity, on the sparse real networks we
+test, no sparsifier improves modularity measured on the original graph beyond
+run-to-run variation, at any retention that preserves quality, and this holds for
+every such algorithm we tested. There is no speed benefit either. Measured end to
+end, including the cost of the sparsifier, the pipeline is no faster than
+clustering the original graph directly, and at aggressive retention it is slower,
+because a fragmented graph presents the optimizer with more work rather than
+less. Every apparent gain we found in this regime dissolves when granularity is
+matched, when chance is subtracted, or when the baseline is given an equal
+compute budget, with one exception on one network, where the surviving recovery
+gain is instead exceeded by an unsparsified run of a different detection
+algorithm.
 
 Where both conditions hold, the gain is real. On synthetic graphs with planted
 communities, with the number of communities fixed by construction so that no
