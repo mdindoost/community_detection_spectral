@@ -1,7 +1,9 @@
 % ============================================================
 % INTRODUCTION: v3, written clean 2026-07-26.
 % Beats B1-B7 per PAPER_RESTRUCTURE/phase4_v3/INTRO_PLAN.md.
-% Settled: no contemporary papers named here (D1); no reference to our own
+% Settled: D1 SUPERSEDED 2026-07-26 by Mohammad: the methods and papers ARE
+%   introduced in B3, since the omission claim in B4 cannot be made before the
+%   literature it refers to has been named. No reference to our own
 % earlier unpublished draft (D2); dissociation previewed as an open
 % phenomenon only (D3); no length pre-compression (D4); mechanism gets one
 % line (D5).
@@ -18,21 +20,35 @@ downstream computation. The task is computationally demanding, and the most
 widely used methods, including modularity
 optimization~\cite{newman2004finding, blondel2008fast, traag2019louvain} and
 flow-based approaches~\cite{rosvall2008maps}, have running times that scale with
-the number of edges rather than with the number of vertices. On the graphs to
+the number of edges. On the graphs to
 which these methods are now routinely applied, that quantity is
 large~\cite{leskovec2009community}.
 
-Reducing the vertex set is not available as a remedy, because a community
-assignment is required for every vertex; removing vertices alters the problem
-rather than reducing it. Reducing the edge set is available. Graph
-sparsification constructs a subgraph on the same vertex set with substantially
-fewer edges while preserving properties of the
-original~\cite{spielman2008graph, benczur2015randomized}. If the properties
-preserved include community structure, then detection can be performed on the
-sparsified graph at lower cost and without loss of quality. That premise has
-been pursued for fifteen years, beginning with Satuluri et
-al.~\cite{satuluri2011local}, and the resulting methods are now implemented in
-standard graph libraries.
+Graph sparsification constructs a subgraph on the same vertex set with
+substantially fewer edges while preserving properties of the original. The
+strongest guarantees are spectral. Spielman and
+Srivastava~\cite{spielman2008graph} show that sampling each edge with probability
+proportional to its effective resistance, and reweighting the retained edges by
+the inverse of that probability, yields a subgraph with
+$O(n \log n / \epsilon^{2})$ edges whose Laplacian quadratic form approximates
+that of the original within a factor $1 \pm \epsilon$; cut sparsifiers with
+comparable guarantees are obtained by related
+sampling~\cite{benczur2015randomized}, and near-linear-time constructions
+followed~\cite{spielman2004nearly, spielman2014nearly}. Because effective
+resistances are themselves expensive to compute, practical variants approximate
+them. DSpar~\cite{liu2023dspar} replaces the resistance of an edge $(u,v)$ by
+$1/d_u + 1/d_v$, which bounds it within a factor $2/\alpha$ where $\alpha$ is the
+normalized spectral gap~\cite{lovasz1993random}, and thereby obtains a spectral
+sparsifier at the cost of reading the degree sequence.
+
+Spectral approximation is a statement about the Laplacian, and the eigenvectors
+of the Laplacian encode cuts and connectivity~\cite{von2007tutorial,
+shi2000normalized}. Community structure is closely related to those quantities
+without being identical to them. If the properties preserved by sparsification
+include community structure, then detection can be performed on the sparsified
+graph at lower cost and without loss of quality. Whether they do is the question
+this paper addresses.
+
 
 % [B2: the answer the field has, and how it was actually scoped]
 Satuluri et al.~\cite{satuluri2011local} introduced local similarity
@@ -54,14 +70,30 @@ known to contain false-positive edges. The same paper reports a synthetic sweep
 in which the method ``actually outperforms the original clustering starting from
 degree 50.'' To our knowledge, no subsequent work examines that threshold.
 
-% [B3: the scope drift, stated without accusation]
-Subsequent work extended the recommendation beyond these conditions.
-Sparsify-then-detect has since been applied to modularity optimizers as well as
-to cut partitioners, to sparse graphs as well as to dense ones, and evaluated
-against graph-internal objectives as well as against external references. The
-degree threshold reported in the original sweep does not appear in this later
-literature, and the conditions attached to the original result are not generally
-restated with it.
+% [B3: the line of work that followed, with citations]
+The approach was taken up and extended. Hamann et
+al.~\cite{hamann2016structure} conducted a systematic comparison of
+structure-preserving sparsification methods for social networks and released
+reference implementations, which are now distributed in standard graph
+libraries. Wu and Chen~\cite{wu2020gsgan} trained a generative model to sparsify
+graphs specifically for community detection, reporting that clustering algorithms
+retain accuracy while ``only using far fewer edges (e.g., 5\%).''
+Sparsification also entered production: the SimClusters system at
+Twitter~\cite{satuluri2020simclusters} prunes its interaction graph before
+community detection at industrial scale. Blagus et al.~\cite{blagus2015sampling}
+report the converse effect, that sampling can promote apparent community
+structure in social and information networks. Most recently, Chen et
+al.~\cite{chen2024demystifying} benchmarked twelve sparsification algorithms
+against sixteen graph properties on fourteen networks, concluding that no single
+sparsifier preserves all properties and that the choice should be matched to the
+downstream task.
+
+Across this line of work the recommendation broadened. Sparsify-then-detect has
+been applied to modularity optimizers as well as to fixed-$k$ cut partitioners,
+to sparse graphs as well as to dense ones, and evaluated against graph-internal
+objectives as well as against external references. The degree threshold reported
+in the original synthetic sweep does not reappear, and the conditions attached to
+the original result are not generally restated alongside it.
 
 % [B4: the lost control and what its absence costs (THE HINGE)]
 A measurement requirement is also frequently omitted, and the omission has a
@@ -81,8 +113,10 @@ This requirement is stated in the 2011 paper, whose authors write that they
 ``cannot simply measure the conductance using the very same sparsified graph,
 since that would tell us nothing about how well the sparsified graph retained the
 cluster structure in the original graph,'' and who report every quality figure on
-the original graph accordingly. It is absent from much of the work that followed,
-and from the released evaluation code of a widely used sparsification benchmark.
+the original graph accordingly. It is absent from much of the work that followed.
+It is also absent from the released evaluation code accompanying the benchmark of
+Chen et al.~\cite{chen2024demystifying}, which computes modularity on the
+sparsified graph.
 
 The effect of the omission is large. Across 63 controlled configurations spanning
 four detection algorithms, two sparsifier families and seven networks, evaluating
