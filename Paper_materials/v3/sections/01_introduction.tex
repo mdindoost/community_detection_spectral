@@ -123,11 +123,12 @@ sparsifiers, spanning the degree-based and similarity-based families that have
 claimed quality gains, the method of Satuluri et al.\ among them, and a
 connectivity-preserving class that cannot fragment a graph by construction; four
 detection algorithms drawn from the two families identified above; seventeen real
-networks of up to 25 million edges; and a synthetic benchmark in which average
-degree is swept over an order of magnitude while community structure is held fixed. One arm of the synthetic
-study uses a fixed-$k$ partitioner, so that the number of communities is
+networks of up to 25 million edges; and two families of synthetic benchmark, LFR
+graphs and stochastic block models, in which average degree is swept over an
+order of magnitude while community structure is held fixed. One arm of the
+synthetic study uses a fixed-$k$ partitioner, so that the number of communities is
 identical in the sparsified and unsparsified conditions and granularity is
-excluded by construction rather than by matching. The study comprises 22
+excluded by construction rather than by matching. The study comprises 23
 controlled experiments. Predictions and stopping rules were fixed before each
 experiment was run, and several of our own hypotheses did not survive them.
 
@@ -139,12 +140,19 @@ universal. On the LFR benchmark graphs~\cite{lancichinetti2008benchmark} we
 generate it falls near an average degree of 50, which is also the threshold
 reported in the original synthetic sweep. On the real networks we test it has
 already occurred at an average degree of 29, the lowest density at which we
-tested a fixed-$k$ partitioner. We therefore state a condition rather than a
-threshold. Density itself is unlikely to be the operative variable. Injecting
-spurious edges into a graph makes sparsification more effective, which points
-instead to how many edges can be removed without destroying community structure.
-Degree heterogeneity and the noise present in how a graph was collected are
-further correlates of that quantity, and we do not separate them here.
+tested a fixed-$k$ partitioner. On stochastic block models it occurs no later
+than on LFR. We therefore state a condition rather than a threshold.
+
+What the transition tracks is how many edges can be removed without destroying
+community structure, rather than density as such. Injecting spurious edges into a
+graph makes sparsification more effective, which is the signature that quantity
+predicts, and average degree is its strongest measured correlate. Degree
+heterogeneity is not a correlate at all. Plain and degree-corrected block models
+generated at the same average degree and mixing cross at the same place although
+their degree variability differs by a factor of ten, and across those graphs the
+gain correlates with average degree at Spearman $+0.65$ and with degree
+variability at $-0.26$. The measurement noise present in how a graph was
+collected remains a correlate we have not separated.
 
 Where either condition fails, no benefit of any kind is present. For detection
 algorithms that choose their own granularity, on the sparse real networks we
