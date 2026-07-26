@@ -206,8 +206,13 @@ This paper contributes the following.
   namely a detection algorithm that takes the number of communities as an input
   and a graph carrying sufficient removable redundancy, established under controls
   that exclude granularity by construction, together with the negative territory
-  delimited across seven sparsifiers, four detection algorithms and seventeen
-  networks.
+  delimited across seven sparsifiers and four detection algorithms on seven real
+  networks. The negative result is not an artifact of the fragmentation that
+  sparsification induces: a connectivity-preserving sparsifier that cannot
+  disconnect a graph leaves no vertex in a small component, and modularity falls
+  by the same margin. We also report that these methods have a hard retention
+  floor on sparse graphs, so that aggressive sparsification is not merely
+  unhelpful there but unreachable.
 
   \item \textbf{An evaluation protocol, and the measured cost of omitting it.}
   Each control is motivated by a specific failure it catches, and the consequence
