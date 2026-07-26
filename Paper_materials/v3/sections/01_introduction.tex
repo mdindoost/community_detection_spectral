@@ -53,10 +53,10 @@ this paper addresses.
 % [B2+B3 merged: the claim, the line of work, and the conditions that did not travel]
 Satuluri et al.~\cite{satuluri2011local} introduced local similarity
 sparsification, in which each vertex retains the incident edges whose endpoints
-have the highest Jaccard similarity of neighbourhoods. Evaluating four clustering
-algorithms on seven networks, they reported speedups commonly between $10\times$
-and $50\times$ with little or no loss of cluster quality, and improved clustering
-accuracy for two of the four algorithms.
+have the highest Jaccard similarity of neighbourhoods. They reported speedups
+commonly between $10\times$ and $50\times$ with little or no loss of cluster
+quality, and improved accuracy for two of the four clustering algorithms they
+tested.
 
 The approach was taken up and extended. Hamann et
 al.~\cite{hamann2016structure} conducted a systematic comparison of
@@ -179,17 +179,15 @@ structure-aware rather than degree-driven, dissolves when granularity is matched
 when chance is subtracted, or when the baseline is given an equal compute budget.
 
 Where both conditions hold, the gain is real. On synthetic graphs with planted
-communities, holding
-the number of communities fixed by construction so that no granularity effect is
-possible, similarity-based sparsification raises both the objective measured on
-the original graph and chance-corrected agreement with the planted labels. On the objective the effect is
-absent at average degrees 11 and 25, present in eight of twelve configurations at
-49, in ten of twelve at 102, and in all twelve at 221. On chance-corrected
-recovery it is absent at 11, present in half the configurations at 25, in nine of
-twelve at 49, and in all twelve at 102 and 221. It survives the worst case over ten independent runs of the
-partitioner, and it is not reproduced by degree-based or uniform sparsification
-at identical retention, so it is a property of the similarity signal rather than
-of the edge budget. Injecting spurious edges makes the gain grow monotonically,
+communities, holding the number of communities fixed by construction so that no
+granularity effect is possible, similarity-based sparsification raises both the
+objective measured on the original graph and chance-corrected agreement with the
+planted labels. The effect is absent at the lowest densities, appears at an
+average degree of 49, and is present in nearly every configuration at 102 and
+above; recovery turns positive at a lower density than the objective does. It
+survives the worst case over ten independent runs of the partitioner, and it is
+not reproduced by degree-based or uniform sparsification at identical retention,
+so it is a property of the similarity signal rather than of the edge budget. Injecting spurious edges makes the gain grow monotonically,
 which is the signature the denoising explanation predicts.
 
 The outcome is therefore determined by two conditions acting together, and
