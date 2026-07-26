@@ -672,7 +672,9 @@ def run_network(name, do_metis=False):
     max_floor = max(mst_floor, lspar_floor, ld_floor, lsim_floor)
     ops = list(TARGETS)
     if max_floor > min(TARGETS) + 0.005:
-        ops.append(round(max_floor, 4))
+        # round UP: rounding down puts the op just below the backbone's own floor and
+        # the backbone arms get skipped at the very point that exists for them.
+        ops.append(float(np.ceil(max_floor * 1e4 + 1.0) / 1e4))
     ops = sorted(set(ops), reverse=True)
     log(f"  operating points (target realized retention): {ops}")
 

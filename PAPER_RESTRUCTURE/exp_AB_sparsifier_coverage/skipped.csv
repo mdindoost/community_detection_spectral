@@ -5,3 +5,5 @@ ca-CondMat,21363,91286,8.546177971258718,mst_jaccard,leiden,0.234,0.234011787130
 ca-CondMat,21363,91286,8.546177971258718,mst_random,leiden,0.234,0.2340117871305567,below_backbone_floor
 ca-CondMat,21363,91286,8.546177971258718,mst_jaccard,leiden,0.2,0.2340117871305567,below_backbone_floor
 ca-CondMat,21363,91286,8.546177971258718,mst_random,leiden,0.2,0.2340117871305567,below_backbone_floor
+com-Amazon,334863,925872,5.529855493141971,mst_jaccard,leiden,0.2,0.36167202377866486,below_backbone_floor
+com-Amazon,334863,925872,5.529855493141971,mst_random,leiden,0.2,0.36167202377866486,below_backbone_floor
