@@ -158,6 +158,29 @@ def main():
                 rec[f"{lab}_auc_end"] = float(e.auc_s.mean())
                 rec[f"{lab}_p_end"] = float(e.p_intra.mean())
                 rec[f"{lab}_hublift_end"] = float(e.hub_inter_lift.mean())
+                t0r = traj[(traj.network == net) & (traj.chain == ch) &
+                           (traj.spe == 0)]
+                ti0 = float(t0r.tri_intra.iloc[0])
+                sd0 = float(t0r.sd_s.iloc[0])
+                r0 = float(t0r.r_pb.iloc[0])
+                q0 = float(t0r.Q.iloc[0])
+                rec[f"{lab}_tri_intra_0"] = ti0
+                rec[f"{lab}_tri_intra_end"] = float(e.tri_intra.mean())
+                rec[f"{lab}_tri_inter_0"] = float(t0r.tri_inter.iloc[0])
+                rec[f"{lab}_tri_inter_end"] = float(e.tri_inter.mean())
+                rec[f"{lab}_sd_s_drift"] = float(e.sd_s.mean()) / sd0 - 1.0
+                rec[f"{lab}_Q_drift"] = float(np.abs(cc0.Q - q0).max())
+                rec[f"{lab}_term_scale"] = float(np.log(e.sd_s.mean() / sd0))
+                rec[f"{lab}_term_sorting"] = (
+                    float(np.log(e.r_pb.mean() / r0))
+                    if e.r_pb.mean() * r0 > 0 else np.nan)
+                print(f"        tri_intra {ti0:.3f} -> "
+                      f"{e.tri_intra.mean():.3f} "
+                      f"({(e.tri_intra.mean()/ti0-1)*100:+.1f}%);  "
+                      f"tri_inter {rec[f'{lab}_tri_inter_0']:.3f} -> "
+                      f"{rec[f'{lab}_tri_inter_end']:.3f};  "
+                      f"sd_s drift {rec[f'{lab}_sd_s_drift']*100:+.2f}%;  "
+                      f"max |Q-Q0| over chain {rec[f'{lab}_Q_drift']:.2e}")
                 rec[f"{lab}_neutral_at_end"] = bmean
                 rec[f"{lab}_neutral_2sd"] = 2 * bsd
                 rec[f"{lab}_separated"] = sep
