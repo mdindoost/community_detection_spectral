@@ -81,9 +81,11 @@ $\Delta Q_{\mathrm{transfer}}$ is negative in every cell. Uniform deletion uses
 no structural information, so the inflation comes from the objective rather than
 from any selection rule.}
 \label{tab:uniform}
+\small
+\setlength{\tabcolsep}{4pt}
 \begin{tabular}{@{}lccrr@{}}
 \toprule
-Network & $Q(P_{\mathrm{base}}, G)$ & $\rho$ & $\Delta Q_{\mathrm{self}}$ &
+Network & $Q_{\mathrm{base}}$ & $\rho$ & $\Delta Q_{\mathrm{self}}$ &
 $\Delta Q_{\mathrm{transfer}}$\\
 \midrule
 ca-CondMat  & 0.729 & 0.800 & $+0.0111$ & $-0.0164$\\
@@ -114,16 +116,17 @@ sparsifier settings under each algorithm. A flip is a cell where
 $\Delta Q_{\mathrm{self}} > 0$ and $\Delta Q_{\mathrm{transfer}} < 0$, so that
 the two accountings disagree on the sign of the conclusion.}
 \label{tab:accounting}
-\begin{tabular}{@{}lccccc@{}}
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}lcccc@{}}
 \toprule
-Algorithm & Cells & $\Delta Q_{\mathrm{self}}>0$ &
-$\Delta Q_{\mathrm{transfer}}>0$ & Flips & max $\Delta Q_{\mathrm{self}}$\\
+ & Infomap & Louvain & Lab.\ prop. & Total\\
 \midrule
-Infomap            & 21 & 20 & 6  & 14 & $+0.312$\\
-Louvain            & 21 & 20 & 0  & 20 & $+0.260$\\
-Label propagation  & 21 & 20 & 9  & 11 & $+0.537$\\
-\midrule
-Total              & 63 & 60 & 15 & 45 & $+0.537$\\
+Cells                              & 21 & 21 & 21 & 63\\
+$\Delta Q_{\mathrm{self}} > 0$     & 20 & 20 & 20 & 60\\
+$\Delta Q_{\mathrm{transfer}} > 0$ & 6  & 0  & 9  & 15\\
+Flips                              & 14 & 20 & 11 & 45\\
+max $\Delta Q_{\mathrm{self}}$ & $+0.312$ & $+0.260$ & $+0.537$ & $+0.537$\\
 \bottomrule
 \end{tabular}
 \end{table}
