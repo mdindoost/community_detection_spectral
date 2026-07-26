@@ -1,0 +1,235 @@
+====================================================================================================
+VARIANT: literal   arms up / down / neutral
+====================================================================================================
+
+### ca-GrQc
+  GATE2 delta(P0)@swap0 = 0.087235   exp_M delta_real = 0.087235   diff = +0.00e+00   [PASS]
+  exp_M delta_null(fresh Leiden on rewired) = 0.188996   p_real=0.8959 p_null=0.4760
+  NEUTRAL(neutral) end: spe=10.000 delta(P0)=-0.08918 p_intra=0.0415 auc_s=0.3389  [frozen-P0 quantity, NOT delta_null]
+  GATE1 neutral end + FRESH Leiden: delta=+0.18720 (exp_M delta_null +0.18900, rel -0.9%)  k=29 (exp_M 30) p=0.4799 (exp_M 0.4760)
+  UP  (up) last-defined point: spe=2.500 (chain stopped at spe=3.244, degenerate_p0=1) stalled=1 acc_rate_cum=0.14704 delta(P0)=+1.30628 r_pb=+0.0772 auc_s=0.9716 p=0.0004 hubLift=1.0004 Minter/Mtot=1.0000
+        neutral band @spe=2.500: -0.07507 +/- 2sd(0.00553) -> [-0.08060,-0.06954]  separated=True
+        tri_intra 11.728 -> 0.000 (-100.0%);  tri_inter 1.649 -> 1.221;  sd_s drift +25.00%;  max |Q-Q0| over chain 8.96e-01
+        P2 within-chain corr(hubLift, delta) = -0.5612  (per seed: [np.float64(-0.548), np.float64(-0.574)])
+  DOWN(down) last-defined point: spe=0.642 (chain stopped at spe=0.647, degenerate_p0=0) stalled=1 acc_rate_cum=0.01149 delta(P0)=-0.50458 r_pb=-0.6657 auc_s=0.0438 p=0.8455 hubLift=0.1442 Minter/Mtot=0.0048
+        neutral band @spe=0.642: -0.00669 +/- 2sd(0.00850) -> [-0.01519,+0.00182]  separated=True
+        tri_intra 11.728 -> 11.694 (-0.3%);  tri_inter 1.649 -> 0.002;  sd_s drift -4.54%;  max |Q-Q0| over chain 1.06e-01
+        P2 within-chain corr(hubLift, delta) = +0.9977  (per seed: [np.float64(0.998), np.float64(0.997)])
+  P1 magnitude: UP-end delta +1.30628 = 1197.9% of the delta_real->delta_null gap (target 25%); best point on chain +1.40523 = 1295.2%
+  P1 direction (UP>base and DOWN<base): True
+  P3 partial corr(log tri_ratio, delta | direction) = -0.8792  (|.|<0.4 required)   n=50
+  P4 fresh-Leiden delta at UP end = +0.05797 vs delta_real +0.08724  [fail]  AMI(P0)=0.0380; max over chain +0.17653
+     fresh-Leiden delta at DOWN end = -0.27799  AMI(P0)=0.5661
+  REGISTERED UNTESTABLE RULE fires (stall < 2 swaps/edge): ['down']
+
+### email-Eu-core
+  GATE2 delta(P0)@swap0 = 0.034000   exp_M delta_real = 0.034000   diff = +0.00e+00   [PASS]
+  exp_M delta_null(fresh Leiden on rewired) = 0.041288   p_real=0.5849 p_null=0.2549
+  NEUTRAL(neutral) end: spe=10.000 delta(P0)=-0.00049 p_intra=0.1647 auc_s=0.4786  [frozen-P0 quantity, NOT delta_null]
+  GATE1 neutral end + FRESH Leiden: delta=+0.04200 (exp_M delta_null +0.04129, rel +1.7%)  k=10 (exp_M 8) p=0.2502 (exp_M 0.2549)
+  UP  (up) last-defined point: spe=2.778 (chain stopped at spe=2.784, degenerate_p0=0) stalled=1 acc_rate_cum=0.03026 delta(P0)=+0.90135 r_pb=+0.2506 auc_s=0.9942 p=0.0012 hubLift=1.0012 Minter/Mtot=1.0000
+        neutral band @spe=2.778: -0.00210 +/- 2sd(0.00319) -> [-0.00529,+0.00109]  separated=True
+        tri_intra 19.502 -> 0.029 (-99.8%);  tri_inter 19.968 -> 29.478;  sd_s drift +29.13%;  max |Q-Q0| over chain 5.84e-01
+        P2 within-chain corr(hubLift, delta) = -0.5618  (per seed: [np.float64(-0.571), np.float64(-0.553)])
+  DOWN(down) last-defined point: spe=1.898 (chain stopped at spe=1.899, degenerate_p0=0) stalled=1 acc_rate_cum=0.02178 delta(P0)=-0.05460 r_pb=-0.2558 auc_s=0.2102 p=0.7761 hubLift=1.0919 Minter/Mtot=0.1126
+        neutral band @spe=1.898: -0.00214 +/- 2sd(0.00654) -> [-0.00868,+0.00440]  separated=True
+        tri_intra 19.502 -> 32.933 (+68.9%);  tri_inter 19.968 -> 1.384;  sd_s drift -6.06%;  max |Q-Q0| over chain 1.93e-01
+        P2 within-chain corr(hubLift, delta) = +0.9089  (per seed: [np.float64(0.914), np.float64(0.904)])
+  P1 magnitude: UP-end delta +0.90135 = 11901.3% of the delta_real->delta_null gap (target 25%); best point on chain +0.96494 = 12773.9%
+  P1 direction (UP>base and DOWN<base): True
+  P3 partial corr(log tri_ratio, delta | direction) = -0.8502  (|.|<0.4 required)   n=56
+  P4 fresh-Leiden delta at UP end = +0.02317 vs delta_real +0.03400  [fail]  AMI(P0)=-0.0002; max over chain +0.03954
+     fresh-Leiden delta at DOWN end = -0.02686  AMI(P0)=0.6382
+  REGISTERED UNTESTABLE RULE fires (stall < 2 swaps/edge): ['down']
+
+### ca-HepTh
+  GATE2 delta(P0)@swap0 = 0.173647   exp_M delta_real = 0.173647   diff = +0.00e+00   [PASS]
+  exp_M delta_null(fresh Leiden on rewired) = 0.214663   p_real=0.7991 p_null=0.4787
+  NEUTRAL(neutral) end: spe=10.000 delta(P0)=-0.03715 p_intra=0.0392 auc_s=0.4405  [frozen-P0 quantity, NOT delta_null]
+  GATE1 neutral end + FRESH Leiden: delta=+0.21319 (exp_M delta_null +0.21466, rel -0.7%)  k=50 (exp_M 53) p=0.4842 (exp_M 0.4787)
+  UP  (up) last-defined point: spe=2.500 (chain stopped at spe=3.082, degenerate_p0=1) stalled=1 acc_rate_cum=0.12928 delta(P0)=+1.29779 r_pb=+0.0412 auc_s=0.9766 p=0.0001 hubLift=1.0001 Minter/Mtot=1.0000
+        neutral band @spe=2.500: -0.03476 +/- 2sd(0.00388) -> [-0.03864,-0.03087]  separated=True
+        tri_intra 3.802 -> 0.000 (-100.0%);  tri_inter 1.653 -> 0.771;  sd_s drift +32.29%;  max |Q-Q0| over chain 7.99e-01
+        P2 within-chain corr(hubLift, delta) = -0.5665  (per seed: [np.float64(-0.564), np.float64(-0.569)])
+  DOWN(down) last-defined point: spe=1.467 (chain stopped at spe=1.470, degenerate_p0=0) stalled=1 acc_rate_cum=0.01867 delta(P0)=-0.50517 r_pb=-0.7058 auc_s=0.0378 p=0.8183 hubLift=0.1178 Minter/Mtot=0.0120
+        neutral band @spe=1.467: +0.00236 +/- 2sd(0.01601) -> [-0.01364,+0.01837]  separated=True
+        tri_intra 3.802 -> 2.938 (-22.7%);  tri_inter 1.653 -> 0.000;  sd_s drift -1.99%;  max |Q-Q0| over chain 1.52e-01
+        P2 within-chain corr(hubLift, delta) = +0.9987  (per seed: [np.float64(0.999), np.float64(0.999)])
+  P1 magnitude: UP-end delta +1.29779 = 2740.8% of the delta_real->delta_null gap (target 25%); best point on chain +1.31860 = 2791.5%
+  P1 direction (UP>base and DOWN<base): True
+  P3 partial corr(log tri_ratio, delta | direction) = -0.8613  (|.|<0.4 required)   n=52
+  P4 fresh-Leiden delta at UP end = +0.02895 vs delta_real +0.17365  [fail]  AMI(P0)=0.0085; max over chain +0.19942
+     fresh-Leiden delta at DOWN end = -0.25182  AMI(P0)=0.5231
+  REGISTERED UNTESTABLE RULE fires (stall < 2 swaps/edge): ['down']
+
+### ca-CondMat
+  GATE2 delta(P0)@swap0 = 0.112577   exp_M delta_real = 0.112577   diff = +0.00e+00   [PASS]
+  exp_M delta_null(fresh Leiden on rewired) = 0.101792   p_real=0.7591 p_null=0.4405
+  NEUTRAL(neutral) end: spe=10.000 delta(P0)=-0.02261 p_intra=0.0272 auc_s=0.4444  [frozen-P0 quantity, NOT delta_null]
+  GATE1 neutral end + FRESH Leiden: delta=+0.10469 (exp_M delta_null +0.10179, rel +2.8%)  k=34 (exp_M 37) p=0.4421 (exp_M 0.4405)
+  UP  (up) last-defined point: spe=3.434 (chain stopped at spe=3.436, degenerate_p0=0) stalled=1 acc_rate_cum=0.04561 delta(P0)=+1.76602 r_pb=+0.0301 auc_s=0.9974 p=0.0000 hubLift=1.0000 Minter/Mtot=1.0000
+        neutral band @spe=3.434: -0.02306 +/- 2sd(0.00181) -> [-0.02487,-0.02125]  separated=True
+        tri_intra 6.012 -> 0.000 (-100.0%);  tri_inter 4.391 -> 3.853;  sd_s drift +29.92%;  max |Q-Q0| over chain 7.59e-01
+        P2 within-chain corr(hubLift, delta) = -0.5816  (per seed: [np.float64(-0.586), np.float64(-0.577)])
+  DOWN(down) last-defined point: spe=2.132 (chain stopped at spe=2.139, degenerate_p0=0) stalled=1 acc_rate_cum=0.01961 delta(P0)=-0.34697 r_pb=-0.7133 auc_s=0.0325 p=0.8088 hubLift=0.1566 Minter/Mtot=0.0107
+        neutral band @spe=2.132: -0.00940 +/- 2sd(0.00178) -> [-0.01118,-0.00762]  separated=True
+        tri_intra 6.012 -> 3.495 (-41.9%);  tri_inter 4.391 -> 0.001;  sd_s drift -6.40%;  max |Q-Q0| over chain 1.88e-01
+        P2 within-chain corr(hubLift, delta) = +0.9982  (per seed: [np.float64(0.998), np.float64(0.998)])
+  P1 magnitude: UP-end delta +1.76602 = -15331.9% of the delta_real->delta_null gap (target 25%); best point on chain +1.76604 = -15332.1%
+  P1 direction (UP>base and DOWN<base): True
+  P3 partial corr(log tri_ratio, delta | direction) = -0.9572  (|.|<0.4 required)   n=60
+  P4 fresh-Leiden delta at UP end = +0.06871 vs delta_real +0.11258  [fail]  AMI(P0)=0.0113; max over chain +0.11449
+     fresh-Leiden delta at DOWN end = -0.23617  AMI(P0)=0.5841
+
+### email-Enron
+  GATE2 delta(P0)@swap0 = 0.150080   exp_M delta_real = 0.150080   diff = +0.00e+00   [PASS]
+  exp_M delta_null(fresh Leiden on rewired) = 0.239952   p_real=0.7311 p_null=0.3245
+  NEUTRAL(neutral) end: spe=10.000 delta(P0)=-0.05390 p_intra=0.1177 auc_s=0.4164  [frozen-P0 quantity, NOT delta_null]
+  GATE1 neutral end + FRESH Leiden: delta=+0.24154 (exp_M delta_null +0.23995, rel +0.7%)  k=162 (exp_M 145) p=0.3226 (exp_M 0.3245)
+  UP  (up) last-defined point: spe=3.901 (chain stopped at spe=3.919, degenerate_p0=0) stalled=1 acc_rate_cum=0.03591 delta(P0)=+1.60727 r_pb=+0.0317 auc_s=0.9756 p=0.0000 hubLift=1.0000 Minter/Mtot=1.0000
+        neutral band @spe=3.901: -0.05262 +/- 2sd(0.00175) -> [-0.05437,-0.05087]  separated=True
+        tri_intra 11.321 -> 0.000 (-100.0%);  tri_inter 13.974 -> 42.216;  sd_s drift +43.15%;  max |Q-Q0| over chain 7.31e-01
+        P2 within-chain corr(hubLift, delta) = -0.5398  (per seed: [np.float64(-0.542), np.float64(-0.538)])
+  DOWN(down) last-defined point: spe=1.951 (chain stopped at spe=1.958, degenerate_p0=0) stalled=1 acc_rate_cum=0.02673 delta(P0)=-0.43864 r_pb=-0.6622 auc_s=0.0389 p=0.8291 hubLift=0.3151 Minter/Mtot=0.0019
+        neutral band @spe=1.951: -0.03978 +/- 2sd(0.00056) -> [-0.04034,-0.03922]  separated=True
+        tri_intra 11.321 -> 21.098 (+86.4%);  tri_inter 13.974 -> 0.003;  sd_s drift -0.13%;  max |Q-Q0| over chain 1.24e-01
+        P2 within-chain corr(hubLift, delta) = +0.9982  (per seed: [np.float64(0.998), np.float64(0.998)])
+  P1 magnitude: UP-end delta +1.60727 = 1621.4% of the delta_real->delta_null gap (target 25%); best point on chain +1.75817 = 1789.3%
+  P1 direction (UP>base and DOWN<base): True
+  P3 partial corr(log tri_ratio, delta | direction) = -0.7869  (|.|<0.4 required)   n=60
+  P4 fresh-Leiden delta at UP end = +0.13344 vs delta_real +0.15008  [fail]  AMI(P0)=-0.0004; max over chain +0.16509
+     fresh-Leiden delta at DOWN end = -0.22691  AMI(P0)=0.3686
+  REGISTERED UNTESTABLE RULE fires (stall < 2 swaps/edge): ['down']
+====================================================================================================
+VARIANT: pfix   arms up_pfix / down_pfix / neutral_pfix
+====================================================================================================
+
+### ca-GrQc
+  GATE2 delta(P0)@swap0 = 0.087235   exp_M delta_real = 0.087235   diff = +0.00e+00   [PASS]
+  exp_M delta_null(fresh Leiden on rewired) = 0.188996   p_real=0.8959 p_null=0.4760
+  NEUTRAL(neutral_pfix) end: spe=2.000 delta(P0)=-0.02623 p_intra=0.8959 auc_s=0.4337  [frozen-P0 quantity, NOT delta_null]
+  UP  (up_pfix) last-defined point: spe=0.945 (chain stopped at spe=0.954, degenerate_p0=0) stalled=1 acc_rate_cum=0.00033 delta(P0)=+0.25037 r_pb=+0.2588 auc_s=0.7882 p=0.8959 hubLift=1.8181 Minter/Mtot=0.1929
+        neutral band @spe=0.945: -0.01362 +/- 2sd(0.00199) -> [-0.01561,-0.01163]  separated=True
+        tri_intra 11.728 -> 9.007 (-23.2%);  tri_inter 1.649 -> 11.828;  sd_s drift +2.95%;  max |Q-Q0| over chain 0.00e+00
+        P2 within-chain corr(hubLift, delta) = +0.9576  (per seed: [np.float64(0.959), np.float64(0.956)])
+  DOWN(down_pfix) last-defined point: spe=0.823 (chain stopped at spe=0.826, degenerate_p0=0) stalled=1 acc_rate_cum=0.00048 delta(P0)=-0.87449 r_pb=-0.8467 auc_s=0.0019 p=0.8959 hubLift=0.0609 Minter/Mtot=0.0011
+        neutral band @spe=0.823: -0.00512 +/- 2sd(0.00350) -> [-0.00862,-0.00161]  separated=True
+        tri_intra 11.728 -> 11.405 (-2.8%);  tri_inter 1.649 -> 0.000;  sd_s drift +9.89%;  max |Q-Q0| over chain 0.00e+00
+        P2 within-chain corr(hubLift, delta) = +0.9269  (per seed: [np.float64(0.93), np.float64(0.924)])
+  P1 magnitude: UP-end delta +0.25037 = 160.3% of the delta_real->delta_null gap (target 25%); best point on chain +0.25045 = 160.4%
+  P1 direction (UP>base and DOWN<base): True
+  P3 partial corr(log tri_ratio, delta | direction) = -0.8708  (|.|<0.4 required)   n=44
+  P4 fresh-Leiden delta at UP end = +0.19108 vs delta_real +0.08724  [PASS]  AMI(P0)=0.9442; max over chain +0.19953
+     fresh-Leiden delta at DOWN end = -0.32646  AMI(P0)=0.5405
+  REGISTERED UNTESTABLE RULE fires (stall < 2 swaps/edge): ['up', 'down']
+
+### email-Eu-core
+  GATE2 delta(P0)@swap0 = 0.034000   exp_M delta_real = 0.034000   diff = +0.00e+00   [PASS]
+  exp_M delta_null(fresh Leiden on rewired) = 0.041288   p_real=0.5849 p_null=0.2549
+  NEUTRAL(neutral_pfix) end: spe=2.000 delta(P0)=+0.01876 p_intra=0.5849 auc_s=0.6389  [frozen-P0 quantity, NOT delta_null]
+  UP  (up_pfix) last-defined point: spe=1.372 (chain stopped at spe=1.374, degenerate_p0=0) stalled=1 acc_rate_cum=0.00092 delta(P0)=+0.06921 r_pb=+0.3494 auc_s=0.9808 p=0.5849 hubLift=2.1400 Minter/Mtot=0.8193
+        neutral band @spe=1.372: +0.02102 +/- 2sd(0.00192) -> [+0.01910,+0.02294]  separated=True
+        tri_intra 19.502 -> 11.894 (-39.0%);  tri_inter 19.968 -> 48.686;  sd_s drift +3.04%;  max |Q-Q0| over chain 0.00e+00
+        P2 within-chain corr(hubLift, delta) = +0.9740  (per seed: [np.float64(0.969), np.float64(0.979)])
+  DOWN(down_pfix) last-defined point: spe=2.000 (chain stopped at spe=2.000, degenerate_p0=0) stalled=0 acc_rate_cum=0.01876 delta(P0)=-0.04077 r_pb=-0.2257 auc_s=0.1739 p=0.5849 hubLift=0.9022 Minter/Mtot=0.2140
+        neutral band @spe=2.000: +0.01876 +/- 2sd(0.00313) -> [+0.01563,+0.02189]  separated=True
+        tri_intra 19.502 -> 28.299 (+45.1%);  tri_inter 19.968 -> 2.307;  sd_s drift -6.02%;  max |Q-Q0| over chain 0.00e+00
+        P2 within-chain corr(hubLift, delta) = +0.9964  (per seed: [np.float64(0.997), np.float64(0.996)])
+  P1 magnitude: UP-end delta +0.06921 = 483.1% of the delta_real->delta_null gap (target 25%); best point on chain +0.06921 = 483.2%
+  P1 direction (UP>base and DOWN<base): True
+  P3 partial corr(log tri_ratio, delta | direction) = -0.9969  (|.|<0.4 required)   n=50
+  P4 fresh-Leiden delta at UP end = +0.04169 vs delta_real +0.03400  [PASS]  AMI(P0)=0.8241; max over chain +0.05447
+     fresh-Leiden delta at DOWN end = -0.01158  AMI(P0)=0.5087
+  REGISTERED UNTESTABLE RULE fires (stall < 2 swaps/edge): ['up']
+
+### ca-HepTh
+  GATE2 delta(P0)@swap0 = 0.173647   exp_M delta_real = 0.173647   diff = +0.00e+00   [PASS]
+  exp_M delta_null(fresh Leiden on rewired) = 0.214663   p_real=0.7991 p_null=0.4787
+  NEUTRAL(neutral_pfix) end: spe=2.000 delta(P0)=+0.05610 p_intra=0.7991 auc_s=0.5564  [frozen-P0 quantity, NOT delta_null]
+  UP  (up_pfix) last-defined point: spe=2.000 (chain stopped at spe=2.000, degenerate_p0=0) stalled=0 acc_rate_cum=0.00106 delta(P0)=+0.33320 r_pb=+0.4538 auc_s=0.9616 p=0.7991 hubLift=2.7888 Minter/Mtot=0.6813
+        neutral band @spe=2.000: +0.05610 +/- 2sd(0.00367) -> [+0.05242,+0.05977]  separated=True
+        tri_intra 3.802 -> 1.666 (-56.2%);  tri_inter 1.653 -> 11.750;  sd_s drift +4.47%;  max |Q-Q0| over chain 0.00e+00
+        P2 within-chain corr(hubLift, delta) = +0.9623  (per seed: [np.float64(0.963), np.float64(0.962)])
+  DOWN(down_pfix) last-defined point: spe=1.806 (chain stopped at spe=1.814, degenerate_p0=0) stalled=1 acc_rate_cum=0.00107 delta(P0)=-0.67683 r_pb=-0.8877 auc_s=0.0026 p=0.7991 hubLift=0.0016 Minter/Mtot=0.0065
+        neutral band @spe=1.806: +0.06101 +/- 2sd(0.00270) -> [+0.05831,+0.06371]  separated=True
+        tri_intra 3.802 -> 3.752 (-1.3%);  tri_inter 1.653 -> 0.000;  sd_s drift +8.48%;  max |Q-Q0| over chain 0.00e+00
+        P2 within-chain corr(hubLift, delta) = +0.9752  (per seed: [np.float64(0.974), np.float64(0.976)])
+  P1 magnitude: UP-end delta +0.33320 = 389.0% of the delta_real->delta_null gap (target 25%); best point on chain +0.33324 = 389.1%
+  P1 direction (UP>base and DOWN<base): True
+  P3 partial corr(log tri_ratio, delta | direction) = -0.9294  (|.|<0.4 required)   n=52
+  P4 fresh-Leiden delta at UP end = +0.21695 vs delta_real +0.17365  [PASS]  AMI(P0)=0.9053; max over chain +0.23616
+     fresh-Leiden delta at DOWN end = -0.34241  AMI(P0)=0.4097
+  REGISTERED UNTESTABLE RULE fires (stall < 2 swaps/edge): ['down']
+
+### ca-CondMat
+  GATE2 delta(P0)@swap0 = 0.112577   exp_M delta_real = 0.112577   diff = +0.00e+00   [PASS]
+  exp_M delta_null(fresh Leiden on rewired) = 0.101792   p_real=0.7591 p_null=0.4405
+  NEUTRAL(neutral_pfix) end: spe=2.000 delta(P0)=+0.05074 p_intra=0.7591 auc_s=0.5886  [frozen-P0 quantity, NOT delta_null]
+  UP  (up_pfix) last-defined point: spe=2.000 (chain stopped at spe=2.000, degenerate_p0=0) stalled=0 acc_rate_cum=0.00645 delta(P0)=+0.23181 r_pb=+0.4642 auc_s=0.9634 p=0.7591 hubLift=2.4789 Minter/Mtot=0.8599
+        neutral band @spe=2.000: +0.05074 +/- 2sd(0.00062) -> [+0.05012,+0.05136]  separated=True
+        tri_intra 6.012 -> 1.181 (-80.3%);  tri_inter 4.391 -> 15.094;  sd_s drift +4.48%;  max |Q-Q0| over chain 0.00e+00
+        P2 within-chain corr(hubLift, delta) = +0.9475  (per seed: [np.float64(0.949), np.float64(0.946)])
+  DOWN(down_pfix) last-defined point: spe=2.000 (chain stopped at spe=2.000, degenerate_p0=0) stalled=0 acc_rate_cum=0.00984 delta(P0)=-0.29802 r_pb=-0.6656 auc_s=0.0486 p=0.7591 hubLift=0.1094 Minter/Mtot=0.0140
+        neutral band @spe=2.000: +0.05074 +/- 2sd(0.00062) -> [+0.05012,+0.05136]  separated=True
+        tri_intra 6.012 -> 4.485 (-25.4%);  tri_inter 4.391 -> 0.001;  sd_s drift -6.33%;  max |Q-Q0| over chain 0.00e+00
+        P2 within-chain corr(hubLift, delta) = +0.9954  (per seed: [np.float64(0.995), np.float64(0.995)])
+  P1 magnitude: UP-end delta +0.23181 = -1105.6% of the delta_real->delta_null gap (target 25%); best point on chain +0.23191 = -1106.5%
+  P1 direction (UP>base and DOWN<base): True
+  P3 partial corr(log tri_ratio, delta | direction) = -0.8981  (|.|<0.4 required)   n=52
+  P4 fresh-Leiden delta at UP end = +0.15607 vs delta_real +0.11258  [PASS]  AMI(P0)=0.9180; max over chain +0.16804
+     fresh-Leiden delta at DOWN end = -0.20107  AMI(P0)=0.5308
+
+### email-Enron
+  GATE2 delta(P0)@swap0 = 0.150080   exp_M delta_real = 0.150080   diff = +0.00e+00   [PASS]
+  exp_M delta_null(fresh Leiden on rewired) = 0.239952   p_real=0.7311 p_null=0.3245
+  NEUTRAL(neutral_pfix) end: spe=2.000 delta(P0)=+0.07975 p_intra=0.7311 auc_s=0.6190  [frozen-P0 quantity, NOT delta_null]
+  UP  (up_pfix) last-defined point: spe=1.292 (chain stopped at spe=1.295, degenerate_p0=0) stalled=1 acc_rate_cum=0.00292 delta(P0)=+0.23327 r_pb=+0.3976 auc_s=0.9756 p=0.7311 hubLift=1.4057 Minter/Mtot=0.9256
+        neutral band @spe=1.292: +0.08883 +/- 2sd(0.00258) -> [+0.08625,+0.09141]  separated=True
+        tri_intra 11.321 -> 2.980 (-73.7%);  tri_inter 13.974 -> 98.962;  sd_s drift +4.20%;  max |Q-Q0| over chain 0.00e+00
+        P2 within-chain corr(hubLift, delta) = +0.9928  (per seed: [np.float64(0.992), np.float64(0.993)])
+  DOWN(down_pfix) last-defined point: spe=2.000 (chain stopped at spe=2.000, degenerate_p0=0) stalled=0 acc_rate_cum=0.01403 delta(P0)=-0.28538 r_pb=-0.5181 auc_s=0.0891 p=0.7311 hubLift=0.3658 Minter/Mtot=0.0034
+        neutral band @spe=2.000: +0.07975 +/- 2sd(0.00139) -> [+0.07836,+0.08114]  separated=True
+        tri_intra 11.321 -> 33.772 (+198.3%);  tri_inter 13.974 -> 0.006;  sd_s drift -2.16%;  max |Q-Q0| over chain 0.00e+00
+        P2 within-chain corr(hubLift, delta) = +0.9860  (per seed: [np.float64(0.986), np.float64(0.986)])
+  P1 magnitude: UP-end delta +0.23327 = 92.6% of the delta_real->delta_null gap (target 25%); best point on chain +0.23332 = 92.6%
+  P1 direction (UP>base and DOWN<base): True
+  P3 partial corr(log tri_ratio, delta | direction) = -0.9794  (|.|<0.4 required)   n=50
+  P4 fresh-Leiden delta at UP end = +0.16037 vs delta_real +0.15008  [PASS]  AMI(P0)=0.8500; max over chain +0.18681
+     fresh-Leiden delta at DOWN end = -0.11976  AMI(P0)=0.4876
+  REGISTERED UNTESTABLE RULE fires (stall < 2 swaps/edge): ['up']
+
+====================================================================================================
+POST-HOC (HYPOTHESIS): real vs null hub placement, exp_M columns
+====================================================================================================
+network           mass_real  mass_null   hb_real   hb_null  hubL_real  hubL_null    d_real    d_null
+ca-GrQc              0.0526     0.6594    0.4782    1.7582     0.9665     1.1721    0.0872    0.1890
+email-Eu-core        0.5999     0.8040    2.1131    1.4035     1.4700     1.0573    0.0340    0.0413
+ca-HepTh             0.2844     0.6775    1.5813    1.9289     1.4219     1.2138    0.1736    0.2147
+ca-CondMat           0.4413     0.6547    2.4896    1.4928     1.4863     1.1211    0.1126    0.1018
+email-Enron          0.5225     0.9030    2.9744    4.4719     1.1942     1.0839    0.1501    0.2400
+
+wrote verdicts.csv
+
+====================================================================================================
+PREDICTION TALLIES
+====================================================================================================
+
+[literal]  networks with data: 5
+  P1 direction (UP>base, DOWN<base): 5/5
+  P1 magnitude >=25% of gap at chain end: 4/5; at best point on chain: 4/5
+  P1 (letter, excluding networks flagged UNTESTABLE): testable = 1/5
+  P2 mean within-chain corr(hubLift,delta) up: -0.5622; >0.8 on 0/5
+  P2 mean within-chain corr(hubLift,delta) down: +0.9803; >0.8 on 5/5
+  P3 |partial corr| < 0.4: 0/5 (values [-0.879, -0.85, -0.861, -0.957, -0.787])
+  P4 fresh delta(UP end) > delta_real: 0/5
+  KILL: UP and DOWN both separated from neutral +/-2sd: 5/5
+
+[pfix]  networks with data: 5
+  P1 direction (UP>base, DOWN<base): 5/5
+  P1 magnitude >=25% of gap at chain end: 4/5; at best point on chain: 4/5
+  P1 (letter, excluding networks flagged UNTESTABLE): testable = 1/5
+  P2 mean within-chain corr(hubLift,delta) up: +0.9668; >0.8 on 5/5
+  P2 mean within-chain corr(hubLift,delta) down: +0.9760; >0.8 on 5/5
+  P3 |partial corr| < 0.4: 0/5 (values [-0.871, -0.997, -0.929, -0.898, -0.979])
+  P4 fresh delta(UP end) > delta_real: 5/5
+  KILL: UP and DOWN both separated from neutral +/-2sd: 5/5
