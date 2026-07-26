@@ -50,11 +50,13 @@ N_ITER = 2
 BASE_SEEDS = [100, 101, 102, 103, 104]     # best-of-5 restarts on the original graph
 REP_SEEDS = [300, 301, 302]                # 3 replicates per arm
 MATCH_SEEDS = list(range(900, 1000))       # runtime-matched restart pool
+METIS_SEEDS = [0, 1, 2, 3, 4]              # Metis option seeds (exp_AA metis_noise)
 TARGETS = [0.5, 0.2]
 FRAG_MAX = 10                              # clusters with size < FRAG_MAX are fragments
 RESMATCH_TRIGGER = 0.25                    # |dk|/k above this -> resolution-matched control
-RESMATCH_MAX_CALLS = 26
-RESMATCH_TIME_BUDGET = 1500.0
+RESMATCH_MAX_CALLS = 22
+RESMATCH_TIME_BUDGET = 900.0               # per resolution-match bisection
+RESMATCH_NETWORK_BUDGET = 7200.0           # total per network; beyond this we skip+flag
 MIN_GT_SIZE = 3
 CHANCE_SEED = 7
 
@@ -533,18 +535,20 @@ def leiden_matched(g, seed, target, tol=0.05, max_iter=RESMATCH_MAX_CALLS,
 # ---------------------------------------------------------------------------
 
 def build_nk(n, E):
+    """Undirected NetworKit graph with exactly one entry per igraph edge.
+
+    NOTE: nk.GraphFromCoo with both (u,v) and (v,u) yields 2m edges even when
+    directed=False, which silently doubles every retention ratio.  Verified on
+    ca-HepTh (24,806 igraph edges -> 49,612 nk edges); we therefore add each edge
+    once, and assert the count.
+    """
     import networkit as nk
-    try:
-        rows = np.concatenate([E[:, 0], E[:, 1]])
-        cols = np.concatenate([E[:, 1], E[:, 0]])
-        data = np.ones(rows.size, dtype=np.float64)
-        G = nk.GraphFromCoo((data, (rows, cols)), n=n, weighted=False, directed=False)
-    except Exception:
-        G = nk.Graph(n, weighted=False, directed=False)
-        for u, v in E:
-            G.addEdge(int(u), int(v))
+    G = nk.Graph(n, weighted=False, directed=False)
+    for u, v in E:
+        G.addEdge(int(u), int(v))
     G.removeSelfLoops()
     G.indexEdges()
+    assert G.numberOfEdges() == E.shape[0], (G.numberOfEdges(), E.shape[0])
     return G
 
 
@@ -654,27 +658,41 @@ def run_network(name, do_metis=False):
     lspar_floor = ls.retention(0.0)
     kn_probe = KNeighbor(E, n, REP_SEEDS[0])
     kn_ret_k1 = kn_probe.retention(1.0)
+    ld_floor = ld_spars.getSparsifiedGraph(nkG, 1.0, ld_attr).numberOfEdges() / m
+    lsim_floor = lsim_spars.getSparsifiedGraph(nkG, 1.0, lsim_attr).numberOfEdges() / m
     log(f"  jaccard {T_jaccard:.2f}s  lspar_rank {T_lspar_rank:.2f}s  mst {T_mst:.2f}s  "
         f"nk_build {T_nk_build:.2f}s  ld_score {T_ld_score:.2f}s  lsim_score {T_lsim_score:.2f}s")
-    log(f"  FLOORS: mst_backbone=(n-1)/m={mst_floor:.4f}  lspar(e->0)={lspar_floor:.4f}  "
-        f"kn(k=1)={kn_ret_k1:.4f}")
+    log(f"  RETENTION FLOORS: mst_backbone=(n-1)/m={mst_floor:.4f}  "
+        f"lspar(e->0)={lspar_floor:.4f}  ld(param=1)={ld_floor:.4f}  "
+        f"lsim(param=1)={lsim_floor:.4f}  kn(integer k=1)={kn_ret_k1:.4f}")
 
     # ---- operating points -------------------------------------------------
+    # {0.5, 0.2} as registered, plus the largest hard floor when it exceeds 0.2, so
+    # that there is one aggressive point at which ALL SEVEN arms are matched.
+    max_floor = max(mst_floor, lspar_floor, ld_floor, lsim_floor)
     ops = list(TARGETS)
-    if mst_floor > min(TARGETS) + 0.005:
-        ops.append(round(mst_floor, 4))
+    if max_floor > min(TARGETS) + 0.005:
+        ops.append(round(max_floor, 4))
     ops = sorted(set(ops), reverse=True)
     log(f"  operating points (target realized retention): {ops}")
 
     # ---- resolution-matched cache ----------------------------------------
     resmatch_cache = {}
+    resmatch_spent = [0.0]
+    per_call_budget = min(RESMATCH_TIME_BUDGET, max(120.0, 25.0 * T_leiden_orig))
 
     def resmatch(nc_target):
-        key = int(round(nc_target / max(1.0, 0.05 * nc_target)))   # 5% buckets
+        key = int(round(np.log(max(nc_target, 1.0)) / np.log(1.05)))   # 5% log buckets
         if key in resmatch_cache:
             return resmatch_cache[key]
+        if resmatch_spent[0] > RESMATCH_NETWORK_BUDGET:
+            log(f"    [resmatch] SKIPPED for target_nc={nc_target:.0f} "
+                f"(network budget {RESMATCH_NETWORK_BUDGET:.0f}s exhausted)")
+            return None
         t = time.perf_counter()
-        memb, gamma, nc_r, calls = leiden_matched(g, BASE_SEEDS[0], int(round(nc_target)))
+        memb, gamma, nc_r, calls = leiden_matched(
+            g, BASE_SEEDS[0], int(round(nc_target)), time_budget=per_call_budget)
+        resmatch_spent[0] += time.perf_counter() - t
         Q_r = float(g.modularity(memb.tolist()))
         out = dict(memb=memb, gamma=gamma, nc=nc_r, Q=Q_r, calls=calls,
                    secs=time.perf_counter() - t)
@@ -778,6 +796,11 @@ def run_network(name, do_metis=False):
                 log(f"    {arm:12s} SKIPPED: target {target} < backbone floor {mst_floor:.4f}")
                 continue
 
+            mean_ret = float(np.mean(rets))
+            if mean_ret > target + 0.02:
+                status = "at_floor"          # sparsifier cannot prune this far
+            elif mean_ret < target - 0.02:
+                status = "coarse_grid"       # overshoot from a coarse parameter grid
             Qor_m = float(np.mean(Q_or))
             T_leiden_sparse = float(np.mean(Ts))
             T_sparsify = float(np.mean(Tsp))
@@ -795,8 +818,10 @@ def run_network(name, do_metis=False):
                 arm=arm, detector="leiden", stochastic=int(stoch),
                 target_ret=target, realized_ret=float(np.mean(rets)),
                 realized_ret_std=float(np.std(rets)), param=params[0], status=status,
+                matched=int(abs(float(np.mean(rets)) - target) <= 0.02),
                 m_sparse=int(round(np.mean(rets) * m)),
-                mst_floor=mst_floor, lspar_floor=lspar_floor, kn_ret_k1=kn_ret_k1,
+                mst_floor=mst_floor, lspar_floor=lspar_floor, ld_floor=ld_floor,
+                lsim_floor=lsim_floor, kn_ret_k1=kn_ret_k1,
                 # honest transfer
                 Q_base_mean=Qb_mean, Q_base_std=Qb_std, Q_base_best=Qb_best,
                 nc_base=nc_base,
@@ -834,7 +859,7 @@ def run_network(name, do_metis=False):
                 speedup_detect_only=T_leiden_orig / T_leiden_sparse,
             )
             append_row(res_csv, row)
-            log(f"    {arm:12s} ret={row['realized_ret']:.4f} nc={nc_sparse:8.0f} "
+            log(f"    {arm:12s} ret={row['realized_ret']:.4f}[{status}] nc={nc_sparse:8.0f} "
                 f"frag={row['frag_node_frac']*100:6.2f}% "
                 f"dQ_mean={row['dQ_vs_base_mean']:+.5f} dQ_best5={row['dQ_vs_base_best']:+.5f} "
                 f"dQ_match={row['dQ_vs_matched']:+.5f}(r={n_restarts}) "
@@ -842,62 +867,107 @@ def run_network(name, do_metis=False):
                 f"T_sp={T_sparsify:.1f}s spd={row['speedup_pipeline']:.2f}x")
             del gs
 
-    # ---- optional fixed-k Metis arm --------------------------------------
+    # ---- optional fixed-k Metis arm (exp_AA protocol: multi-seed, worst case) ----
     if do_metis:
-        log(f"\n  ==== Metis (fixed k) on {name} ====")
+        import warnings
+        warnings.filterwarnings("ignore", category=DeprecationWarning)
+        log(f"\n  ==== Metis (fixed k = nc_base) on {name} ====")
         k_fix = int(round(nc_base))
-        mb, T_mb = metis_partition(g, k_fix, seed=0)
-        Q_mb = float(g.modularity(mb.tolist()))
-        rec_row("baseline", 1.0, 1.0, 0, mb, dict(resolution="", detector="metis"))
-        log(f"    metis base k={k_fix} Q_orig={Q_mb:.6f} T={T_mb:.2f}s")
+        Qm_b, Tm_b, AMIm_b, F1m_b, mb = [], [], [], [], None
+        for s in METIS_SEEDS:
+            p, dt = metis_partition(g, k_fix, seed=s)
+            Qm_b.append(float(g.modularity(p.tolist()))); Tm_b.append(dt)
+            r = rec_eval(p) if mode else {}
+            if r.get("AMI", "") != "":
+                AMIm_b.append(r["AMI"])
+            if r.get("avgF1_ge3", "") != "":
+                F1m_b.append(r["avgF1_ge3"])
+            rec_row("baseline", 1.0, 1.0, s, p, dict(resolution="", detector="metis"))
+            if mb is None:
+                mb = p
+        Q_mb_mean, Q_mb_best = float(np.mean(Qm_b)), float(np.max(Qm_b))
+        T_mb = float(np.mean(Tm_b))
+        fs_mb = frag_stats(mb, n)
+        log(f"    metis base k={k_fix} Q={Q_mb_mean:.6f}+-{np.std(Qm_b):.6f} "
+            f"best={Q_mb_best:.6f} "
+            f"AMI={np.mean(AMIm_b) if AMIm_b else float('nan'):.4f} T={T_mb:.3f}s")
         for target in ops:
             for arm in ARMS:
-                obj, realized, T_s, prm, status = sparsify(arm, target, REP_SEEDS[0])
-                if status == "below_backbone_floor":
+                Qm_a, Tm_a, AMIm_a, F1m_a, rets_a, ms_first = [], [], [], [], [], None
+                fsl = []
+                gs = None
+                for i, s in enumerate(METIS_SEEDS[:3]):
+                    if (arm in STOCHASTIC) or i == 0:
+                        obj, realized, T_s, prm, status = sparsify(arm, target, REP_SEEDS[i % 3])
+                        if status == "below_backbone_floor":
+                            break
+                        gs = make_graph(arm, obj)
+                    ms, T_ms = metis_partition(gs, k_fix, seed=s)
+                    Qm_a.append(float(g.modularity(ms.tolist()))); Tm_a.append(T_ms)
+                    rets_a.append(realized)
+                    fsl.append(frag_stats(ms, n))
+                    r = rec_eval(ms) if mode else {}
+                    if r.get("AMI", "") != "":
+                        AMIm_a.append(r["AMI"])
+                    if r.get("avgF1_ge3", "") != "":
+                        F1m_a.append(r["avgF1_ge3"])
+                    rec_row(arm, target, round(realized, 5), s, ms,
+                            dict(resolution="", detector="metis"))
+                    if ms_first is None:
+                        ms_first = ms
+                if status == "below_backbone_floor" or not Qm_a:
                     continue
-                gs = make_graph(arm, obj)
-                ms, T_ms = metis_partition(gs, k_fix, seed=0)
-                Qo = float(g.modularity(ms.tolist()))
-                fs = frag_stats(ms, n)
-                rec = rec_eval(ms) if mode else {}
-                rec_row(arm, target, round(realized, 5), 0, ms,
-                        dict(resolution="", detector="metis"))
+                Qa_mean, Qa_min = float(np.mean(Qm_a)), float(np.min(Qm_a))
+                realized = float(np.mean(rets_a))
+                rec = rec_eval(ms_first) if mode else {}
                 row = dict(
                     network=name, n=n, m=m, avg_deg=2.0 * m / n, arm=arm,
-                    detector="metis", stochastic=0, target_ret=target,
-                    realized_ret=realized, realized_ret_std=0.0,
+                    detector="metis", stochastic=int(arm in STOCHASTIC), target_ret=target,
+                    realized_ret=realized, realized_ret_std=float(np.std(rets_a)),
                     param=prm.get("param", ""), status=status,
+                    matched=int(abs(realized - target) <= 0.02),
                     m_sparse=int(round(realized * m)),
-                    mst_floor=mst_floor, lspar_floor=lspar_floor, kn_ret_k1=kn_ret_k1,
-                    Q_base_mean=Q_mb, Q_base_std=0.0, Q_base_best=Q_mb, nc_base=k_fix,
-                    Q_sparse_on_sparse=float(gs.modularity(ms.tolist())),
-                    Q_orig_mean=Qo, Q_orig_std=0.0, Q_orig_max=Qo,
-                    dQ_naive="", dQ_vs_base_mean=Qo - Q_mb, dQ_vs_base_best=Qo - Q_mb,
-                    dQ_vs_matched=Qo - Q_mb, Q_matched_best=Q_mb, n_restarts=1,
-                    budget=T_s + T_ms,
-                    nc_sparse=fs["n_clusters"],
-                    frag_nodes=fs["frag_nodes"], frag_node_frac=fs["frag_node_frac"],
-                    n_frag_clusters=fs["n_frag_clusters"],
-                    n_singletons=fs["n_singletons"],
-                    max_cluster_frac=fs["max_cluster_frac"],
-                    frag_nodes_base=int(frag_stats(mb, n)["frag_nodes"]),
-                    frag_node_frac_base=frag_stats(mb, n)["frag_node_frac"],
+                    mst_floor=mst_floor, lspar_floor=lspar_floor, ld_floor=ld_floor,
+                    lsim_floor=lsim_floor, kn_ret_k1=kn_ret_k1,
+                    Q_base_mean=Q_mb_mean, Q_base_std=float(np.std(Qm_b)),
+                    Q_base_best=Q_mb_best, nc_base=k_fix,
+                    Q_sparse_on_sparse=float(gs.modularity(ms_first.tolist())),
+                    Q_orig_mean=Qa_mean, Q_orig_std=float(np.std(Qm_a)),
+                    Q_orig_max=float(np.max(Qm_a)),
+                    dQ_naive="", dQ_vs_base_mean=Qa_mean - Q_mb_mean,
+                    dQ_vs_base_best=Qa_mean - Q_mb_best,
+                    dQ_vs_matched=Qa_min - Q_mb_best,     # worst-case, exp_AA metis_noise
+                    Q_matched_best=Q_mb_best, n_restarts=len(Qm_b),
+                    budget=T_s + float(np.mean(Tm_a)),
+                    nc_sparse=float(np.mean([f["n_clusters"] for f in fsl])),
+                    frag_nodes=float(np.mean([f["frag_nodes"] for f in fsl])),
+                    frag_node_frac=float(np.mean([f["frag_node_frac"] for f in fsl])),
+                    n_frag_clusters=float(np.mean([f["n_frag_clusters"] for f in fsl])),
+                    n_singletons=float(np.mean([f["n_singletons"] for f in fsl])),
+                    max_cluster_frac=float(np.mean([f["max_cluster_frac"] for f in fsl])),
+                    frag_nodes_base=fs_mb["frag_nodes"],
+                    frag_node_frac_base=fs_mb["frag_node_frac"],
                     resmatch_done=0, nc_resmatch="", gamma_resmatch="", Q_resmatch="",
                     dQ_vs_resmatch="",
-                    AMI=rec.get("AMI", ""), ARI=rec.get("ARI", ""), NMI=rec.get("NMI", ""),
+                    AMI=(float(np.mean(AMIm_a)) if AMIm_a else ""),
+                    ARI=rec.get("ARI", ""), NMI=rec.get("NMI", ""),
                     AMI_chance=rec.get("AMI_chance", ""),
-                    avgF1_ge3=rec.get("avgF1_ge3", ""),
+                    avgF1_ge3=(float(np.mean(F1m_a)) if F1m_a else ""),
                     avgF1_chance=rec.get("avgF1_chance", ""),
-                    T_leiden_orig=T_mb, T_sparsify=T_s, T_leiden_sparse=T_ms,
-                    T_pipeline=T_s + T_ms,
-                    speedup_pipeline=T_mb / max(T_s + T_ms, 1e-9),
-                    speedup_detect_only=T_mb / max(T_ms, 1e-9),
+                    T_leiden_orig=T_mb, T_sparsify=T_s,
+                    T_leiden_sparse=float(np.mean(Tm_a)),
+                    T_pipeline=T_s + float(np.mean(Tm_a)),
+                    speedup_pipeline=T_mb / max(T_s + float(np.mean(Tm_a)), 1e-9),
+                    speedup_detect_only=T_mb / max(float(np.mean(Tm_a)), 1e-9),
                 )
                 append_row(res_csv, row)
+                dami = ((float(np.mean(AMIm_a)) - float(np.mean(AMIm_b)))
+                        if (AMIm_a and AMIm_b) else float("nan"))
+                df1 = ((float(np.mean(F1m_a)) - float(np.mean(F1m_b)))
+                       if (F1m_a and F1m_b) else float("nan"))
                 log(f"    metis {arm:12s} t={target} ret={realized:.4f} "
-                    f"dQ={Qo-Q_mb:+.6f} "
-                    f"{('AMI=%.4f' % rec['AMI']) if rec.get('AMI') not in ('', None) else ''}"
-                    f"{('avgF1=%.4f' % rec['avgF1_ge3']) if rec.get('avgF1_ge3') not in ('', None) else ''}")
+                    f"dQ_mean={Qa_mean-Q_mb_mean:+.6f} dQ_worst={Qa_min-Q_mb_best:+.6f} "
+                    f"dAMI={dami:+.4f} davgF1={df1:+.4f}")
                 del gs
 
     log(f"\n  {name} DONE in {time.perf_counter()-t0:.1f}s")
