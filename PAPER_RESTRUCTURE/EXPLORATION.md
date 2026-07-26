@@ -35,7 +35,10 @@ into prose happens afterwards, story-first, per the discipline in STORY.md.
    (fallback `ulimit -v`). All CSV writes incremental/append. Per-run logs. Check `free -g`
    before large graphs. Local machine = 14GB RAM (OOM-killed us once); Fuji = 62GB / 24 cores /
    Python 3.10 / disk was 98% full — check `df -h` before writing anything big.
-8. **No .tex edits during exploration.** STORY.md edits only with Mohammad's explicit sign-off.
+8. **No .tex edits during exploration.** STORY.md: evidence-backed claim-table updates that
+   record verified experiment verdicts are applied directly and flagged in the report
+   (Mohammad, 2026-07-25: "why are you waiting for my sign off if it is worth doing");
+   genuine narrative pivots (thesis/framing changes) still need his explicit sign-off.
 9. **α=1.0 is the no-sparsification sentinel** in all of Mohammad's experiment configs.
 10. **Scale to the claim.** Cheap version first; scale up only if the cheap version says the
     idea is alive. Kill criteria are honored — no "one more tweak" after a kill.
@@ -65,8 +68,9 @@ into prose happens afterwards, story-first, per the discipline in STORY.md.
 - **Exp N (Enron anatomy, exp_N_enron_anatomy/)**: COMPLETE, SUMMARY.md committed. Gain
   survives adversarial granularity check; mechanism = 2.58x biased removal of hub-mediated
   boundary edges; no separate basin; compute claim must be phrased in expectation only.
-- **Pending user sign-off**: STORY.md C8 row update (proposed text in exp_M SUMMARY §"Effect on
-  claim C8"); C9 enrichment from Exp N; Exp L's eventual claim row.
+- **STORY.md claims table updated directly (2026-07-25)**: C8 (exp_M mechanism), C9 (exp_N
+  anatomy + exp_R iteration control), C6 (exp_O verdict), new C16 (exp_L), C17 reserved for
+  exp_V. Remaining tex-side integration happens in the assembly phase after exploration.
 
 ## Experiment roster
 
