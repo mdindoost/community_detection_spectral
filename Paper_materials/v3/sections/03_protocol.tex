@@ -248,10 +248,13 @@ double edge swaps, which holds every vertex degree exactly and destroys the
 community structure. A signal that reappears on the rewiring is not evidence
 about communities.
 
-Two quantities fail this test. The first is the change in modularity of a fixed
-partition when the graph is sparsified, which is positive on all seventeen
-networks we tested; on their rewirings it is positive on all seventeen as well,
-and larger than the real value on fifteen of them. The second is the separation
+Two quantities fail this test. Both are measured across seventeen real networks,
+from $10^3$ to $3.8 \times 10^6$ vertices, under degree-based sparsification with
+one Leiden partition held fixed per graph and nulls built from $10m$ double edge
+swaps. The first is the change in modularity of that fixed partition when the
+graph is sparsified, which is positive on all seventeen networks; on their
+rewirings it is positive on all seventeen as well, and larger than the real value
+on fifteen of them. The second is the separation
 between the scores a degree-based sparsifier assigns to within-community and
 between-community edges, which on the rewirings is larger than on the real graphs
 in sixteen of seventeen cases, with a median ratio of $1.60$. Real community
@@ -272,8 +275,9 @@ deploying a similarity signal. On email-Enron, weighting each edge by
 $1 + J(u,v)$, with $J$ the Jaccard similarity of the endpoint neighbourhoods,
 raises modularity measured on the original graph to $0.6153 \pm 0.0034$ against a
 baseline of $0.6071$ and a compute-matched best of $0.6051$, a gain of $+0.0102$
-at five pooled standard deviations. Permuting those same weights across edges
-gives $0.6168 \pm 0.0020$, a gain of $+0.0117$, which is larger. On a
+at $3.7$ times the pooled standard deviation. Permuting those same weights across
+edges gives $0.6168 \pm 0.0020$, a gain of $+0.0117$ at $6.0$ pooled standard
+deviations, which is larger. On a
 degree-preserving rewiring of ca-CondMat, where the similarity signal is absent
 by construction, weighting still produces $+0.0023$ and clears the same
 significance test. What the weights contribute is heterogeneity in the
@@ -281,23 +285,27 @@ optimizer's search rather than information about communities.
 
 \subsection{Realized retention}\label{sec:protocol:retention}
 
-Retention is measured, never assumed. The sampling scheme in common use clips
-per-edge probabilities at one, and between 13\% and 35\% of edges reach that
-clip, so the expected number of retained edges falls below the nominal $\alpha m$
-and saturates: at $\alpha = 1.0$ one of our networks retains $0.662$ of its
-edges, and at $\alpha = 0.95$ another retains $0.447$. Three samplers that all
-describe themselves by the same $\alpha$ realize $0.33$ to $0.55$, $0.37$ to
-$0.68$, and, once the scale factor is solved by bisection, $0.70$ to $0.95$.
-Sparsifiers are compared at matched realized retention throughout, and the
-realized value appears in every table.
+We report retention as the measured fraction of edges kept, because the nominal
+parameter of a sampler does not determine it. The scheme in common use clips
+per-edge probabilities at one, and across six networks at four targets between
+12\% and 36\% of edges reach that clip, so the expected number of retained edges
+falls below the nominal $\alpha m$ and saturates. On email-Eu-core the expected
+retention at $\alpha = 1.0$ is $0.665$, and on wiki-Vote at $\alpha = 0.95$ it is
+$0.447$. Three samplers that all describe themselves by the same $\alpha$ realize
+different fractions: sampling with replacement gives $0.33$ to $0.52$ across
+seventeen networks at a nominal $0.8$, the clipped no-replacement scheme gives
+$0.37$ to $0.68$ across those six networks and four targets, and solving the
+scale factor by bisection on the same cells gives $0.70$ to $0.95$. Sparsifiers
+are compared at matched realized retention throughout, and the realized value
+appears in every table.
 
 Two properties of the local selection rules limit what can be matched. The
 achievable retentions form a coarse grid, so that on com-Amazon local similarity
 sparsification can produce only $0.301$ and $0.542$ and nothing between them. And
 several methods cannot reach aggressive retention on a sparse graph at all,
-because each vertex keeps at least one incident edge; the resulting floors reach
-$0.36$ on the sparsest network we test, which is reported with the results rather
-than treated as a free parameter.
+because each vertex keeps at least one incident edge. The resulting floors reach
+$0.36$ on com-Amazon, the sparsest network we test at average degree $5.5$, and
+we report them with the results.
 
 A comparison must also be like for like in what is removed. A method that deletes
 vertices as well as edges scores its partition on a smaller and denser
@@ -313,14 +321,17 @@ al.~\cite{gottesburen2025linear} recommend after measuring the same overhead in
 graph partitioning. The comparison is the whole pipeline, sparsifier included,
 against one run of the same detection algorithm on the original graph.
 
-Among the cells of our largest sweep that preserve quality, the greatest
-end-to-end speedup is $0.66\times$, which is slower than not sparsifying.
-Speedups above $1.5\times$ occur in 12 of 63 cells, and every one of them loses
-modularity. Discounting the sparsifier entirely and timing only the detection
-step, the median speedup is between $1.15\times$ and $1.63\times$ by algorithm,
-well short of the factor of two that halving the edges suggests, because all
-three algorithms return more communities on a sparsified graph and do more work
-per pass.
+Of the 63 configurations in Table~\ref{tab:accounting}, four preserve quality, in
+the sense of coming within $0.005$ of the best-of-$N$ baseline, and the greatest
+end-to-end speedup among them is $0.66\times$, which is slower than not
+sparsifying. Speedups above $1.5\times$ occur in 12 of the 63 cells, and all 12
+lose modularity, by $0.015$ to $0.162$ against the compute-matched baseline.
+Discounting the sparsifier entirely and timing only the detection step, the
+median speedup is $1.21\times$ for Infomap, $1.63\times$ for Louvain and
+$1.15\times$ for label propagation, well short of the factor of two that halving
+the edges suggests, because all three algorithms return more communities on a
+sparsified graph, on average $1.4$, $8.9$ and $2.3$ times as many, and do more
+work per pass.
 
 \begin{table*}[t]
 \centering
@@ -367,11 +378,3 @@ No quality-preserving configuration exceeds $0.66\times$
 \end{tabular}
 \end{table*}
 
-\subsection{Pre-registration}\label{sec:protocol:prereg}
-
-Each experiment in this study has a design document written before its code,
-fixing what is measured, what is predicted, and what outcome would end the line of
-work. Several of the predictions were ours and failed. The synthetic sweep that
-locates the boundary was registered with the prediction that sparsification would
-not produce an honest modularity gain at any density, and the fixed-$k$ arm
-falsified it.
