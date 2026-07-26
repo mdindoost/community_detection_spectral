@@ -84,6 +84,13 @@ into prose happens afterwards, story-first, per the discipline in STORY.md.
   memory-bound regime where edge reduction = feasibility, not speed. The one unconditional
   "sparsification pays" statement.
 
+- **Exp V — "spending the signal"** (greenlit, DESIGN.md pre-registered, commit ba85b8a):
+  can L-Spar's verified structure-aware Jaccard signal be deployed for an honest gain —
+  weighting (w=1+J, J-shuffle sharp null), seeding (sparse->refine), protected deletion —
+  under full controls; adjudicates the com-Amazon anomaly. Constructive positive => new C17;
+  negative => strengthened thesis. Prior art to position against: Khadivi 2011, Berry 2011,
+  adaptive-modularity-weighting 2017 (their evaluations have the artifact shapes we audit).
+
 ### Tier 2 — raises the ceiling
 - **Exp T — predictor at scale**: 100+ networks (Netzschleuder), statistics pre-registered
   BEFORE any results are read (list them in DESIGN.md and freeze). Claim: C10 becomes a real
