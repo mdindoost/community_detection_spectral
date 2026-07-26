@@ -89,30 +89,27 @@ best recover reference communities are not the ones that score best on modularit
 
 ---
 
-## Decisions to make before drafting
+## Decisions — SETTLED by Mohammad, 2026-07-26
 
-**D1 — Does B4 name names?** We can show three contemporary instances of the missing control,
-one of them a released benchmark's code line. Options: (a) name them in the introduction, with the
-arithmetic; (b) name them in related work only, and keep the introduction at "much of the
-literature"; (c) name none, describe the pattern. *Recommendation:* (b). The introduction stays
-about the science, the receipts live in related work, and nobody is ambushed in a first paragraph.
-Fairness also requires that wherever we name them we note that the 2011 paper did it right.
+**D1 — SETTLED: no names in the introduction.** The contemporary instances of the missing control
+(including a benchmark's released code line and a reported modularity above its graph's maximum)
+live in related work, with the arithmetic. The introduction stays about the science. Wherever they
+are named, fairness requires noting that the 2011 paper did it right.
 
-**D2 — How prominent is our own error?** Our February draft committed the same error. Disclosing
-it in the introduction is disarming and buys enormous credibility; it also risks reading as
-confessional. *Recommendation:* one clause in B4 or B5 — "including, in an earlier version of this
-work, our own" — and nothing more. It converts the paper from prosecution to shared correction.
+**D2 — SETTLED: our own earlier draft is NOT mentioned. It was never published.**
+Mohammad's ruling, and it is correct: an unpublished manuscript is not part of the literature and
+there is nothing to disclose. Confessing to a paper no one has seen would be performance, not
+candour. The internal record (PAPER_RESTRUCTURE/) keeps the history; the paper does not.
+*Consequence:* B4 and B5 carry no self-referential clause.
 
-**D3 — Does the introduction preview the dissociation (B7-iv)?** It is our most interesting
-observation and our least-tested. *Recommendation:* one sentence in the contribution list, framed
-as an open phenomenon, never as a result. It sets up the discussion and seeds the next paper.
+**D3 — SETTLED: preview the dissociation as an open phenomenon**, one sentence in the contribution
+list, never stated as a result.
 
-**D4 — Length.** Journals tolerate 1.5–2 pages. Seven beats is right for that. If it must shrink,
-B1 and B2 merge; B4 never shrinks.
+**D4 — SETTLED: no length constraint while drafting.** Write it complete; cut only what proves
+unnecessary once the body exists. Do not pre-compress.
 
-**D5 — Where does the mechanism work sit?** It explains the boundary but is not the story.
-*Recommendation:* one line in B6 and one contribution bullet; the full treatment in its own
-section.
+**D5 — SETTLED: mechanism gets one line in B6 and one contribution bullet**; full treatment in its
+own section.
 
 ---
 
