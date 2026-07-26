@@ -140,13 +140,20 @@ controlled experiments. Predictions and stopping rules were fixed before each
 experiment was run, and several of our own hypotheses did not survive them.
 
 % [B6: the boundary]
-Sparsification improves community detection above an average degree of
-approximately 50, for detection algorithms that take the number of communities as
-an input, and not otherwise. The transition is abrupt, and it falls at the
-threshold reported in the original synthetic sweep.
+On the graphs examined in this study, sparsification improves community detection
+only for detection algorithms that take the number of communities as an input,
+and only where the graph is dense enough to carry redundant edges. The transition
+between the two regimes is sharp within a given family of graphs, but its
+location is not universal. On the synthetic benchmarks we generate it falls near
+an average degree of 50, which is also the threshold reported in the original
+synthetic sweep. On the real networks we test it has already occurred at an
+average degree of 29, the lowest density at which we ran a fixed-$k$ partitioner
+on a real graph, so the transition there lies at or below that value. We
+therefore state the condition rather than a threshold, and the numbers we report
+describe the graphs in this study rather than graphs in general.
 
-Below it, no benefit of any kind is present. For modularity-family detectors with
-free granularity, on graphs with average degree between 5 and 33, no sparsifier
+Where either condition fails, no benefit of any kind is present. For
+modularity-family detectors with free granularity, on graphs with average degree between 5 and 33, no sparsifier
 we tested improves modularity measured on the original graph beyond the variation
 of a small number of random restarts, at any retention level that preserves
 quality, under any of the four algorithms examined. Nor is there a speed benefit.
@@ -159,7 +166,8 @@ and in the one case where a sparsifier's edge-selection signal is demonstrably
 structure-aware rather than degree-driven, dissolves when granularity is matched,
 when chance is subtracted, or when the baseline is given an equal compute budget.
 
-Above it the gain is real. On synthetic graphs with planted communities, holding
+Where both conditions hold, the gain is real. On synthetic graphs with planted
+communities, holding
 the number of communities fixed by construction so that no granularity effect is
 possible, similarity-based sparsification raises both the objective measured on
 the original graph and chance-corrected agreement with the planted labels. The
@@ -174,8 +182,8 @@ The outcome is therefore determined by two conditions acting together, and
 neither is sufficient on its own. A fixed-$k$ partitioner applied to a sparse
 graph shows no gain in any configuration we tested, and a free-granularity
 optimizer applied to a dense one shows none either once granularity is
-controlled. The gain appears only where high average degree and a fixed community
-count coincide. Which sparsifier is used matters less than either condition,
+controlled. The gain appears only where sufficient density and a fixed community count
+coincide. Which sparsifier is used matters less than either condition,
 provided its selection signal reflects local structure rather than degree alone.
 The mechanism is consistent with this. The quantity governing a degree-based
 sparsifier's effect on modularity is the separation between the scores it assigns to within-community
