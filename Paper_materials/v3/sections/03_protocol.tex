@@ -32,18 +32,27 @@ in the sections that follow is produced under all of them.
 
 \subsection{One yardstick for two partitions}\label{sec:protocol:transfer}
 
-A sparsify-then-detect pipeline returns a partition of the vertex set, and so
-does the detection algorithm applied to the original graph. Both describe the
-same vertices, and the question is which of them describes $G$ better, so both
-are scored on $G$:
-\begin{equation}\label{eq:honest}
-\Delta Q \;=\; Q(P_{\mathrm{sparse}}, G) \;-\; Q(P_{\mathrm{base}}, G),
-\qquad P_{\mathrm{sparse}} = \mathcal{A}(G'),
-\end{equation}
-where $\mathcal{A}$ is the detection algorithm and $G'$ the sparsified graph.
-Detection may use any graph; scoring uses the original. The alternative
-accounting scores $P_{\mathrm{sparse}}$ on $G'$ and $P_{\mathrm{base}}$ on $G$,
-and so compares two numbers computed on two different objects.
+Detection may use any graph; scoring must use the original one. Let
+$\mathcal{A}$ be a detection algorithm, $G$ the original graph and $G'$ a
+sparsified copy of it. The two partitions under comparison are
+$P_{\mathrm{sparse}} = \mathcal{A}(G')$ and $P_{\mathrm{base}} = \mathcal{A}(G)$,
+and since both are partitions of the same vertex set, the question the pipeline
+raises is which of them better describes $G$. Two accountings of that question
+appear in this literature:
+\begin{align}
+\Delta Q_{\mathrm{transfer}} &= Q(P_{\mathrm{sparse}}, G) - Q(P_{\mathrm{base}},
+G), \label{eq:transfer}\\
+\Delta Q_{\mathrm{self}} &= Q(P_{\mathrm{sparse}}, G') - Q(P_{\mathrm{base}}, G).
+\label{eq:self}
+\end{align}
+They differ in one place, the graph on which the first term is evaluated.
+Equation~\eqref{eq:transfer} measures both partitions with a single instrument.
+Equation~\eqref{eq:self} changes the instrument between the arm under test and
+the arm it is tested against, and the instrument it applies to the former is the
+graph from which edges have been removed. We report
+$\Delta Q_{\mathrm{transfer}}$ throughout; $\Delta Q_{\mathrm{self}}$ appears in
+released benchmark tooling and in recent work in this line, documented in
+Section~\ref{sec:related}.
 
 The requirement is stated in the paper that introduced the pipeline. Measuring
 quality on the sparsified graph, Satuluri et al.\ write, ``would tell us nothing
@@ -51,8 +60,8 @@ about how well the sparsified graph retained the cluster structure in the
 original graph''~\cite[\S4.3]{satuluri2011local}, and their reported conductances
 are computed on the original graph throughout.
 
-Why the two accountings differ is visible in the objective. Modularity scores a
-partition $P$ of a graph with $m$ edges by
+The two accountings diverge systematically, and the objective shows why.
+Modularity scores a partition $P$ of a graph with $m$ edges by
 \begin{equation}\label{eq:modularity}
 Q(P, G) \;=\; \sum_{C \in P} \left[ \frac{m_C}{m} - \gamma
 \left( \frac{D_C}{2m} \right)^{\!2} \right],
@@ -248,7 +257,7 @@ last column reports what we measure when the control is absent.}
 Failure & Control & Measured consequence of omitting it\\
 \midrule
 Quality read off the sparsified graph &
-Score both partitions on the original graph, Eq.~\eqref{eq:honest} &
+Score both partitions on the original graph, Eq.~\eqref{eq:transfer} &
 The sign of the conclusion differs in 45 of 63 configurations; positive in 60 of
 63 one way and in 15 of 63 the other (\S\ref{sec:protocol:transfer})\\
 Finer partitions score higher &
