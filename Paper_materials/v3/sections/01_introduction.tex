@@ -91,18 +91,25 @@ the unsparsified graph at an average degree of approximately 50. To our
 knowledge, no subsequent work examines that threshold.
 
 % [B4: the lost control and what its absence costs (THE HINGE)]
-A measurement requirement is also frequently omitted, and the omission has a
-direct bearing on what can be concluded. A sparsifier intended for community
-detection removes edges lying between communities in preference to edges lying
-within them. Quality measures for a partition, including modularity and
-conductance, penalize exactly the between-community edges that such a sparsifier
-removes. A partition evaluated on the sparsified graph is therefore evaluated
-against a graph from which its penalty term has been partially deleted, and the
-resulting quantity reflects the sparsifier's selectivity rather than the extent
-to which community structure was preserved. The comparison that answers the
-intended question evaluates the partition obtained from the sparsified graph and
-the partition obtained from the original graph on the same graph, namely the
-original one.
+These extensions also change what has to be measured. The question a
+sparsify-then-detect pipeline is meant to answer is whether the communities of
+the original graph can still be recovered after most of its edges are removed.
+The object of interest is therefore the original graph, and the quantity to be
+compared is the quality, on that graph, of two partitions: the one obtained by
+running the detection algorithm on the sparsified graph, and the one obtained by
+running it on the original graph directly. Both partitions cover the same vertex
+set, so both can be scored on the same object, and the difference between those
+two scores is the effect of sparsification.
+
+Evaluating the first partition on the sparsified graph instead measures something
+else. A sparsifier intended for community detection removes edges lying between
+communities in preference to edges lying within them, and quality measures for a
+partition, including modularity and conductance, penalize exactly those
+between-community edges. A partition scored on the sparsified graph is thus
+scored against a graph from which part of its own penalty term has been deleted,
+and the resulting value reflects how selectively the sparsifier removed edges
+rather than how much community structure survived. The two quantities are not
+comparable, and only the first answers the question.
 
 This requirement is stated in the 2011 paper, whose authors write that they
 ``cannot simply measure the conductance using the very same sparsified graph,
