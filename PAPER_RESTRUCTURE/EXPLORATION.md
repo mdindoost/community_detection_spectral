@@ -163,6 +163,36 @@ the null arm reproduces the gradient within noise on ≥half the networks, the h
 and the observation stays a descriptive footnote. No rescue tweaks.
 **Output:** PAPER_RESTRUCTURE/exp_O_core_preservation/{DESIGN.md,run.py,results CSVs,SUMMARY.md}.
 
+## THE DISCRIMINATING VARIABLE (established 2026-07-26 by the steelman pass)
+
+Mohammad's standing instinct from the very beginning — *"we remove edges, so we must go back to
+the MAIN graph to compare"* — is not merely one control among several. The literature audit shows
+it is **the single variable that separates the papers that got the right answer from the ones that
+did not**, and it cuts across decades, methods, and venues:
+
+- **Satuluri 2011 (SIGMOD, the founding claim) DID it**, explicitly and in writing: "we cannot
+  simply measure the conductance using the very same sparsified graph, since that would tell us
+  nothing about how well the sparsified graph retained the cluster structure in the original
+  graph. Therefore, we report the conductances of the clusters obtained from the sparsified graphs
+  also using the structure of the original graph." They also fixed k (Metis/Graclus take k as
+  input) and charged sparsification time to their speedups.
+- **Pari et al. 2026 (ERSCD) did NOT.** They report Q = 0.87 on football; the maximum attainable
+  modularity on that graph is 0.6046 and ground truth scores 0.554. The number is arithmetically
+  impossible on the original graph. Honest transfer of their own partition: 0.598, below plain
+  Louvain. (references/NOTES_effres_2026.md)
+- **Chen et al. 2024 (PVLDB, the field's most rigorous benchmark) ships it as a DEFAULT in code**:
+  `src/metrics_nk.py:414`, `Modularity().getQuality(C, Graph)` with `Graph` = the sparsified graph.
+- **Our own February draft did NOT** — which is how the headline claim survived to a full draft.
+
+**The narrative this implies (candidate paper spine): the field REGRESSED.** The discipline was
+stated correctly in 2011 by the paper that started the line, and it has been progressively
+forgotten — to the point where a 2026 paper reports an impossible modularity and the best
+benchmark's tooling computes the artifact by default. Our contribution is then not "we discovered
+the artifact" (Satuluri knew) but *"we can prove what its absence does: it flips the sign of the
+conclusion in 45 of 63 controlled cells across four detection algorithms, and here is the
+protocol that prevents it."* That is a stronger, more citable, and more honest position than a
+discovery claim, and it credits the 2011 authors rather than attacking them.
+
 ## After exploration: SYNTHESIS, not writing (Mohammad's rule, 2026-07-25)
 
 When the roster is done, the next phase is NOT tex assembly. It is a deliberate synthesis
