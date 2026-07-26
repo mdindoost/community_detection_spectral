@@ -89,11 +89,10 @@ into prose happens afterwards, story-first, per the discipline in STORY.md.
 - **Exp S — com-Orkut feasibility demo** (117M edges, needs Fuji, dataset must be downloaded):
   memory-bound regime where edge reduction = feasibility, not speed. The one unconditional
   "sparsification pays" statement. BLOCKED on Fuji disk cleanup — Mohammad will say when.
-- **Small threads APPROVED by Mohammad 2026-07-25** (do if they help the paper — they do):
-  H-O1 leaf-shedding (pre-registered follow-up of exp_O, cheap, sharpens the exp_O negative
-  into a degree/k-core statement) and a Youtube mini-anatomy (C9's second gain gets the exp_N
-  treatment: statistical reality + granularity check + boundary-removal mechanism; run on
-  Fuji, com-Youtube dataset needs rsync ~35MB). Queue after P/Q are in flight.
+- **Small threads APPROVED by Mohammad 2026-07-25**: H-O1 leaf-shedding = **Exp W, DONE,
+  hypothesis DEAD** (kill fired 0/9; fragments are mid-degree, hubs never shed, null MORE
+  leaf-selective — see exp_W_leaf_shedding/SUMMARY.md); Youtube mini-anatomy = Exp X, running
+  on Fuji.
 - **Exp T decision deferred until after Exp P** (Mohammad 2026-07-25).
 
 - **Exp V — "spending the signal"** (greenlit, DESIGN.md pre-registered, commit ba85b8a):

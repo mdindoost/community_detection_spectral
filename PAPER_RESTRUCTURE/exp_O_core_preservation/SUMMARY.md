@@ -146,13 +146,13 @@ re-slicing was used to reach the verdicts above; every threshold is the register
 
 ## HYPOTHESES (post-hoc, not results -- each needs its own pre-registration)
 
-- **H-O1 (leaf-shedding).** The real phenomenon may be degree/k-core-selective rather than
-  embeddedness-selective: fragments concentrate in low-degree, low-coreness nodes. A direct test
-  would stratify fragment composition by k-core index and degree with a granularity-matched
-  control. The coreness- and degree-decile agreement gradients recorded here
-  (`core_ah_gap`, `deg_ah_gap`, `ahc_d*`, `ahd_d*`) are the raw material: they are strongly
-  NEGATIVE on email-Enron under L-Spar (-0.128 at 0.5, -0.318 at 0.2), i.e. the graph's k-core
-  is where the assignment moves.
+- **H-O1 (leaf-shedding). [RESOLVED by Exp W, 2026-07-25: DEAD — kill criterion fired 0/9
+  cells. Fragments are mid-degree/mid-coreness nodes, hubs are never shed, and on email-Enron
+  fragment degrees exceed the graph median; the config null is MORE leaf-selective than the
+  real graph in 8/8 cells. See exp_W_leaf_shedding/SUMMARY.md.]** Original hypothesis text:
+  the real phenomenon may be degree/k-core-selective rather than embeddedness-selective:
+  fragments concentrate in low-degree, low-coreness nodes. A direct test would stratify
+  fragment composition by k-core index and degree with a granularity-matched control.
 - **H-O2 (boundary-only gradient).** Agreement appears depressed only for nodes with a nonzero
   fraction of out-of-community neighbours; among fully embedded nodes (20-66% of the graph) it is
   flat. A pre-registered version would bin by *number* of boundary edges rather than by decile.
