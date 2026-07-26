@@ -24,8 +24,11 @@
 % STYLE: no em-dashes, no AI-characteristic phrasing (see STYLE.md).
 % ============================================================
 
-Every number reported in the rest of this paper is produced under the controls
-stated here; Table~\ref{tab:protocol} collects them.
+Section~\ref{sec:intro} listed four requirements, each belonging to a specific
+class of method rather than to sparsification in general. This section states
+them as controls. Each is given with the failure it catches and with what we
+measure when it is absent. Table~\ref{tab:protocol} collects them. Every number
+in the sections that follow is produced under all of them.
 
 \subsection{One yardstick for two partitions}\label{sec:protocol:transfer}
 
@@ -60,9 +63,10 @@ The subtracted term is normalized by $m$. Deleting edges shrinks it, so
 modularity computed on a sparsified graph rises whether or not the partition has
 improved, and the rise is larger the more edges are removed.
 
-The inflation does not require a sparsifier that selects intelligently. Uniform
-random edge deletion, whose selection rule uses no information at all, was scored
-both ways on three networks at two retention levels. Modularity measured on the sparsified graph rises in all six cells, by up
+The effect is not small and it is not confined to sparsifiers that select
+intelligently. Uniform random edge deletion, whose selection rule uses no
+information at all, was scored both ways on three networks at two retention
+levels. Modularity measured on the sparsified graph rises in all six cells, by up
 to $+0.011$. The same partitions scored on the original graph fall in all six, by
 up to $-0.025$. The sign of the conclusion is opposite in every cell, and the gap
 between the two accountings roughly doubles when retention falls from $0.9$ to
@@ -142,9 +146,9 @@ $0.308$.
 We therefore report both: the compute-matched figure, which is the fair
 accounting of what the pipeline costs, and the best of a fixed number of
 restarts, which is a strictly more generous baseline that can only handicap the
-treatment. A result counts as surviving only if it survives both. The controls
-compose, so the granularity control is applied to results that have already
-passed the compute test.
+treatment. A result counts as surviving only if it survives both. This is also
+the reason the granularity control above is applied to results that have already
+passed the compute test, rather than in place of it.
 
 \subsection{Nulls}\label{sec:protocol:nulls}
 
