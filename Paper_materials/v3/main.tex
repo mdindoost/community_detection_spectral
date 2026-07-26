@@ -1,14 +1,14 @@
 % =====================================================================
 % THE BOUNDARY OF GRAPH SPARSIFICATION FOR COMMUNITY DETECTION
-% Version 3 — written clean, 2026-07-26.
+% Version 3 : written clean, 2026-07-26.
 %
 % RULE FOR THIS FILE (Mohammad, 2026-07-26): no text is inherited from
 % main-tnse.tex (v1) or main-v2.tex (v2). Every sentence is written fresh
 % against the evidence in PAPER_RESTRUCTURE/. Prior drafts are not
-% consulted for prose, framing, or ordering — only the CSVs and the
+% consulted for prose, framing, or ordering : only the CSVs and the
 % verified claims table (phase2_writing/STORY.md) are inputs.
 %
-% ORDER OF WRITING (Mohammad's rule): introduction first — it carries the
+% ORDER OF WRITING (Mohammad's rule): introduction first : it carries the
 % story. Abstract and conclusion are written LAST.
 % =====================================================================
 
@@ -40,13 +40,13 @@ E-mail: \{md724, bd344, ikoutis, bader\}@njit.edu}}
 
 \maketitle
 
-% ---------------------------------------------------------------------
-% ABSTRACT — WRITTEN LAST. Do not draft here until the body is settled.
-% ---------------------------------------------------------------------
+%
+% ABSTRACT : WRITTEN LAST. Do not draft here until the body is settled.
+%
 \begin{abstract}
 % TODO (last): written after the body. Must state the boundary (degree
 % threshold + algorithm family), the cost of the missing control
-% (45/63 sign flips), and the protocol — in that order.
+% (45/63 sign flips), and the protocol : in that order.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -54,37 +54,37 @@ Graph sparsification, community detection, modularity, evaluation methodology,
 graph reduction.
 \end{IEEEkeywords}
 
-% ---------------------------------------------------------------------
+%
 \section{Introduction}\label{sec:intro}
 \input{sections/01_introduction}
 
-% ---------------------------------------------------------------------
-% SKELETON BELOW — section order is provisional and will be settled after
+%
+% SKELETON BELOW : section order is provisional and will be settled after
 % the introduction is written, since the introduction determines what the
 % body must deliver and in what order.
-% ---------------------------------------------------------------------
+%
 
 \section{Background and Setting}\label{sec:background}
 % TODO
 
 \section{What Honest Evaluation Requires}\label{sec:protocol}
-% TODO — the controls, each motivated by a failure it catches.
+% TODO : the controls, each motivated by a failure it catches.
 
 \section{The Mechanism}\label{sec:mechanism}
-% TODO — delta, its decomposition, the causal steering result.
+% TODO : delta, its decomposition, the causal steering result.
 
-\section{Where Sparsification Does Not Help}\label{sec:negative}
-% TODO — the sparse/low-degree regime, both sparsifier families, four algorithms.
+\section{Below the Boundary: Where Sparsification Does Not Help}\label{sec:negative}
+% TODO: the sparse/low-degree regime, both sparsifier families, four algorithms.
 
-\section{Where It Does}\label{sec:positive}
-% TODO — the degree threshold, fixed-k partitioners, Exp AA.
+\section{The Boundary}\label{sec:boundary}
+\input{sections/05_boundary}
 
 \section{Discussion}\label{sec:discussion}
-% TODO — the dissociation; what the boundary means for practice.
+% TODO : the dissociation; what the boundary means for practice.
 
-% ---------------------------------------------------------------------
-% CONCLUSION — WRITTEN LAST.
-% ---------------------------------------------------------------------
+%
+% CONCLUSION : WRITTEN LAST.
+%
 \section{Conclusion}\label{sec:conclusion}
 % TODO (last).
 

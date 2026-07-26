@@ -1,0 +1,197 @@
+% ============================================================
+% SECTION 5: THE BOUNDARY. Written clean 2026-07-26 from exp_AA.
+% Evidence: PAPER_RESTRUCTURE/exp_AA_satuluri_regime/{SUMMARY.md,
+%   results_armA.csv, results_armB.csv, results_armC.csv,
+%   metis_noise.csv, lfr_generation.csv}
+% Weight: HEAVY, equal to the whole negative-territory section
+% (PAPER_STRUCTURE.md). This carries the paper's novel finding.
+% STYLE: no em-dashes, no AI-characteristic phrasing (see STYLE.md).
+% ============================================================
+
+Everything to this point has been measured on real networks whose average degree
+lies between 5.5 and 32.6, and on that territory the answer is uniformly
+negative. That range is not a neutral choice. It is the range in which
+sparsification for community detection is normally studied, and it lies entirely
+below the one quantitative boundary the founding work
+names~\cite{satuluri2011local}: a synthetic sweep in which local similarity
+sparsification ``actually outperforms the original clustering starting from
+degree 50.'' A negative result confined to one side of a boundary answers half
+the question. This section supplies the other half.
+
+\subsection{Design}
+
+Three properties are required of the setting. Average degree must vary over an
+order of magnitude while everything else is held fixed. Community labels must be
+known rather than inferred. And the granularity artifact that accounts for most
+of the apparent gains in this literature must be removable by construction rather
+than by control.
+
+Synthetic benchmarks with planted communities supply the first two. A fixed-$k$
+partitioner supplies the third. If the number of communities is an input to the
+algorithm, then the sparsified and unsparsified arms return the same number of
+communities by definition, and no difference between them can be attributed to
+one partition being finer than the other.
+
+We generate LFR benchmark graphs~\cite{lancichinetti2008benchmark} with
+$n = 10^4$ nodes and degree exponent $2.1$, matching the generator settings of
+the original sweep, at nominal average degrees of $10$, $25$, $50$, $100$ and
+$200$, at two mixing levels, with three graphs per configuration. Realized degree
+and mixing are recorded per graph, and all results are reported against realized
+values. Three sparsifiers are applied at matched realized retention: local
+similarity sparsification, degree-based sparsification, and uniform random edge
+deletion. Detection is performed both by a free-granularity modularity optimizer
+and, through the \texttt{pymetis} bindings, by Metis, a fixed-$k$
+balance-constrained cut partitioner from the family the original accuracy claim
+concerns. Quality is scored on the original graph throughout. Recovery is
+measured against the planted labels with chance-corrected indices and a
+size-matched random-partition floor.
+
+\subsection{The threshold}
+
+Table~\ref{tab:boundary} reports, for each average degree, the number of
+configurations in which similarity-based sparsification improves modularity
+measured on the original graph, and the number in which it improves
+chance-corrected agreement with the planted communities, out of twelve
+configurations per degree.
+
+\begin{table}[t]
+\centering
+\caption{Fixed-$k$ partitioner (Metis), realized mixing $\approx 0.6$. Counts are
+configurations out of twelve in which similarity sparsification improves the
+quantity named, with the mean change beside them. Modularity is measured on the
+\emph{original} graph. Because $k$ is an input to the partitioner, the sparsified
+and unsparsified arms return identical community counts, so no granularity effect
+is possible.}
+\label{tab:boundary}
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+Avg.\ degree & $\Delta Q > 0$ & mean $\Delta Q$ & $\Delta\mathrm{AMI} > 0$ & mean $\Delta\mathrm{AMI}$\\
+\midrule
+11.2  & 0/12  & $-0.103$ & 0/12  & $-0.216$\\
+24.6  & 0/12  & $-0.046$ & 6/12  & $-0.072$\\
+49.4  & 8/12  & $-0.016$ & 9/12  & $+0.042$\\
+101.9 & 10/12 & $+0.006$ & 12/12 & $+0.116$\\
+220.9 & 12/12 & $+0.009$ & 12/12 & $+0.093$\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Below average degree $25$, the method is harmful on both measures in every
+configuration tested. At $49.4$ it becomes beneficial in two thirds of them. By
+$101.9$ it is beneficial in all twelve configurations on recovery and ten of
+twelve on the objective. The strongest individual cells occur at aggressive
+retention: at average degree $49.4$ and $15\%$ retention, the partition obtained
+from the sparsified graph scores $+0.005$ modularity and $+0.152$ AMI above the
+partition obtained from the original graph, and at $220.9$ the modularity gain
+reaches $+0.012$.
+
+The location of this transition was not chosen by us, and it was not known to us
+when the experiment was designed. It coincides with the degree at which the
+original authors reported their method beginning to overtake the unsparsified
+baseline.
+
+\subsection{Three ways the result could be spurious}
+
+\paragraph{Run-to-run variation}
+Metis is not deterministic across option seeds. We repeated the decisive cells
+with ten partitioner seeds per graph and compared the \emph{worst} sparsified run
+against the \emph{best} unsparsified run. The gain survives that comparison at
+every degree at or above $49.4$, with worst-case modularity differences of
+$+0.001$, $+0.005$ and $+0.008$, and worst-case AMI differences of $+0.134$,
+$+0.102$ and $+0.064$. Seed standard deviations are $0.002$ in modularity and
+$0.011$ in AMI, so the effect exceeds the noise it must clear by a factor of
+between two and sixty.
+
+\paragraph{The edge budget rather than the selection}
+Any sparsifier at $15\%$ retention produces a smaller graph that is denser within
+communities, and a fixed-$k$ partitioner may simply behave better on such a
+graph. Degree-based and uniform random sparsification, applied to the same graphs
+at the same realized retention, do not reproduce the effect at any degree. Their
+modularity changes run from $-0.145$ to $-0.003$, and their recovery changes from
+$-0.480$ to $+0.032$. What produces the gain is the similarity signal used to
+choose which edges to keep, not the number of edges kept.
+
+\paragraph{Granularity}
+The partitioner takes the community count as an input, and both arms are run with
+the same value, so the two partitions being compared have identical community
+counts by construction. This is the artifact that no amount of matching fully
+excludes on a free-granularity detector, and here it is excluded structurally. We
+also record cluster-size balance and find it slightly improved rather than
+degraded under sparsification, so the gain is not purchased by producing more
+uneven communities.
+
+\subsection{The same graphs, a different algorithm family}
+
+Running a free-granularity modularity optimizer on the identical graphs gives a
+different answer. Modularity gains never exceed the spread of a handful of random
+restarts. Recovery gains do appear, and they grow with degree, reaching $+0.096$
+AMI, but they do not survive the granularity control. Partitioning the original
+graph at a resolution tuned to match the sparsified partition's community count
+recovers the planted communities as well or better in twenty-one of the
+twenty-nine configurations where the comparison is defined. What appeared to be a
+benefit of sparsification is the benefit of a finer partition, obtainable without
+touching the graph.
+
+The variable that decides the outcome is therefore the interaction of density
+with the detection algorithm's degrees of freedom, not the sparsifier and not the
+graph alone. A partitioner constrained to return a fixed number of balanced
+groups is helped, above a density threshold, by having its misleading edges
+removed. An optimizer free to choose its own granularity already has a cheaper
+route to the same improvement, and takes it.
+
+\subsection{Why density matters: the denoising account}
+
+The original authors attributed their gains to the removal of spurious edges,
+noting that their strongest results came from an assay network known to contain
+many false-positive interactions. That explanation makes a testable prediction.
+If sparsification helps by deleting edges that do not belong to the generative
+structure, then its benefit should grow with the proportion of such edges.
+
+We inject uniformly random edges into benchmark graphs while holding the planted
+labels fixed, and measure recovery against those labels. The prediction holds.
+Recovery gain rises monotonically with the injected fraction in every tested
+configuration for similarity-based sparsification, with rank correlations of
+unity between noise level and gain. At average degree $50$ and $20\%$ retention,
+the gain grows from $+0.062$ with no injected noise to $+0.184$ when the number
+of spurious edges equals the number of real ones. Degree-based sparsification
+shows no such response, which is consistent with its selection signal being a
+function of degree rather than of local structure.
+
+Two qualifications apply. The gain does not vanish when no noise is injected, so
+denoising adds to an effect that is already present rather than being its sole
+cause. And a benchmark graph's noise is random by construction, whereas the
+spurious edges produced by a real measurement process need not be. The experiment
+establishes the direction of the mechanism, not its magnitude in the field.
+
+\subsection{What the positive result does not say}
+
+Two facts constrain how this finding should be read, and both come from the same
+experiments.
+
+Sparsification repairs a weaker detector rather than producing the best available
+partition. At every degree tested, a resolution-tuned modularity optimizer
+running on the untouched graph recovers the planted communities better than any
+sparsified pipeline. At average degree $49.4$ it reaches $0.956$ AMI, against
+$0.754$ for the sparsified fixed-$k$ pipeline. Sparsification lifts the fixed-$k$
+partitioner from $0.596$ to $0.754$, a real and substantial improvement to that
+algorithm, and still leaves it behind an algorithm that never needed
+sparsification. The defensible statement is that similarity sparsification
+repairs a fixed-$k$ cut partitioner on dense graphs, not that it improves
+community detection.
+
+In our implementation the quality gain is also not a speed gain. Computing exact
+pairwise similarity costs more than it saves. End to end, the pipeline runs at
+$1.49\times$ the baseline at average degree $10$, $1.01\times$ at $100$, and
+$0.58\times$ at $200$, which is slower than not sparsifying at all, even though
+detection alone accelerates by up to $7.2\times$. The original speedups were
+obtained with an approximate similarity computation reported as two orders of
+magnitude cheaper, measured against clustering runs that took hours. Both cost
+bases differ from ours by enough to account for the discrepancy without any
+disagreement about what should be counted.
+
+One part of the original report does not reproduce. At high mixing, where the
+planted structure is nearly absent and baseline recovery falls to between $0.03$
+and $0.19$, we find no gain under either detector at any degree, whereas the
+original sweep reports its largest improvement in that regime. Whether this is a
+genuine non-reproduction or a floor effect of the metrics we use cannot be
+settled at that mixing level, and we report it unresolved.
