@@ -7,15 +7,34 @@ recovery 3/3 labelled networks x 2 targets, every cell granularity-controlled.
 
 ## Verdict (four parts)
 
-**V1 — The founding quality claim does not survive honest evaluation: NO, in 14/14 cells.**
-Satuluri et al. claim "little or no deterioration ... consistently enables higher clustering
-accuracies". Scored on the ORIGINAL graph, the L-Spar partition is worse than plain Leiden in
+**V1 — Under a modularity objective and a resolution-free optimizer, L-Spar loses in 14/14 cells.**
+Scored on the ORIGINAL graph, the L-Spar partition is worse than plain Leiden in
 every network at every retention: `dQ_vs_matched` runs -0.0142 to -0.4035, `dQ_honest_vs_best`
--0.0117 to -0.4066 (results.csv). The apparent gain is entirely Artifact I: `dQ_naive`
-(sparse-graph modularity vs original-graph modularity) is *positive* +0.044..+0.389 in the same
-cells, and `dQ_fixed` (the fixed baseline partition re-scored on the sparse graph) is positive
-+0.022..+0.322 everywhere. Reading modularity off the sparsified graph flips the sign of the
-result on all 14 cells.
+-0.0117 to -0.4066 (results.csv). Reading modularity off the sparsified graph flips the sign in
+all 14 cells (`dQ_naive` +0.044..+0.389; `dQ_fixed` +0.022..+0.322) — a clean demonstration of
+Artifact I under the founding sparsifier.
+
+**SCOPE CORRECTION (2026-07-26, after reading the primary source — see
+references/NOTES_satuluri2011.md).** This is NOT a refutation of Satuluri et al. 2011, for three
+reasons established by reading their paper in full:
+(a) **They do not commit Artifact I.** §4.3: "we cannot simply measure the conductance using the
+very same sparsified graph, since that would tell us nothing about how well the sparsified graph
+retained the cluster structure in the original graph." Table 2 caption: "phi_avg is always
+calculated w.r.t. the original graph." Their other metric is external ground truth, where
+Artifact I is structurally impossible. Artifact I is a pitfall of the literature that FOLLOWED
+them. They also match cluster counts by construction (k is an input to Metis/Graclus/Metis+MQI)
+and charge sparsification time to their speedups.
+(b) **They never claim a modularity improvement.** Their accuracy claim is agreement with
+external ground truth, for two named algorithms (Metis 4/4, Graclus 3/3). Their own
+graph-internal objective results (conductance, honestly transferred) are 5W/5L/1T — a coin flip
+they print in full.
+(c) **We tested outside their regime.** Their LFR sweep (§4.5) states L-Spar "actually outperforms
+the original clustering starting from degree 50." All seven of our networks have average degree
+5.53-32.58. On their own two low-degree datasets (DIP 6.4, Human 10.8) their eight F-score deltas
+are +1.54/+1.09/-0.47/-0.12/-0.16/+0.11/+0.68/+0.37 — a wash, matching ours. Where our regimes
+overlap, we agree with them.
+The honest statement of V1 is therefore: *L-Spar does not improve modularity for a resolution-free
+optimizer on low-degree graphs* — a regime the original authors did not claim.
 
 **V2 — Mechanism IS structure-aware, and this is the first sparsifier in the study whose
 selection signal the configuration null does NOT reproduce.** L-Spar's Jaccard separation
@@ -37,11 +56,23 @@ control that was given MORE clusters and still reached only 0.3425-0.3555. This 
 granularity-controlled positive in the study, and it coexists with a modularity LOSS in the
 same cell (dQ_vs_matched = -0.0789): the two criteria point in opposite directions.
 
-**V4 — Cost: there is no speedup, and the Jaccard computation is why.**
+**V4 — In our regime there is no speedup, and exact Jaccard is part of why.**
 End-to-end `speedup_vs_single_leiden` = 0.87-1.35x across all 14 cells, and it is BELOW 1.0
-on the two largest graphs (com-DBLP 0.906, com-Amazon 0.880 at target 0.2). The 10-50x of the
-original paper is not reproduced under any accounting. Sparsification is not free: T_jaccard is
-2.8%-46.8% of pipeline wall clock. Even Leiden-in-isolation is only 0.92-2.59x.
+on the two largest graphs (com-DBLP 0.906, com-Amazon 0.880 at target 0.2). Sparsification is not
+free: T_jaccard is 2.8%-46.8% of pipeline wall clock. Even Leiden-in-isolation is only 0.92-2.59x.
+**The paper's 10-50x is not reachable here, and the reason is REGIME, NOT ACCOUNTING** — they
+charge sparsification time exactly as we do (Table 2 caption: speedups "take into account both the
+sparsification as well as the clustering times"), and they disclose their own slowdowns
+(Metis+MQI Wiki 0.46x, Orkut 0.7x). The gap decomposes into: (i) algorithm class — their baselines
+are 2-10 hour runs of Metis/Metis+MQI/MLR-MCL on 53-117M-edge graphs (Metis+MQI on Wiki = 35,511 s)
+vs our 12.4 s near-linear Leiden on <=1.05M edges; (ii) retention — they ran 0.04-0.17, we ran
+0.30-0.54 realized, whose cost ceiling is 1.9-3.3x and our observed 0.92-2.59x sits inside it;
+(iii) a ~12x "clearer graph converges faster" effect they document (Metis 80 s on L-Spar-Wiki vs
+940 s on RandomEdge-Wiki AT EQUAL EDGE COUNT) **which reverses sign for Leiden** at aggressive
+retention, because the shattered graph yields 72,736/57,788 communities and the optimizer does more
+work. That sign reversal is a new observation worth stating: the structure-clarity runtime effect
+is positive for cut-based partitioners and negative for modularity optimizers pushed past their
+natural resolution.
 
 ## Findings with pointers
 
