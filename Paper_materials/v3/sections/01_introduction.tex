@@ -7,6 +7,10 @@
 % earlier unpublished draft (D2); dissociation previewed as an open
 % phenomenon only (D3); no length pre-compression (D4); mechanism gets one
 % line (D5).
+% 2026-07-26 (Mohammad, "fix 1"): the two conditions are now stated at the end
+%   of B1, immediately after the question, so the boundary is known before the
+%   prior-work beats. Worded to avoid duplicating B6's opening clause; B6 keeps
+%   the full statement with its numbers.
 % STYLE: no em-dashes, no AI-characteristic phrasing (see STYLE.md).
 % ============================================================
 
@@ -39,7 +43,11 @@ shi2000normalized}. Community structure is closely related to those quantities
 without being identical to them. If the properties preserved by sparsification
 include community structure, then detection can be performed on the sparsified
 graph at lower cost and without loss of quality. Whether they do is the question
-this paper addresses.
+this paper addresses. The answer we obtain is conditional. On the networks and
+detection algorithms examined here, two conditions have to hold together: the
+algorithm must take the number of communities as an input, and the graph must
+carry edges whose removal does not destroy its community structure. Where either
+condition fails, we find no benefit of any kind, in quality or in speed.
 
 
 % [B2+B3 merged: the claim, the line of work, and the conditions that did not travel]
