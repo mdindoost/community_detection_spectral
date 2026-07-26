@@ -87,8 +87,8 @@ average degrees of 65, 76 and 94, two of them derived from high-throughput assay
 known to contain false-positive edges; the pipeline is now applied to sparse
 graphs and to detection algorithms that run in near-linear time. The same paper
 reports a synthetic sweep in which the method begins to outperform clustering on
-the unsparsified graph at an average degree of approximately 50. To our
-knowledge, no subsequent work examines that threshold.
+the unsparsified graph at an average degree of approximately 50. To our knowledge, 
+no subsequent work examines that threshold.
 
 % [B4: what has to be measured, and the requirements each method class imposes]
 These extensions also change what has to be measured. The question a
@@ -126,28 +126,18 @@ involving that class is entitled to conclude.
 Section~\ref{sec:protocol} states the resulting requirements and the control that
 establishes each one.
 
-% [B5: what we did]
-We therefore rebuilt the evaluation before re-asking the question. Partitions are
-always scored on the original graph. Comparisons against a stochastic baseline
-are given the same wall-clock budget as the pipeline they are compared with, and
-are also checked against a fixed-restart baseline, because a runtime-matched
-control is weak precisely when the pipeline is fast. Because sparsification
-fragments partitions, and because best-match and information-theoretic recovery
-scores rise mechanically with the number of clusters, every recovery comparison
-is matched for granularity against a partition of the original graph at the same
-cluster count, and is referenced to a chance floor computed from size-matched
-random partitions. Because a heavy-tailed degree sequence alone can produce
-several of the effects attributed to community structure, the central mechanistic
-claims are checked against degree-preserving randomizations of the same graphs.
-
-With that instrument we ran 23 controlled experiments over both sparsifier
-families that have ever claimed quality gains, degree-based and similarity-based,
-the latter being the 2011 method itself; four detection algorithms drawn from two
-families; seventeen real networks of up to 25 million edges; and a synthetic
-sweep of the one variable the original authors identified as decisive. The design
-locates a boundary rather than confirming or refuting a claim, and it is reported
-as such. Predictions and stopping rules were fixed before each experiment ran,
-and several of our own hypotheses did not survive them.
+% [B5: the study]
+Applying these requirements, we re-examined the question across both sparsifier
+families that have claimed quality gains, degree-based and similarity-based, the
+latter being the method of Satuluri et al.; four detection algorithms drawn from
+the two families identified above; seventeen real networks of up to 25 million
+edges; and a synthetic benchmark in which average degree is swept over an order
+of magnitude while community structure is held fixed. One arm of the synthetic
+study uses a fixed-$k$ partitioner, so that the number of communities is
+identical in the sparsified and unsparsified conditions and granularity is
+excluded by construction rather than by matching. The study comprises 23
+controlled experiments. Predictions and stopping rules were fixed before each
+experiment was run, and several of our own hypotheses did not survive them.
 
 % [B6: the boundary]
 Our results locate a boundary, and the transition across it is abrupt.
