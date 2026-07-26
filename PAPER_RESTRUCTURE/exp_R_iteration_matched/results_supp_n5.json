@@ -1,0 +1,26 @@
+{
+  "summary": {
+    "n": 25,
+    "mean_Q": 0.6103566792738822,
+    "sd_Q_pop": 0.0037291373853104667,
+    "sd_Q_sample": 0.0038060349061446955,
+    "best_Q": 0.6163802207724725,
+    "worst_Q": 0.6034818540341885,
+    "median_Q": 0.6103527229843884,
+    "mean_k": 189.28,
+    "sd_k": 19.488499172588945,
+    "median_seconds": 2.4737428170001294,
+    "mean_seconds": 2.4669844948000175,
+    "min_seconds": 2.369433917999231,
+    "max_seconds": 2.5985420899996825
+  },
+  "mean_minus_seeded": -0.004277440333270377,
+  "var_ratio_pop": 2.1940872515229355,
+  "var_ratio_sample": 1.8284060429357798,
+  "mannwhitney_p": 0.02246922936578109,
+  "median_cost_vs_pipeline": 1.0807089633028089,
+  "frac_above_seeded_mean": 0.24,
+  "frac_above_seeded_best": 0.0,
+  "kill_c1_meanB_ge_seededmean_minus_0p001": false,
+  "kill_c2": false
+}
