@@ -161,6 +161,17 @@ def lfr_params(mu, d, mode):
     raise ValueError(mode)
 
 
+def lfr_feasible(mu, d, params):
+    """Analytic precheck. Community sizes sum to exactly n, so every drawn
+    community must be able to host the SMALLEST node; and the largest node must
+    fit the largest drawn community (~0.85*max_community in practice). Modes
+    that fail this burn 3e6 futile assignment iterations, so skip them."""
+    mind = solve_min_degree(TAU1, d, params["max_degree"])
+    return (np.ceil((1 - mu) * mind) < params["min_community"]
+            and np.ceil((1 - mu) * params["max_degree"])
+            < 0.85 * params["max_community"])
+
+
 def _lfr_once(mu, d, seed, params):
     md = params["max_degree"]
     min_deg = solve_min_degree(TAU1, d, md)
@@ -204,6 +215,11 @@ def gen_lfr(mu, d, seed):
     best = None
     for name in GEN_MODES:
         params = lfr_params(mu, d, name)
+        if not lfr_feasible(mu, d, params):
+            log(f"    gen mode {name} skipped: provably infeasible "
+                f"(max_degree={params['max_degree']}, "
+                f"comm=[{params['min_community']},{params['max_community']}])")
+            continue
         for s in ((seed,) if name == "registered"
                   else (seed, seed + 1000, seed + 2000)):
             attempts += 1
@@ -567,11 +583,16 @@ class ResGrid:
     graph per LFR graph, shared by every cell (cheaper and lower-variance than
     per-cell bisection; the achieved nc is reported so the match is auditable)."""
 
-    def __init__(self, g, y, seed=BASE_SEEDS[0]):
+    def __init__(self, g, y, seed=BASE_SEEDS[0], budget=240.0):
         self.rows = []
-        for gam in RES_GAMMAS:
+        spent = 0.0
+        for gam in RES_GAMMAS:          # ascending: cheap gammas first
+            t0 = time.perf_counter()
             memb, _ = leiden(g, seed, resolution=gam)
+            spent += time.perf_counter() - t0
             self.rows.append(dict(gamma=gam, **evaluate(g, memb, y)))
+            if spent > budget:          # truncated on the largest graphs;
+                break                   # nc_resmatch records the achieved match
 
     def nearest(self, target_nc):
         i = int(np.argmin([abs(r["nc"] - target_nc) for r in self.rows]))
@@ -966,7 +987,12 @@ if __name__ == "__main__":
     elif stage == "armA":
         run_armA(rest or None)
     elif stage == "armB":
-        run_armB(rest or None)
+        dets = [a[4:] for a in rest if a.startswith("det=")]
+        cells = [a for a in rest if not a.startswith("det=")]
+        if dets:
+            run_armB(cells or None, detectors=tuple(dets[0].split("+")))
+        else:
+            run_armB(cells or None)
     elif stage == "armC":
         run_armC()
     else:
