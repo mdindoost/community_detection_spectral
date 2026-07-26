@@ -214,11 +214,13 @@ time than one detection run. The registered control gives the baseline as many
 independent restarts as fit the pipeline's wall clock and takes the best of them.
 
 That control is weaker than it appears, and its weakness favours the treatment.
-When the pipeline is fast the budget buys very little: two restarts in all 48
-cells of one sweep, and between 1 and 16 in another, with 1 in most cells on the
-two largest networks. Label propagation shows what this costs. Under the
-compute-matched control it is the strongest of the three algorithms in that
-sweep, with a mean change of $+0.009$; against the best of 20 plain restarts of
+When the pipeline is fast the budget buys very little. In a sweep of 48 cells
+over six networks, four retention targets and two samplers under Leiden, it
+bought exactly two restarts in every cell. Across the 63 configurations of
+Table~\ref{tab:accounting} it bought between 1 and 16, and 1 in 13 of the 18
+cells on the two largest networks. Label propagation shows what this costs. Under
+the compute-matched control it is the strongest of the three algorithms in
+Table~\ref{tab:accounting}, with a mean change of $+0.009$; against the best of 20 plain restarts of
 the same baseline, 10 on the two largest networks, it is the weakest, at
 $-0.106$. On email-Enron its two apparent gains of $+0.146$ and $+0.161$ become
 $-0.068$ and $-0.053$. The compute-matched baseline drew four and five restarts
