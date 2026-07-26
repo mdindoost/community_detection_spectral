@@ -59,9 +59,11 @@ graph reduction.
 \input{sections/01_introduction}
 
 %
-% SKELETON BELOW : section order is provisional and will be settled after
-% the introduction is written, since the introduction determines what the
-% body must deliver and in what order.
+% ORDER SETTLED 2026-07-26, after the introduction. It follows B6: the
+% negative territory, then the boundary, then the mechanism that explains
+% both. This replaces the provisional skeleton, which had the mechanism
+% before the negative territory. Mohammad: the order may still change, and
+% sections may be merged or moved once each is written.
 %
 
 \section{Background and Setting}\label{sec:background}
@@ -69,15 +71,29 @@ graph reduction.
 
 \section{What Honest Evaluation Requires}\label{sec:protocol}
 % TODO : the controls, each motivated by a failure it catches.
-
-\section{The Mechanism}\label{sec:mechanism}
-% TODO : delta, its decomposition, the causal steering result.
+% TITLE IS PROVISIONAL (Mohammad dislikes it, 2026-07-26).
 
 \section{Below the Boundary: Where Sparsification Does Not Help}\label{sec:negative}
 % TODO: the sparse/low-degree regime, both sparsifier families, four algorithms.
 
-\section{The Boundary}\label{sec:boundary}
-\input{sections/05_boundary}
+%
+% THE BOUNDARY : PULLED FROM THE PAPER 2026-07-26 at Mohammad's instruction.
+% sections/05_boundary.tex is intact on disk and is NOT to be deleted. It was
+% written before the protocol section existed and before the terminology was
+% fixed, so it comes back once the rest of the body is rewritten and it can be
+% reconciled against it. Nothing references \label{sec:boundary}; the
+% introduction's only cross-reference is to sec:protocol.
+%
+% \section{The Boundary}\label{sec:boundary}
+% \input{sections/05_boundary}
+%
+
+\section{The Mechanism}\label{sec:mechanism}
+% TODO : delta, its decomposition, the causal steering result.
+
+\section{Related Work}\label{sec:related}
+% TODO : Satuluri credited precisely; the contemporary instances of the
+% missing control, with arithmetic.
 
 \section{Discussion}\label{sec:discussion}
 % TODO : the dissociation; what the boundary means for practice.
