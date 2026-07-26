@@ -91,8 +91,13 @@ into prose happens afterwards, story-first, per the discipline in STORY.md.
   "sparsification pays" statement. BLOCKED on Fuji disk cleanup — Mohammad will say when.
 - **Small threads APPROVED by Mohammad 2026-07-25**: H-O1 leaf-shedding = **Exp W, DONE,
   hypothesis DEAD** (kill fired 0/9; fragments are mid-degree, hubs never shed, null MORE
-  leaf-selective — see exp_W_leaf_shedding/SUMMARY.md); Youtube mini-anatomy = Exp X, running
-  on Fuji.
+  leaf-selective); Youtube mini-anatomy = **Exp X, DONE, kill FIRED — Youtube gain is a
+  granularity artifact, C9 demoted to Enron-only** (see exp_X_youtube_anatomy/SUMMARY.md).
+
+**ROSTER STATUS 2026-07-26: EXPLORATION COMPLETE.** Done: L, M (17/17), N, O, P, Q, R, V, W, X.
+Remaining: S (blocked on Fuji disk — Mohammad's call), T (decide with Mohammad post-P: P found
+negatives universal across 4 algorithms, weakening T's urgency but predictor-at-scale would
+still upgrade C10). NEXT PHASE: SYNTHESIS (see section above) — do NOT start writing tex.
 - **Exp T decision deferred until after Exp P** (Mohammad 2026-07-25).
 
 - **Exp V — "spending the signal"** (greenlit, DESIGN.md pre-registered, commit ba85b8a):
