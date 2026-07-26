@@ -1,3 +1,7 @@
 network,n,m,avg_deg,arm,detector,target_ret,realized_ret,status
 ca-HepTh,8638,24806,5.74345913405881,mst_jaccard,leiden,0.2,0.34818189147786827,below_backbone_floor
 ca-HepTh,8638,24806,5.74345913405881,mst_random,leiden,0.2,0.34818189147786827,below_backbone_floor
+ca-CondMat,21363,91286,8.546177971258718,mst_jaccard,leiden,0.234,0.2340117871305567,below_backbone_floor
+ca-CondMat,21363,91286,8.546177971258718,mst_random,leiden,0.234,0.2340117871305567,below_backbone_floor
+ca-CondMat,21363,91286,8.546177971258718,mst_jaccard,leiden,0.2,0.2340117871305567,below_backbone_floor
+ca-CondMat,21363,91286,8.546177971258718,mst_random,leiden,0.2,0.2340117871305567,below_backbone_floor
