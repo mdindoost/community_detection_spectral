@@ -74,19 +74,15 @@ sparsifier preserves all properties and that the choice should be matched to the
 downstream task.
 
 The conditions under which the original result was obtained are specific, and
-they did not travel with it. The two algorithms for which accuracy improved are
-fixed-$k$, balance-constrained cut partitioners, whereas the pipeline is now
-applied to modularity optimizers that choose their own granularity. Accuracy was
-measured as agreement with external ground-truth communities, whereas quality is
-now also reported using objectives computed on the graph itself. The networks on
-which the gains were largest have average degrees of 65, 76 and 94, and two of
-them are derived from high-throughput assays known to contain false-positive
-edges, whereas the pipeline is now applied to sparse graphs. The speedups were
-measured against clustering runs lasting hours, whereas the detection algorithms
-now in use run in near-linear time. The same paper reports a synthetic sweep in
-which the method begins to outperform clustering on the unsparsified graph at an
-average degree of approximately 50. To our knowledge, no subsequent work examines
-that threshold.
+none of them travelled with it. The accuracy gain was reported for fixed-$k$ cut
+partitioners, judged against external ground-truth communities, on dense graphs,
+and against clustering runs that took hours. The pipeline is now applied to
+modularity optimizers that choose their own granularity, judged partly by
+objectives computed on the graph itself, on sparse graphs, and against detection
+algorithms that run in near-linear time. The same paper reports a synthetic sweep
+in which the method begins to outperform clustering on the unsparsified graph at
+an average degree of approximately 50, and to our knowledge no subsequent work
+examines that threshold.
 
 % [B4: what has to be measured, and the requirements each method class imposes]
 These extensions also change what has to be measured. The question a
@@ -136,68 +132,50 @@ controlled experiments. Predictions and stopping rules were fixed before each
 experiment was run, and several of our own hypotheses did not survive them.
 
 % [B6: the boundary]
-On the graphs examined in this study, sparsification improves community detection
-only for detection algorithms that take the number of communities as an input,
-and only where the graph is dense enough to carry redundant edges. The transition
-between the two regimes is sharp within a given family of graphs, but its
-location is not universal. On the LFR benchmark
+The density condition has a location, and that location is not universal. The
+transition is sharp within a given family of graphs. On the LFR benchmark
 graphs~\cite{lancichinetti2008benchmark} we generate it falls near an average
 degree of 50, which is also the threshold reported in the original synthetic
-sweep. On the real networks we test it has already occurred at an
-average degree of 29, the lowest density at which we ran a fixed-$k$ partitioner
-on a real graph, so the transition there lies at or below that value. We
-therefore state the condition rather than a threshold, and the numbers we report
-describe the graphs in this study rather than graphs in general.
+sweep. On the real networks we test it has already occurred at an average degree
+of 29, the lowest density at which we tested a fixed-$k$ partitioner. We
+therefore state a condition rather than a threshold.
 
-Density is unlikely to be the operative variable. The noise-injection experiment
-of Section~\ref{sec:boundary} shows the gain growing monotonically with the
-fraction of spurious edges added to a graph, which indicates that what matters is
-how many edges can be removed without destroying community structure. Average
-degree is one correlate of that quantity, and degree heterogeneity and the
-measurement noise present in how a graph was collected are others; we do not
-separate them here.
+Density is unlikely to be the operative variable. Injecting spurious edges into a
+graph makes the gain grow, which points instead to how many edges can be removed
+without destroying community structure. Average degree is one correlate of that
+quantity, degree heterogeneity and the noise present in how a graph was collected
+are others, and we do not separate them here.
 
 Where either condition fails, no benefit of any kind is present. For
-modularity-family detectors with free granularity, on graphs with average degree
-between 5 and 33, no sparsifier we tested improves modularity measured on the
-original graph beyond the variation of a small number of random restarts, at any
-retention level that preserves quality. This holds for seven sparsifiers under a
-modularity optimizer, and for two sparsifiers under each of four detection
-algorithms. Nor is there a speed benefit.
-Measured end to end, including the cost of the sparsifier itself, the pipeline
-requires between $0.87\times$ and $1.35\times$ the time of clustering the
-original graph directly, and at aggressive retention it is slower, because a
-fragmented graph presents the optimizer with more work rather than less. Every
-apparent gain we found in this regime, in modularity, in ground-truth recovery,
-and in the one case where a sparsifier's edge-selection signal is demonstrably
-structure-aware rather than degree-driven, dissolves when granularity is matched,
-when chance is subtracted, or when the baseline is given an equal compute budget.
+modularity-family detectors with free granularity, on the sparse real networks we
+test, no sparsifier we tested improves modularity measured on the original graph
+beyond run-to-run variation, at any retention that preserves quality, and the
+same holds under every detection algorithm we tested. There is no speed benefit
+either. Measured end to end, including the cost of the sparsifier, the pipeline
+is no faster than clustering the original graph directly, and at aggressive
+retention it is slower, because a fragmented graph presents the optimizer with
+more work rather than less. Every apparent gain we found in this regime dissolves
+when granularity is matched, when chance is subtracted, or when the baseline is
+given an equal compute budget, including the gain produced by the one sparsifier
+whose selection signal is demonstrably structure-aware.
 
 Where both conditions hold, the gain is real. On synthetic graphs with planted
-communities, holding the number of communities fixed by construction so that no
+communities, with the number of communities fixed by construction so that no
 granularity effect is possible, similarity-based sparsification raises both the
 objective measured on the original graph and chance-corrected agreement with the
-planted labels. The effect is absent at the lowest densities, appears at an
-average degree of 49, and is present in nearly every configuration at 102 and
-above; recovery turns positive at a lower density than the objective does. It
-survives the worst case over ten independent runs of the partitioner, and it is
-not reproduced by degree-based or uniform sparsification at identical retention,
-so it is a property of the similarity signal rather than of the edge budget.
-Injecting spurious edges makes the gain grow monotonically, which is the
-signature the denoising explanation predicts.
+planted labels. Recovery turns positive at a lower density than the objective
+does. Degree-based and uniform sparsification at identical retention do not
+reproduce the effect, so it belongs to the similarity signal rather than to the
+edge budget.
 
-The outcome is therefore determined by two conditions acting together, and
-neither is sufficient on its own. A fixed-$k$ partitioner applied to a sparse
-graph shows no gain on the objective in any configuration we tested, and a
-free-granularity optimizer applied to a dense one shows none either once
-granularity is controlled. Which sparsifier is used matters less than either condition, provided its
-selection signal reflects local structure rather than degree alone.
-The mechanism is consistent with this. The quantity governing a degree-based
-sparsifier's effect on modularity is the separation between the scores it assigns
-to within-community and between-community edges, and we show by direct intervention that this
-quantity is controlled by where high-degree-product edges sit relative to
-community boundaries, at fixed degree sequence, fixed partition and fixed
-modularity.
+A fixed-$k$ partitioner applied to a sparse graph shows no gain on the objective
+in any configuration we tested, and a free-granularity optimizer applied to a
+dense one shows none either once granularity is controlled. Neither condition is
+sufficient on its own. Which sparsifier is used matters less than either
+condition, provided its selection signal reflects local structure rather than
+degree alone. The mechanism is consistent with this: what governs a degree-based
+sparsifier's effect on modularity is where high-degree-product edges sit relative
+to community boundaries, which we establish by direct intervention.
 
 Two qualifications attach to this result. Sparsification repairs a weaker
 detector rather than surpassing a stronger one. On the synthetic benchmarks, a
