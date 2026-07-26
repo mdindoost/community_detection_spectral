@@ -1,0 +1,35 @@
+{
+  "status": "POST-HOC SUPPLEMENTARY PROBE -- HYPOTHESIS GRADE, NOT REGISTERED",
+  "target_k": 5259.0,
+  "gamma_star": 1.8315248944064597,
+  "probes": [
+    {
+      "gamma": 1.5,
+      "k": 5619,
+      "Q": 0.7268554768943973
+    },
+    {
+      "gamma": 1.8315248944064597,
+      "k": 4999,
+      "Q": 0.7170125240573605
+    },
+    {
+      "gamma": 1.6210646005539686,
+      "k": 4244,
+      "Q": 0.7184896464292977
+    }
+  ],
+  "n_runs": 5,
+  "mean_k": 6393.6,
+  "min_k": 6149.0,
+  "max_k": 6604.0,
+  "Q_mean": 0.7229843149010586,
+  "Q_std": 0.0013927337818978962,
+  "Q_best": 0.7241874025953171,
+  "Q_seeded_mean": 0.7294840057051575,
+  "gap_seeded_minus_kmatched": 0.0064996908040988455,
+  "gap_seeded_minus_kmatched_best": 0.00529660310984037,
+  "frac_largest_mean": 0.08001356959705345,
+  "n_comm_gt_1pct_mean": 18.4,
+  "top5_share_mean": 0.3253663350633101
+}
