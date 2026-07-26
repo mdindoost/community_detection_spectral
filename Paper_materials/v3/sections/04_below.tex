@@ -1,0 +1,255 @@
+% ============================================================
+% SECTION 4: BELOW THE BOUNDARY. Written clean 2026-07-26 (evening).
+% Weight: MEDIUM-HEAVY (PAPER_STRUCTURE.md). Delivers the "no benefit of any
+% kind" half of the one-sentence claim.
+%
+% DECISIONS TAKEN WITH MOHAMMAD BEFORE DRAFTING:
+%   (1) counts, not per-cell values: the claim is delimitation
+%   (2) the com-Amazon exception gets its own subsection, named as an exception
+%   (3) the section opens with the seven-sparsifier rationale and its exclusions
+%
+% CROSS-REFERENCE WARNING: sections/05_boundary.tex is currently commented out of
+% main.tex, so \ref{sec:boundary} would be undefined. This section therefore
+% refers to the fixed-k result in words. WHEN SECTION 5 RETURNS, replace those
+% phrasings with real references (marked below with "% XREF").
+%
+% Evidence, all recomputed from CSVs this session, not from SUMMARY files:
+%   exp_AB/results.csv     102 matched Leiden cells, 7 arms, 7 networks; 0/102
+%                          positive; per-arm best cells; fragmentation columns;
+%                          28 Metis rows, 8 positive at d_avg 28.5-32.6
+%   exp_L/results.csv      L-Spar 7 networks, 11 ok cells, -0.0142 .. -0.4035
+%   exp_P/results.csv      63 cells, 3 algorithms, 60/63 negative vs best-of-N
+%   exp_P/bestof.csv       per-network best-of-N baselines
+%   exp_V/results.csv      four deployments of the verified signal
+% STYLE: no em-dashes, no AI-characteristic phrasing (see STYLE.md).
+% ============================================================
+
+\subsection{What was tested, and why these methods}\label{sec:negative:arms}
+
+Seven sparsifiers were run through the protocol of Section~\ref{sec:protocol}, chosen
+so that a negative result cannot be attributed to the selection.
+
+Two are the methods whose quality claims motivate the pipeline: local similarity
+sparsification~\cite{satuluri2011local} and the degree-based
+sampler~\cite{liu2023dspar}, one from each family described in
+Section~\ref{sec:background}. Three more are the methods that the largest
+independent benchmark of sparsification ranks highest at preserving clustering
+structure, namely K-Neighbor, Local Degree and Local
+Similarity~\cite{chen2024demystifying, hamann2016structure}, so that the arms
+include the strongest candidates chosen by someone else. The remaining two are a
+connectivity-preserving backbone, a spanning structure topped up to the retention
+target either at random or by similarity, which cannot disconnect a graph by
+construction and is included as an instrument rather than as a competitor. Uniform
+random deletion supplies the no-information baseline wherever a selection rule has
+to be shown to be doing work.
+
+Three classes are excluded, and the exclusions bound what follows. Node-removing
+methods such as $k$-core peeling are not tested, because they score their
+partition on a smaller and denser vertex set, which is a different comparison
+requiring the coverage control of
+Section~\ref{sec:protocol:retention}. Learned sparsifiers~\cite{wu2020gsgan} are
+not tested, because matching them on realized retention requires retraining per
+operating point. And of the detection algorithms, the two for which the founding
+accuracy claim was made, Metis and Graclus, together with MLR-MCL, have no
+implementation in the library used here, so the real-network arms of this section
+use four other algorithms. That last exclusion is the most consequential one in
+the paper and we return to it in Section~\ref{sec:discussion}.
+
+Before any quality measurement, one structural fact constrains the design. Four of
+the seven methods cannot reach aggressive retention on a sparse graph, because
+each vertex keeps at least one incident edge. Table~\ref{tab:floors} gives the
+floors. On the three sparsest networks no method in this study can retain less
+than about a third of the edges, so the aggressive regime in which sparsification
+would pay for itself is not merely unhelpful there; it is unreachable. All arms
+are therefore compared at a common operating point per network, and the third
+point is set at the largest floor rather than at a round number.
+
+\begin{table}[t]
+\centering
+\caption{Hard retention floors by method, as a fraction of edges. A blank marks a
+method with no floor. Networks are ordered by average degree; the floor is
+governed by it. Below these values the method cannot be run at all, whatever the
+target.}
+\label{tab:floors}
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}lrrrrr@{}}
+\toprule
+Network & $d_{\mathrm{avg}}$ & Backbone & L-Spar & Loc.\ Deg. & K-Neigh.\\
+\midrule
+com-Amazon    &  5.53 & 0.362 & 0.301 & 0.352 & 0.330\\
+ca-HepTh      &  5.74 & 0.348 & 0.276 & 0.347 & 0.317\\
+com-DBLP      &  6.62 & 0.302 & 0.244 & 0.301 & 0.277\\
+ca-CondMat    &  8.55 & 0.234 & 0.186 & 0.234 & 0.218\\
+email-Enron   & 10.73 & 0.186 & 0.159 & 0.186 & 0.179\\
+wiki-Vote     & 28.51 & 0.070 & 0.067 & 0.070 & 0.069\\
+email-Eu-core & 32.58 & 0.061 & 0.053 & 0.061 & 0.060\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{The objective}\label{sec:negative:objective}
+
+Table~\ref{tab:negative} reports the result. Across 102 matched-retention cells,
+seven sparsifiers on seven networks under a modularity optimizer, not one cell
+improves modularity measured on the original graph, whether the baseline is the
+compute-matched control or the best of five plain restarts. The best cell in the
+entire grid loses $0.0105$.
+
+\begin{table}[t]
+\centering
+\caption{Every matched-retention cell, Leiden, seven networks. $\Delta Q$ is
+measured on the original graph, Eq.~\eqref{eq:transfer}, against the best of five
+plain restarts. Counts are cells with a positive value. The arms differ in how
+much they lose and not in whether they lose.}
+\label{tab:negative}
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}lrrrr@{}}
+\toprule
+Arm & Cells & $\Delta Q > 0$ & Best cell & Worst cell\\
+\midrule
+K-Neighbor            & 18 & 0 & $-0.0105$ & $-0.667$\\
+DSpar                 & 18 & 0 & $-0.0116$ & $-0.640$\\
+L-Spar                &  9 & 0 & $-0.0117$ & $-0.407$\\
+Backbone, random fill & 14 & 0 & $-0.0141$ & $-0.214$\\
+Local Similarity      & 15 & 0 & $-0.0172$ & $-0.311$\\
+Local Degree          & 14 & 0 & $-0.0288$ & $-0.278$\\
+Backbone, Jaccard fill& 14 & 0 & $-0.0290$ & $-0.235$\\
+\midrule
+Total                 & 102 & \textbf{0} & $-0.0105$ & $-0.667$\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The sweep that isolates one method across its full retention range agrees. Local
+similarity sparsification on the same seven networks loses between $0.014$ and
+$0.404$ against a compute-matched baseline in every configuration that runs, with
+the loss growing as retention falls, and its three most aggressive configurations
+cannot be run at all because of the floors in Table~\ref{tab:floors}.
+
+\subsection{The loss is not fragmentation}\label{sec:negative:fragmentation}
+
+Sparsification breaks graphs apart, and a natural reading of the previous table is
+that the optimizer is being handed a shattered graph and is penalized for it. The
+backbone arms test that reading directly, because they retain a spanning structure
+and so cannot increase the number of connected components.
+
+They do what they were built to do. Under the backbone with random fill, no
+detected community is a singleton in any of its fourteen cells, and the fraction
+of vertices sitting in communities of fewer than three members never exceeds
+$1.8\%$. The shattering arms reach $86\%$ on the same networks. The conclusion
+does not move: the backbone's best cell is $-0.0141$, worse than four of the arms
+that fragment freely.
+
+The fragmentation explanation is therefore tested and rejected as sufficient. What
+is left is the edges themselves. Removing half of them costs modularity on the
+original graph whether or not the graph stays in one piece.
+
+A second observation follows from the same arms and points the same way. The
+backbone's two fills differ only in which edges top up the spanning structure,
+random or highest Jaccard similarity. Random fill scores better in ten of the
+fourteen paired cells. On these graphs, in this regime, the similarity signal
+subtracts.
+
+\subsection{The loss is not an artifact of one optimizer}\label{sec:negative:algorithms}
+
+Everything above uses a modularity optimizer, which raises the question of whether
+the objective and the algorithm are too closely coupled. Running two sparsifiers
+across three further algorithms, one flow-based and one a local majority rule
+alongside a second modularity optimizer, gives 63 configurations on the same seven
+networks. Against the best of $N$ plain restarts, 60 are negative. The mean change
+is $-0.082$ under Infomap, $-0.046$ under Louvain and $-0.106$ under label
+propagation. The three positive cells are all label propagation on one network,
+where the unsparsified baseline is pathological: its own best of twenty restarts
+reaches modularity $0.079$ where a modularity optimizer on the same graph reaches
+$0.416$. Relieving a known failure mode of one algorithm is not a benefit of
+sparsification.
+
+\subsection{Recovery, and what happens to it under control}\label{sec:negative:recovery}
+
+Agreement with reference communities behaves differently from the objective, and
+the difference is instructive rather than encouraging.
+
+Raw agreement often rises. It rises because the sparsified partition is finer, and
+both of the controls in Sections~\ref{sec:protocol:granularity}
+and~\ref{sec:protocol:chance} are needed to see it. On com-DBLP, local similarity
+sparsification lifts average best-match $F_1$ from $0.102$ to $0.193$ while taking
+the community count from 220 to 10,947; the original graph partitioned to the same
+count reaches $0.300$, and the random-partition floor at that count is $0.090$
+against $0.019$ at the baseline count. Nearly all of the apparent gain is
+granularity, and what is left of it is chance.
+
+This is the pattern across the labelled networks, with one exception, which is the
+subject of Section~\ref{sec:negative:exception}.
+
+\subsection{No speed benefit either}\label{sec:negative:speed}
+
+The pipeline is not faster. Of the 63 configurations, four preserve quality in the
+sense of coming within $0.005$ of the best-of-$N$ baseline, and the fastest of
+those four runs at $0.66\times$ the speed of clustering the original graph
+directly. Twelve configurations exceed $1.5\times$, and every one of them loses
+modularity, by $0.015$ to $0.162$. Timing only the detection step and giving the
+sparsifier away for free, the median speedup is $1.21\times$, $1.63\times$ and
+$1.15\times$ by algorithm, well short of the factor of two that halving the edge
+count suggests, because all three algorithms return more communities on the
+sparsified graph and do more work per pass.
+
+\subsection{Hypotheses of ours that did not survive}\label{sec:negative:killed}
+
+Four explanations for the negative result were our own, were pre-registered, and
+failed.
+
+We proposed that sparsification preserves community cores while shedding
+peripheral vertices, which would make the loss benign. Four of that hypothesis's
+five predictions failed: the fragments subdivide communities without mixing them,
+but they cut the most embedded vertices as readily as the least, and a
+resolution-matched partition of the original graph preserves cores better in
+sixteen of twenty comparisons.
+
+We proposed that the damage is concentrated in leaf and near-leaf vertices, so
+that shedding them first would be harmless. It was not.
+
+We proposed that triangle structure governs which edges a degree-based sparsifier
+removes. A causal test moved the triangle count in both directions while the
+score-separation quantity fell uniformly, which rules the explanation out rather
+than leaving it unsupported.
+
+Finally, we found a statistically clean gain on a large network, replicated it
+exactly, and then killed it ourselves: its cluster count correlates with its
+modularity at $-0.799$, the seeded run's community count falls below all twenty
+plain restarts, and its mean lands on the regression line those restarts trace, so
+the gain is granularity and not structure.
+
+Reporting these is not a courtesy. Each is an explanation a reader would otherwise
+have to wonder about, and each was closed by a test rather than by argument.
+
+\subsection{The exception}\label{sec:negative:exception}
+
+One result in this section survives every control we have.
+
+On com-Amazon, local similarity sparsification at realized retention $0.542$
+reaches average best-match $F_1$ of $0.402$ against a baseline of $0.142$. The
+granularity control does not remove it: partitioning the original graph to the
+same community count gives $0.319$, and deliberately over-matching by 37 per cent
+more communities still gives only $0.372$. The chance floor does not remove it
+either, and subtracting the floor widens the margin rather than narrowing it,
+because the floor rises with the community count. A second, independent instance
+appears in the same experiments from an unrelated method, Local Degree, on
+com-Amazon and com-DBLP.
+
+What removes it is a different comparison. Both non-modularity algorithms reach
+higher agreement on com-Amazon without any sparsification at all, $0.465$ under
+Infomap and $0.480$ under label propagation, against the $0.402$ that the
+sparsified modularity pipeline attains. The effect is real, and it is the
+modularity objective's default granularity being partially repaired by shattering
+the graph, in a metric that rewards fine partitions. It is not a capability that
+sparsification confers.
+
+Two things about this cell are worth carrying forward. It coexists with a
+modularity loss of $0.079$ in the same configuration, so the objective and the
+recovery measure move in opposite directions on the same partition of the same
+graph. And it is the reason the negative result of this section is stated as it
+is: no benefit on the objective anywhere, and no recovery benefit that survives
+comparison against a better algorithm run on the untouched graph. Section
+\ref{sec:discussion} takes up the dissociation as an open phenomenon.
