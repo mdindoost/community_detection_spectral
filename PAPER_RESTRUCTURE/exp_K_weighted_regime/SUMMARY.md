@@ -33,5 +33,5 @@ quality-preserving retention, and detection/recovery degrade beyond ~10% edge re
 1/alpha (normalized Laplacian): ca-GrQc 535.5, com-Amazon 10,782, com-DBLP 373, ca-HepTh 320,
 email-Enron 284, ca-CondMat 139.2, wiki-Vote 9.9, email-Eu-core 4.7.
 Feb run audited: numbers reproduce verbatim; n=1 replicate, salted-hash seeds (non-reproducible),
-alpha=0.8 never ran, dQ_leiden was cross-graph (Artifact I). Sampler verified bit-identical to
+alpha=0.8 never ran, dQ_leiden was sparse-graph self-scoring (Artifact I). Sampler verified bit-identical to
 Liu et al. Algorithm 1.

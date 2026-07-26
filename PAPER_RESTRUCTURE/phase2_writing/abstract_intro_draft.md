@@ -43,7 +43,7 @@ PHASE1_VERDICT.md / exp_E / exp_F.)
 2. **The mechanism (real).** Hub-bridge intuition; DSpar scores; δ > 0; fixed-partition theory
    summary (Thms 1–3 retained). The mechanism is provable and measurable.
 3. **The artifacts (the trap).** Three ways the mechanism *appears* to improve detection:
-   cross-graph modularity, granularity, unmatched compute. One paragraph each with the control
+   sparse-graph self-scoring modularity, granularity, unmatched compute. One paragraph each with the control
    that exposes it. Key sentence: "a degree-biased sampler raises the fixed-partition modularity of
    *any* partition on *any* degree-heterogeneous graph — including one with no communities at all."
 4. **The null-model result.** 17/17 networks: configuration-model rewiring reproduces both signals,

@@ -57,7 +57,7 @@ Phase-1 outputs · DROP = removed. Every NEW table/figure names its data source 
   degree-homogeneity note; define rewiring operator h formally (draft never did).
 
 ## §6 Three evaluation artifacts, three controls — NEW (from Phase 1)
-- 6.1 Artifact I — cross-graph modularity. Transfer loss: partitions from sparsified graphs lose
+- 6.1 Artifact I — sparse-graph self-scoring modularity. Transfer loss: partitions from sparsified graphs lose
   0.01–0.19 Q on the original graph, 15/15. Source: exp4_comprehensive CSV (Q_transfer_loss) +
   audit fresh test. Table: Q_sparse vs Q_on_orig vs Q_base at α∈{0.8,0.9}.
 - 6.2 Artifact II — granularity. Resolution-matched controls beat DSpar on recovery everywhere:

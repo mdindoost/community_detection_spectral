@@ -29,7 +29,7 @@ Rewired graphs have no community structure yet show equal-or-larger ΔQ_fixed an
 
 dQ_final at α∈{0.8,0.9} across 15 datasets: range −0.0008 … +0.0078.
 Only email-Enron (+0.0072/+0.0078) and com-DBLP (+0.0029/+0.0031) exceed +0.001.
-Draft claims ΔQ_Leiden +0.05…+0.30 — cross-graph inflation.
+Draft claims ΔQ_Leiden +0.05…+0.30 — sparse-graph self-scoring inflation.
 
 ## 4. Sampler facts
 

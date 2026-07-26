@@ -121,7 +121,7 @@ for i, d in enumerate(ds):
 t2 = r"""\begin{table*}[t]
 \centering
 \setlength{\tabcolsep}{5pt}
-\caption{Artifact I --- cross-graph modularity. $Q_{\mathrm{sparse}}$ is the modularity of the
+\caption{Artifact I --- sparse-graph self-scoring. $Q_{\mathrm{sparse}}$ is the modularity of the
 partition found on the sparsified graph, \emph{scored on that sparsified graph}; $Q_{\mathrm{orig}}$
 is the same partition scored on the original graph; the transfer loss is
 $Q_{\mathrm{sparse}}-Q_{\mathrm{orig}}$. It is positive for all 15 datasets at both $\alpha$ values,

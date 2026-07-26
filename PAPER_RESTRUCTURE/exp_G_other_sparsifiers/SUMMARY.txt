@@ -33,7 +33,7 @@ Arm (b):    degree-preserving rewire, 10*m double-edge swaps, seed 12345
 
 
 ================================================================================
-TABLE A -- ARTIFACT I (cross-graph inflation) UNDER UNIFORM SPARSIFICATION
+TABLE A -- ARTIFACT I (sparse-graph self-scoring inflation) UNDER UNIFORM SPARSIFICATION
 ================================================================================
 dataset       alpha  ret     Q_base    Q_sparse   Q_on_orig  paper_delta  honest_delta   gap
 ------------------------------------------------------------------------------------------------

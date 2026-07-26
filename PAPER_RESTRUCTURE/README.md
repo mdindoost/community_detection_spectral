@@ -17,7 +17,7 @@ the prediction of an improvement.
 
 ## Key audit facts (established 2026-07-24)
 
-1. `ΔQ_Leiden` in the draft = Q(P_α on sparsified G) − Q(P_0 on original G) → cross-graph, invalid.
+1. `ΔQ_Leiden` in the draft = Q(P_α on sparsified G) − Q(P_0 on original G) → sparse-graph self-scoring (Artifact I), invalid.
 2. Scored honestly on the original graph, DSpar at effective ~40% retention **loses** 0.01–0.19
    modularity on all datasets tested (fresh test + repo's own `results/exp4_comprehensive/`
    `Q_transfer_loss` column, positive on all 15 datasets, all α).

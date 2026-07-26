@@ -38,7 +38,7 @@ looked best there — hb does not predict recovery gains.
 
 ## What this means
 
-**Dead:** "sparsification improves community detection/modularity" (cross-graph artifact);
+**Dead:** "sparsification improves community detection/modularity" (sparse-graph self-scoring artifact);
 r=0.92 as framework validation (near-tautological); recovery gains at scale (granularity artifact);
 δ>0 or hb>1 as evidence of community-relevant structure (nulls reproduce both).
 
@@ -48,7 +48,7 @@ existence proof of genuine, runtime-matched-surviving gains under extreme hub-br
 wiki-Vote as negative control.
 
 **New contributions Phase 1 created:**
-1. Three artifact mechanisms, each with a diagnostic control: cross-graph Q (control: score on
+1. Three artifact mechanisms, each with a diagnostic control: sparse-graph self-scoring (control: score on
    original / seeded refinement), granularity (control: resolution-matched Leiden), unmatched
    compute (control: runtime-matched restarts).
 2. The configuration-model null table (17 networks, real vs rewired) — the paper's central figure.

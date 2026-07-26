@@ -5,11 +5,11 @@ Experiment D: Does DSpar sparsification improve GROUND-TRUTH recovery at scale?
 Background
 ----------
 The draft's ground-truth section tests only 5 tiny graphs (improvement on 1 of 5),
-and its headline modularity gains are a cross-graph measurement artifact.  Average-F1
+and its headline modularity gains are a sparse-graph self-scoring artifact.  Average-F1
 against ground truth is a GRAPH-INDEPENDENT metric: the detected partition lives on the
 node set, not on the edge set, so a partition found on a sparsified graph and one found
 on the original graph are scored on exactly the same object.  It is therefore immune to
-the cross-graph-modularity artifact.
+the sparse-graph self-scoring artifact.
 
 Datasets (SNAP, with ground-truth communities): com-Amazon, com-DBLP, com-Youtube.
 `datasets/<name>/<name>_labels.txt` is the SNAP top5000.cmty.txt file (5000 lines,

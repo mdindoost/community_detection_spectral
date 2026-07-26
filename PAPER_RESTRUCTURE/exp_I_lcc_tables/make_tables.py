@@ -89,7 +89,7 @@ def main():
         r"\caption{Fixed-partition modularity changes under with-replacement DSpar at nominal $\alpha = 0.8$, "
         r"computed on the largest connected component of each simple undirected graph "
         rf"(realized retention ${ret_lo:.2f}$--${ret_hi:.2f}$)." + "\n"
-        r"\textbf{Both $\Delta Q$ columns are evaluated on the sparsified graph}; Section~\ref{sec:artifacts} shows why such cross-graph quantities must not be read as detection improvements.}",
+        r"\textbf{Both $\Delta Q$ columns are evaluated on the sparsified graph}; Section~\ref{sec:artifacts} shows why such sparse-graph-scored quantities must not be read as detection improvements.}",
         r"\label{tab:exp1_2_modularity}",
         r"\begin{tabular}{lrrrrr}",
         r"\toprule",
