@@ -140,6 +140,21 @@ the null arm reproduces the gradient within noise on ≥half the networks, the h
 and the observation stays a descriptive footnote. No rescue tweaks.
 **Output:** PAPER_RESTRUCTURE/exp_O_core_preservation/{DESIGN.md,run.py,results CSVs,SUMMARY.md}.
 
+## Session-death recovery (quota end, OOM, restart)
+
+Long runs are launched DETACHED and survive the death of any Claude session. To recover:
+1. `git pull` (every completed network is committed+pushed immediately).
+2. Read this file + the exp_*/SUMMARY.md files.
+3. Check Fuji jobs: `ssh mayooran@100.88.245.65 'ls -lt md724/community_detection_spectral/PAPER_RESTRUCTURE/exp_M_suppression_probe/ | head; tail -5 md724/community_detection_spectral/PAPER_RESTRUCTURE/exp_M_suppression_probe/*.log'`
+   (Tailscale SSH; if it prints a login.tailscale.com URL, Mohammad must click it — auth
+   expires ~12h.) Copy finished CSVs back with scp, merge/dedupe, commit.
+4. Check local detached jobs: `ls -lt PAPER_RESTRUCTURE/exp_*/` for fresh logs/CSVs; a run
+   whose log stopped growing and whose process is gone (ps aux | grep run.py) died — resume
+   from its incremental CSV (all runners append; never re-run completed rows).
+
+**Standing authorization (Mohammad, 2026-07-25): run any needed experiments on Fuji.** Keep
+its disk in mind (~8GB free); com-Orkut (Exp S) does NOT fit until Fuji is cleaned.
+
 ## Environment
 
 - venv recipe: `python3 -m venv venv && pip install numpy scipy python-igraph leidenalg networkx
