@@ -148,15 +148,44 @@ instead; the control below operationalizes that warning.
 
 The control is a partition of the \emph{original} graph at a matched community
 count, obtained by raising the resolution parameter $\gamma$ in
-\eqref{eq:modularity} until the counts agree. On com-DBLP, Louvain returns 220
-communities on the original graph and scores $0.102$ average best-match $F_1$
-against the reference communities. Local similarity sparsification at retention
-$0.5$ returns 10,947 communities and scores $0.193$, an apparent gain of $+0.091$.
-The original graph partitioned at $\gamma = 576$ returns 11,159 communities and
-scores $0.300$. The finer partition is worth twice what the sparsification
-appeared to be worth, and it requires no sparsifier. Leiden reproduces both
-numbers to three decimal places, which places the effect in the modularity
-objective's default granularity rather than in one optimizer's search.
+\eqref{eq:modularity} until the counts agree. Table~\ref{tab:granularity} applies
+it to com-DBLP under Louvain. Local similarity sparsification at realized
+retention $0.503$ raises average best-match $F_1$ from $0.102$ to $0.193$, an
+apparent gain of $+0.091$, while raising the number of communities of size at
+least three from 220 to 10,947. The original graph partitioned at $\gamma = 640$
+reaches 11,159 such communities and scores $0.300$. The finer partition is worth
+more than twice what the sparsification appeared to be worth, and it requires no
+sparsifier. The same holds for degree-based sparsification on the same network,
+where the apparent change is negative and the matched control is positive.
+Leiden reproduces the sparsified figure to four decimal places and its own
+control, at $\gamma = 576$ and 10,812 communities, reaches $0.297$, so the effect
+belongs to the modularity objective's default granularity rather than to one
+optimizer's search.
+
+\begin{table}[t]
+\centering
+\caption{Granularity control on com-DBLP under Louvain, average best-match $F_1$
+over reference communities of size at least three. $k_{\geq 3}$ counts
+communities of that size; $\gamma$ is the resolution used on the \emph{original}
+graph. Each sparsified arm is followed by its control, a partition of the
+original graph at the same $k_{\geq 3}$. The floor is a size-matched random
+partition at the arm's own $k_{\geq 3}$. Baseline and sparsified rows are means
+over three to six seeds; controls are single runs.}
+\label{tab:granularity}
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}lrrcc@{}}
+\toprule
+Condition & $k_{\geq 3}$ & $\gamma$ & $F_1$ & floor\\
+\midrule
+Original graph               & 220    & 1   & $0.102 \pm 0.005$ & 0.019\\
+DSpar, $\rho = 0.500$        & 1{,}684  & 1   & $0.098 \pm 0.002$ & 0.049\\
+\quad matched control        & 1{,}657  & 24  & $0.125$           & \\
+L-Spar, $\rho = 0.503$       & 10{,}947 & 1   & $0.193 \pm 0.000$ & 0.090\\
+\quad matched control        & 11{,}159 & 640 & $0.300$           & \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 Where the counts cannot be brought together, we draw no recovery conclusion. The
 comparability rule is $|\Delta k|/k < 25\%$, and the cells it excludes are
