@@ -50,7 +50,7 @@ graph at lower cost and without loss of quality. Whether they do is the question
 this paper addresses.
 
 
-% [B2: the answer the field has, and how it was actually scoped]
+% [B2+B3 merged: the claim, the line of work, and the conditions that did not travel]
 Satuluri et al.~\cite{satuluri2011local} introduced local similarity
 sparsification, in which each vertex retains the incident edges whose endpoints
 have the highest Jaccard similarity of neighbourhoods. Evaluating four clustering
@@ -59,41 +59,37 @@ with little or no deterioration in the quality of the resulting clusters,'' and
 stated that ``for at least two of the four clustering algorithms, our
 sparsification consistently enables higher clustering accuracies.''
 
-The conditions under which that result was obtained are specific. The two
-algorithms for which accuracy improved are fixed-$k$, balance-constrained cut
-partitioners. Accuracy is measured as agreement with external ground-truth
-communities rather than by any objective computed on the graph. The reported
-speedups are relative to clustering runs requiring hours on graphs of up to
-$1.2 \times 10^8$ edges. The networks on which the gains are largest have average
-degrees of 65, 76 and 94, and two of them are derived from high-throughput assays
-known to contain false-positive edges. The same paper reports a synthetic sweep
-in which the method ``actually outperforms the original clustering starting from
-degree 50.'' To our knowledge, no subsequent work examines that threshold.
-
-% [B3: the line of work that followed, with citations]
 The approach was taken up and extended. Hamann et
 al.~\cite{hamann2016structure} conducted a systematic comparison of
 structure-preserving sparsification methods for social networks and released
-reference implementations, which are now distributed in standard graph
-libraries. Wu and Chen~\cite{wu2020gsgan} trained a generative model to sparsify
-graphs specifically for community detection, reporting that clustering algorithms
-retain accuracy while ``only using far fewer edges (e.g., 5\%).''
-Sparsification also entered production: the SimClusters system at
+reference implementations, which are now distributed in standard graph libraries.
+Wu and Chen~\cite{wu2020gsgan} trained a generative model to sparsify graphs
+specifically for community detection, reporting that clustering algorithms retain
+accuracy while ``only using far fewer edges (e.g., 5\%).'' Sparsification also
+entered production: the SimClusters system at
 Twitter~\cite{satuluri2020simclusters} prunes its interaction graph before
 community detection at industrial scale. Blagus et al.~\cite{blagus2015sampling}
-report the converse effect, that sampling can promote apparent community
-structure in social and information networks. Most recently, Chen et
+report a converse effect, that sampling can promote apparent community structure
+in social and information networks. Most recently, Chen et
 al.~\cite{chen2024demystifying} benchmarked twelve sparsification algorithms
 against sixteen graph properties on fourteen networks, concluding that no single
 sparsifier preserves all properties and that the choice should be matched to the
 downstream task.
 
-Across this line of work the recommendation broadened. Sparsify-then-detect has
-been applied to modularity optimizers as well as to fixed-$k$ cut partitioners,
-to sparse graphs as well as to dense ones, and evaluated against graph-internal
-objectives as well as against external references. The degree threshold reported
-in the original synthetic sweep does not reappear, and the conditions attached to
-the original result are not generally restated alongside it.
+The conditions under which the original result was obtained are specific, and
+they did not travel with it. The two algorithms for which accuracy improved are
+fixed-$k$, balance-constrained cut partitioners, whereas the pipeline is now
+applied to modularity optimizers that choose their own granularity. Accuracy was
+measured as agreement with external ground-truth communities, whereas quality is
+now also reported using objectives computed on the graph itself. The speedups
+were relative to clustering runs requiring hours on graphs of up to
+$1.2 \times 10^8$ edges, and the networks on which the gains were largest have
+average degrees of 65, 76 and 94, two of them derived from high-throughput assays
+known to contain false-positive edges; the pipeline is now applied to sparse
+graphs and to detection algorithms that run in near-linear time. The same paper
+reports a synthetic sweep in which the method ``actually outperforms the original
+clustering starting from degree 50.'' To our knowledge, no subsequent work
+examines that threshold.
 
 % [B4: the lost control and what its absence costs (THE HINGE)]
 A measurement requirement is also frequently omitted, and the omission has a
