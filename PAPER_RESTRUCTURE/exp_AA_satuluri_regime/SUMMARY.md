@@ -44,9 +44,12 @@ AMI 0.9866 vs resmatch 0.9928; mu=0.5/d=49.4/ret 0.199, 0.8927 vs 0.9145.
 => **Leiden's recovery gain is a granularity effect**, the same mechanism that killed the
 Youtube gain in exp_X. C6/C16 are unchanged for the modularity-optimizer family.
 
-**HYPOTHESIS (post-hoc, needs its own run):** the one exception is mu=0.5, d_avg~221, where
-lspar beats the resolution-matched control by +0.017..+0.024 AMI. Only **1 of 3 LFR seeds** has
-completed for that cell. Flagged HYPOTHESIS per EXPLORATION.md rule 2; do not cite.
+**HYPOTHESIS RAISED AND KILLED (same day).** A single seed at mu=0.5, d_avg~221 showed lspar
+beating the resolution-matched control by +0.023 AMI. Flagged HYPOTHESIS per EXPLORATION.md
+rule 2 rather than reported as a finding. With all 3 LFR seeds in: **+0.023, -0.002, -0.005**
+(mean +0.006). It was a seed artifact. **The granularity escape does not close at extreme
+degree; Finding 1 stands exactly as written.** A clean in-session demonstration of why the
+pre-registration rule exists.
 
 **Controls all clean.** Size-matched random-partition chance floor `AMI_chance` = -0.0001 at
 every degree. Realized retention reported in every row.
@@ -192,8 +195,16 @@ not *"sparsification improves community detection"*.
    achieved match for audit.
 6. **Compute ran entirely on the 14 GB local machine.** Fuji was unreachable — Tailscale SSH
    printed an auth URL; the user must re-click it to restore access.
-7. **Still filling in** (detached, resume-safe): Arm A mu=0.8 at d>=50 and mu=0.5 at d_avg~221
-   seeds 2-3. Neither affects any verdict above.
+7. **Coverage, final state (480 rows Arm A).** COMPLETE: Arm B (695 rows, real Metis, both mu x
+   all 5 degrees), Arm C (240), metis_noise (108), and Arm A at mu=0.3 and mu=0.5 for all five
+   degrees. OUTSTANDING: Arm A mu=0.8 at d>=100 only — the near-structureless regime
+   (mu_real ~ 0.90, baseline AMI 0.03-0.19) already documented as a non-reproduction under both
+   detectors. **No verdict depends on it.** The newly completed mu=0.8 d_avg=143 Leiden cells
+   confirm section 2 rather than complicating it: `dQ_vs_matched` -0.010..-0.146 vs seed sd
+   0.0013, and the single positive recovery (AMI 0.222 vs baseline 0.189 at retention 0.5) is
+   BELOW its resolution-matched control (0.197) — the same granularity artifact.
+   Whether the high-mixing non-reproduction is genuine or a floor effect is unresolvable at
+   mu_real ~ 0.90; stated, not resolved.
 8. **`dQ_vs_matched` is sensitive to the restart budget** — where the pipeline is fast the matched
    baseline gets only 1 restart; always read `dQ_vs_base_best` alongside. This is why Arm A's
    formal P1 trigger is not treated as a real Leiden gain.
