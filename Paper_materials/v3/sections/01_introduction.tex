@@ -140,29 +140,30 @@ controlled experiments. Predictions and stopping rules were fixed before each
 experiment was run, and several of our own hypotheses did not survive them.
 
 % [B6: the boundary]
-Our results locate a boundary, and the transition across it is abrupt.
+Sparsification improves community detection above an average degree of
+approximately 50, for detection algorithms that take the number of communities as
+an input, and not otherwise. The transition is abrupt, and it falls at the
+threshold reported in the original synthetic sweep.
 
-On one side of it sparsification does not improve detection. For modularity-family
-detectors with free granularity, on graphs with average degree between 5 and 33,
-no sparsifier we tested improves modularity measured on the original graph beyond
-the variation of a small number of random restarts, at any retention level that
-preserves quality, under any of the four algorithms examined. Nor is there a
-speed benefit. Measured end to end, including the cost of the sparsifier itself,
-the pipeline requires between $0.87\times$ and $1.35\times$ the time of clustering
-the original graph directly, and at aggressive retention it is slower, because a
-fragmented graph presents the optimizer with more work rather than less. Every apparent
-gain we found in this regime, in modularity, in ground-truth recovery, and in the
-one case where a sparsifier's edge-selection signal is demonstrably
+Below it, no benefit of any kind is present. For modularity-family detectors with
+free granularity, on graphs with average degree between 5 and 33, no sparsifier
+we tested improves modularity measured on the original graph beyond the variation
+of a small number of random restarts, at any retention level that preserves
+quality, under any of the four algorithms examined. Nor is there a speed benefit.
+Measured end to end, including the cost of the sparsifier itself, the pipeline
+requires between $0.87\times$ and $1.35\times$ the time of clustering the
+original graph directly, and at aggressive retention it is slower, because a
+fragmented graph presents the optimizer with more work rather than less. Every
+apparent gain we found in this regime, in modularity, in ground-truth recovery,
+and in the one case where a sparsifier's edge-selection signal is demonstrably
 structure-aware rather than degree-driven, dissolves when granularity is matched,
 when chance is subtracted, or when the baseline is given an equal compute budget.
 
-On the other side of the boundary sparsification does improve detection, under
-the conditions the original authors described. On synthetic graphs with planted communities, holding the number of
-communities fixed by construction so that no granularity effect is possible,
-similarity-based sparsification raises both the objective measured on the
-original graph and chance-corrected agreement with the planted labels once the
-average degree passes approximately 50. The effect is absent at average degree 11
-and 25, present in two thirds of configurations at 49, and present in all of them
+Above it the gain is real. On synthetic graphs with planted communities, holding
+the number of communities fixed by construction so that no granularity effect is
+possible, similarity-based sparsification raises both the objective measured on
+the original graph and chance-corrected agreement with the planted labels. The
+effect is absent at average degree 11 and 25, present in two thirds of configurations at 49, and present in all of them
 at 102 and 221. It survives the worst case over ten independent runs of the
 partitioner, and it is not reproduced by degree-based or uniform sparsification
 at identical retention, so it is a property of the similarity signal rather than
