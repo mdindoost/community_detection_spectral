@@ -272,6 +272,48 @@ def main():
                       f"{unt}")
             rows.append(rec)
 
+    # ------------------------------------------------------------------
+    # POST-HOC (HYPOTHESIS): does the real-vs-null difference in hub placement
+    # go in the direction the causal chains say raises delta?  The steering
+    # variable is the share of degree-product mass sitting on inter edges,
+    # which is recoverable from exp_M's hb and p_intra:
+    #    mass_share_inter = (1-p) hb / ((1-p) hb + p)
+    # (verified against trajectories.csv M_inter/M_total at swap 0).
+    print("\n" + "=" * 100)
+    print("POST-HOC (HYPOTHESIS): real vs null hub placement, exp_M columns")
+    print("=" * 100)
+    print(f"{'network':16s} {'mass_real':>10s} {'mass_null':>10s} "
+          f"{'hb_real':>9s} {'hb_null':>9s} {'hubL_real':>10s} {'hubL_null':>10s} "
+          f"{'d_real':>9s} {'d_null':>9s}")
+    for net in NETS:
+        R = ref[net]
+        t0 = traj[(traj.network == net) & (traj.spe == 0)]
+        if len(t0) == 0:
+            continue
+        def ms(p, hb):
+            return (1 - p) * hb / ((1 - p) * hb + p)
+        # hb for the null arm: recomputed from exp_M rows
+        dfs = []
+        for i, f in enumerate(["probe_results_batch2.csv",
+                               "probe_results_batch2_small.csv",
+                               "probe_results.csv"]):
+            dd = pd.read_csv(EXPM / f, keep_default_na=False, na_values=[""])
+            dd["_pri"] = i
+            dfs.append(dd)
+        dd = pd.concat(dfs, ignore_index=True)
+        dd["rewire_seed"] = dd["rewire_seed"].fillna("")
+        dd = (dd.sort_values("_pri")
+                .drop_duplicates(["network", "arm", "rewire_seed"], keep="first"))
+        s = dd[dd.network == net]
+        hb_r = float(s[s.arm == "real"]["hb"].iloc[0])
+        hb_n = float(s[s.arm == "null"]["hb"].mean())
+        hl_r = float(s[s.arm == "real"]["hub_inter_lift"].iloc[0])
+        hl_n = float(s[s.arm == "null"]["hub_inter_lift"].mean())
+        print(f"{net:16s} {ms(R['p_real'], hb_r):10.4f} "
+              f"{ms(R['p_null'], hb_n):10.4f} {hb_r:9.4f} {hb_n:9.4f} "
+              f"{hl_r:10.4f} {hl_n:10.4f} {R['delta_real']:9.4f} "
+              f"{R['delta_null']:9.4f}")
+
     out = pd.DataFrame(rows)
     out = out.drop(columns=[c for c in out.columns if c.endswith("_acc_end")])
     out.to_csv(HERE / "verdicts.csv", index=False)
