@@ -81,3 +81,9 @@ com-Amazon,real,resmatch_L_lspar05,100,8424,8424,,,,0.3301633509182033,0.5765040
 com-Amazon,real,resmatch_sweep_L_lspar05,100,9222,9222,,,,0.3424479199047125,0.6051272818310399,0.0797685579783851,1.0,,384.0,over-matched x1.1
 com-Amazon,real,resmatch_sweep_L_lspar05,100,10695,10695,,,,0.36688327532537407,0.6589120193259576,0.07485453132479061,1.0,,512.0,over-matched x1.2
 com-Amazon,real,resmatch_sweep_L_lspar05,100,11863,11863,,,,0.3724119367206026,0.6746258392413278,0.07019803419987736,1.0,,640.0,over-matched x1.4
+com-Amazon,real,resmatch_forced_C_seed,100,308,308,,,,0.18258824370470164,0.0996957717048561,0.2654807157045472,1.0,,1.125,forced granularity control for C_seed (target k=320)
+com-Amazon,real,resmatch_forced_C_seed,101,311,311,,,,0.19542425031602345,0.10319378778831262,0.2876547128437343,1.0,,1.0,forced granularity control for C_seed (target k=320)
+com-Amazon,real,resmatch_forced_C_seed,102,308,308,,,,0.1762868016228491,0.09307689223999122,0.259496711005707,1.0,,1.0,forced granularity control for C_seed (target k=320)
+com-DBLP,real,resmatch_forced_B_weight,100,240,240,,,,0.08029042485976778,0.017858417038189935,0.14272243268134563,1.0,,1.5,forced granularity control for B_weight (target k=249)
+com-DBLP,real,resmatch_forced_B_weight,101,252,252,,,,0.09927657883056047,0.019674621438004657,0.17887853622311628,1.0,,1.375,forced granularity control for B_weight (target k=249)
+com-DBLP,real,resmatch_forced_B_weight,102,261,261,,,,0.08770878788528826,0.019732290276382698,0.1556852854941938,1.0,,1.5,forced granularity control for B_weight (target k=249)

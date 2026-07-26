@@ -867,6 +867,39 @@ def run_recovery(which):
 
 # ===========================================================================
 
+def run_forced_resmatch(spec):
+    """Granularity control for a recovery arm whose control the 20%-rule skipped.
+
+    spec = "network:condition:k[,network:condition:k]".  Same leiden_matched
+    machinery, 3 seeds; appends resmatch_forced_<condition> rows to recovery.csv.
+    """
+    out = HERE / "recovery.csv"
+    for item in spec.split(","):
+        name, cond, k = item.split(":")
+        k = int(k)
+        g, id_map = load_lcc_graph(name, return_map=True)
+        comms = load_ground_truth(DATASETS_DIR / name / f"{name}_labels.txt", id_map)
+        gt_sizes = np.array([c.size for c in comms], dtype=np.float64)
+        n2c = defaultdict(list)
+        for ci, mem in enumerate(comms):
+            for node in mem:
+                n2c[int(node)].append(ci)
+        log(f"\n=== FORCED RESMATCH {name} for {cond} at k={k}")
+        for s in BASE_SEEDS[:3]:
+            memb, gamma, nc = leiden_matched(g, s, k)
+            f = average_f1(memb, n2c, gt_sizes)
+            r = dict(dataset=name, graph="real", condition=f"resmatch_forced_{cond}",
+                     seed=s, n_clusters=f["n_clusters"],
+                     n_clusters_ge3=f["n_clusters_ge3"], avgF1_ge3=f["avgF1_ge3"],
+                     gt2det=f["gt2det"], det2gt_ge3=f["det2gt_ge3"],
+                     realized_ret=1.0, resolution=round(gamma, 5),
+                     notes=f"forced granularity control for {cond} (target k={k})")
+            append_row(out, r, REC_FIELDS)
+            log(f"  s={s} gamma={gamma:.5f} k={f['n_clusters']} "
+                f"avgF1_ge3={f['avgF1_ge3']:.4f}")
+        del g
+
+
 if __name__ == "__main__":
     stage = sys.argv[1] if len(sys.argv) > 1 else "main"
     arg = sys.argv[2] if len(sys.argv) > 2 else None
@@ -876,5 +909,7 @@ if __name__ == "__main__":
         run_null(arg.split(",") if arg else NULL_NETWORKS)
     elif stage == "recovery":
         run_recovery(arg.split(",") if arg else ["email-Eu-core"])
+    elif stage == "forced_resmatch":
+        run_forced_resmatch(arg)
     else:
         raise SystemExit(f"unknown stage {stage}")
