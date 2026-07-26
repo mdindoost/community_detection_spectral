@@ -54,19 +54,18 @@ this paper addresses.
 Satuluri et al.~\cite{satuluri2011local} introduced local similarity
 sparsification, in which each vertex retains the incident edges whose endpoints
 have the highest Jaccard similarity of neighbourhoods. Evaluating four clustering
-algorithms on seven networks, they reported speedups ``often in the range 10-50,
-with little or no deterioration in the quality of the resulting clusters,'' and
-stated that ``for at least two of the four clustering algorithms, our
-sparsification consistently enables higher clustering accuracies.''
+algorithms on seven networks, they reported speedups commonly between $10\times$
+and $50\times$ with little or no loss of cluster quality, and improved clustering
+accuracy for two of the four algorithms.
 
 The approach was taken up and extended. Hamann et
 al.~\cite{hamann2016structure} conducted a systematic comparison of
 structure-preserving sparsification methods for social networks and released
 reference implementations, which are now distributed in standard graph libraries.
 Wu and Chen~\cite{wu2020gsgan} trained a generative model to sparsify graphs
-specifically for community detection, reporting that clustering algorithms retain
-accuracy while ``only using far fewer edges (e.g., 5\%).'' Sparsification also
-entered production: the SimClusters system at
+specifically for community detection, and report that clustering accuracy is
+retained while as little as five percent of the edges are kept. Sparsification
+also entered production: the SimClusters system at
 Twitter~\cite{satuluri2020simclusters} prunes its interaction graph before
 community detection at industrial scale. Blagus et al.~\cite{blagus2015sampling}
 report a converse effect, that sampling can promote apparent community structure
@@ -87,9 +86,9 @@ $1.2 \times 10^8$ edges, and the networks on which the gains were largest have
 average degrees of 65, 76 and 94, two of them derived from high-throughput assays
 known to contain false-positive edges; the pipeline is now applied to sparse
 graphs and to detection algorithms that run in near-linear time. The same paper
-reports a synthetic sweep in which the method ``actually outperforms the original
-clustering starting from degree 50.'' To our knowledge, no subsequent work
-examines that threshold.
+reports a synthetic sweep in which the method begins to outperform clustering on
+the unsparsified graph at an average degree of approximately 50. To our
+knowledge, no subsequent work examines that threshold.
 
 % [B4: the lost control and what its absence costs (THE HINGE)]
 A measurement requirement is also frequently omitted, and the omission has a
