@@ -33,11 +33,32 @@ Five original contributions. A review has zero.
 
 ## The one sentence the paper exists to defend
 
-> **Sparsification's effect on community detection is determined by average degree and algorithm
-> family, not by the sparsifier — and the threshold sits near average degree 50.**
+**Updated 2026-07-26 (evening), after exp_AB, exp_AC and the section 3 audit. The previous
+version is kept below because what falsified it is instructive.**
+
+> **Sparsification's effect on community detection is decided by the detector's degrees of
+> freedom and by the graph's removable redundancy rather than by the sparsifier; outside those
+> two conditions there is no benefit of any kind, and the accounting in common use reports one
+> anyway.**
 
 Every section either supports that sentence or explains why nobody had found it. Anything that
 does neither is cut.
+
+*Superseded version, and why:*
+
+> ~~Sparsification's effect on community detection is determined by average degree and algorithm
+> family, not by the sparsifier, and the threshold sits near average degree 50.~~
+
+Three of our own results undercut it. **"The threshold sits near average degree 50" is an LFR
+statement**: exp_AB found the fixed-k gain on real graphs at d_avg 28.5, and exp_AC found the SBM
+family crossing no later than LFR, so the paper now states a condition and not a threshold.
+**"Determined by average degree"** overstates what we can support: exp_AA's noise injection shows
+the gain growing at fixed density when spurious edges are added, so the operative quantity is how
+much redundancy can be removed, of which average degree is the strongest correlate we can measure
+(Spearman +0.65 in exp_AC) and degree heterogeneity is not a correlate at all (-0.26, tested and
+excluded). **The old sentence also carried only the positive half.** The measured cost of the
+missing control (45 of 63 sign flips) and the delimited negative territory are what change what
+other people do, and a headline that omits them sells the weaker half of the finding first.
 
 *Corollary settled at the same time:* **the boundary leads; the yardstick is the instrument that
 found it.** A contribution paper's headline is its finding, not its method — even when the method
