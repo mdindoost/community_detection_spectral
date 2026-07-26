@@ -1,0 +1,58 @@
+[2026-07-26 12:42:43] === Exp AB streaming driver start ===
+[2026-07-26 12:42:43] ca-HepTh: Fuji free = 5583 MB
+[2026-07-26 12:42:43] ca-HepTh: rsync dataset
+[2026-07-26 12:42:43] ca-HepTh: launching detached run 
+launched
+[2026-07-26 12:44:23] ca-HepTh: run finished; pulling results
+[2026-07-26 12:44:23] ca-HepTh: deleting dataset from Fuji
+[2026-07-26 12:44:24] ca-HepTh: commit + push
+[2026-07-26 12:44:24] ca-HepTh: pushed
+[2026-07-26 12:44:25] email-Eu-core: Fuji free = 5584 MB
+[2026-07-26 12:44:25] email-Eu-core: rsync dataset
+[2026-07-26 12:44:25] email-Eu-core: launching detached run --metis
+launched
+[2026-07-26 12:44:54] email-Eu-core: run finished; pulling results
+[2026-07-26 12:44:54] email-Eu-core: deleting dataset from Fuji
+[2026-07-26 12:44:54] email-Eu-core: commit + push
+[2026-07-26 12:44:55] email-Eu-core: pushed
+[2026-07-26 12:44:55] ca-CondMat: Fuji free = 5581 MB
+[2026-07-26 12:44:55] ca-CondMat: rsync dataset
+[2026-07-26 12:44:56] ca-CondMat: launching detached run 
+launched
+[2026-07-26 12:48:11] ca-CondMat: run finished; pulling results
+[2026-07-26 12:48:12] ca-CondMat: deleting dataset from Fuji
+[2026-07-26 12:48:12] ca-CondMat: commit + push
+[2026-07-26 12:48:13] ca-CondMat: pushed
+[2026-07-26 12:48:13] wiki-Vote: Fuji free = 5571 MB
+[2026-07-26 12:48:13] wiki-Vote: rsync dataset
+[2026-07-26 12:48:13] wiki-Vote: launching detached run --metis
+launched
+[2026-07-26 12:49:46] wiki-Vote: run finished; pulling results
+[2026-07-26 12:49:46] wiki-Vote: deleting dataset from Fuji
+[2026-07-26 12:49:46] wiki-Vote: commit + push
+[2026-07-26 12:49:47] wiki-Vote: pushed
+[2026-07-26 12:49:47] email-Enron: Fuji free = 5568 MB
+[2026-07-26 12:49:47] email-Enron: rsync dataset
+[2026-07-26 12:49:48] email-Enron: launching detached run 
+launched
+[2026-07-26 12:55:01] email-Enron: run finished; pulling results
+[2026-07-26 12:55:01] email-Enron: deleting dataset from Fuji
+[2026-07-26 12:55:02] email-Enron: commit + push
+[2026-07-26 12:55:03] email-Enron: pushed
+[2026-07-26 12:55:03] com-Amazon: Fuji free = 5546 MB
+[2026-07-26 12:55:03] com-Amazon: rsync dataset
+[2026-07-26 12:55:03] com-Amazon: launching detached run 
+launched
+[2026-07-26 14:11:09] com-Amazon: run finished; pulling results
+[2026-07-26 14:11:09] com-Amazon: deleting dataset from Fuji
+[2026-07-26 14:11:09] com-Amazon: commit + push
+[2026-07-26 14:11:10] com-Amazon: pushed
+[2026-07-26 14:11:10] com-DBLP: Fuji free = 5515 MB
+[2026-07-26 14:11:10] com-DBLP: rsync dataset
+[2026-07-26 14:11:11] com-DBLP: launching detached run 
+launched
+[2026-07-26 15:39:04] com-DBLP: run finished; pulling results
+[2026-07-26 15:39:05] com-DBLP: deleting dataset from Fuji
+[2026-07-26 15:39:05] com-DBLP: commit + push
+[2026-07-26 15:39:06] com-DBLP: pushed
+[2026-07-26 15:39:06] === Exp AB streaming driver done ===

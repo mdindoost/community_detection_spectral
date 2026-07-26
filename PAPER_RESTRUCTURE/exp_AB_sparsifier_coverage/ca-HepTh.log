@@ -1,0 +1,52 @@
+
+==============================================================================
+ca-HepTh: n=8,638 m=24,806 d_avg=5.74 (load 0.0s)
+==============================================================================
+  baseline Q=0.761367+-0.000943 best5=0.762360 nc=49 frag_nodes=27 T=0.37s
+  jaccard 0.02s  lspar_rank 0.01s  mst 0.00s  nk_build 0.02s  ld_score 0.00s  lsim_score 0.01s
+  RETENTION FLOORS: mst_backbone=(n-1)/m=0.3482  lspar(e->0)=0.2760  ld(param=1)=0.3466  lsim(param=1)=0.2726  kn(integer k=1)=0.3170
+  operating points (target realized retention): [0.5, 0.3482, 0.2]
+
+  ---- operating point target_ret=0.5 ----
+    [resmatch] target_nc=129 -> nc=130 gamma=4 Q_orig=0.733070 (3 calls, 1.2s)
+    kn           ret=0.5015[ok] nc=     129 frag=  2.53% dQ_mean=-0.10353 dQ_best5=-0.10453 dQ_match=-0.10427(r=1) dQ_res=-0.07524 T_sp=0.0s spd=1.12x
+    [resmatch] target_nc=66 -> nc=65 gamma=1.5 Q_orig=0.759069 (3 calls, 1.1s)
+    ld           ret=0.5104[ok] nc=      66 frag=  0.59% dQ_mean=-0.06933 dQ_best5=-0.07032 dQ_match=-0.07006(r=2) dQ_res=-0.06703 T_sp=0.2s spd=0.84x
+    [resmatch] target_nc=704 -> nc=692 gamma=64 Q_orig=0.597428 (8 calls, 3.6s)
+    lsim         ret=0.5008[ok] nc=     704 frag= 23.80% dQ_mean=-0.08582 dQ_best5=-0.08681 dQ_match=-0.08656(r=1) dQ_res=+0.07812 T_sp=0.1s spd=0.97x
+    [resmatch] target_nc=104 -> nc=103 gamma=3 Q_orig=0.746311 (4 calls, 1.6s)
+    mst_jaccard  ret=0.5000[ok] nc=     104 frag=  0.00% dQ_mean=-0.06372 dQ_best5=-0.06471 dQ_match=-0.06446(r=1) dQ_res=-0.04866 T_sp=0.0s spd=1.34x
+    [resmatch] target_nc=71 -> nc=74 gamma=1.75 Q_orig=0.757339 (4 calls, 1.5s)
+    mst_random   ret=0.5000[ok] nc=      71 frag=  0.05% dQ_mean=-0.05677 dQ_best5=-0.05776 dQ_match=-0.05750(r=1) dQ_res=-0.05274 T_sp=0.0s spd=1.13x
+    [resmatch] target_nc=315 -> nc=315 gamma=18 Q_orig=0.684504 (9 calls, 3.9s)
+    lspar        ret=0.5006[ok] nc=     315 frag= 10.42% dQ_mean=-0.07230 dQ_best5=-0.07330 dQ_match=-0.07304(r=1) dQ_res=+0.00456 T_sp=0.0s spd=1.20x
+    [resmatch] target_nc=218 -> nc=223 gamma=10 Q_orig=0.709293 (7 calls, 2.9s)
+    dspar        ret=0.4976[ok] nc=     218 frag=  4.38% dQ_mean=-0.12431 dQ_best5=-0.12530 dQ_match=-0.12505(r=1) dQ_res=-0.07224 T_sp=0.0s spd=1.17x
+
+  ---- operating point target_ret=0.3482 ----
+    [resmatch] target_nc=628 -> nc=651 gamma=56 Q_orig=0.605591 (9 calls, 4.0s)
+    kn           ret=0.3444[ok] nc=     628 frag= 22.15% dQ_mean=-0.22828 dQ_best5=-0.22927 dQ_match=-0.22902(r=1) dQ_res=-0.07250 T_sp=0.0s spd=1.22x
+    [resmatch] target_nc=124 -> nc=130 gamma=4 Q_orig=0.733070 (3 calls, 1.2s)
+    ld           ret=0.3482[ok] nc=     124 frag=  0.69% dQ_mean=-0.15615 dQ_best5=-0.15714 dQ_match=-0.15689(r=1) dQ_res=-0.12785 T_sp=0.1s spd=1.34x
+    [resmatch] target_nc=1246 -> nc=1239 gamma=160 Q_orig=0.496412 (11 calls, 5.4s)
+    lsim         ret=0.3444[ok] nc=    1246 frag= 44.51% dQ_mean=-0.17213 dQ_best5=-0.17312 dQ_match=-0.17287(r=2) dQ_res=+0.09283 T_sp=0.1s spd=0.94x
+    [resmatch] target_nc=95 -> nc=94 gamma=2.5 Q_orig=0.750741 (5 calls, 2.0s)
+    mst_jaccard  ret=0.3482[ok] nc=      95 frag=  0.00% dQ_mean=-0.07732 dQ_best5=-0.07831 dQ_match=-0.07806(r=1) dQ_res=-0.06669 T_sp=0.0s spd=1.32x
+    mst_random   ret=0.3482[ok] nc=      95 frag=  0.00% dQ_mean=-0.07732 dQ_best5=-0.07831 dQ_match=-0.07806(r=1) dQ_res=-0.06669 T_sp=0.0s spd=1.33x
+    [resmatch] target_nc=1875 -> nc=1802 gamma=320 Q_orig=0.425453 (12 calls, 6.3s)
+    lspar        ret=0.2760[coarse_grid] nc=    1875 frag= 77.95% dQ_mean=-0.30846 dQ_best5=-0.30946 dQ_match=-0.30920(r=1) dQ_res=+0.02745 T_sp=0.0s spd=1.00x
+    [resmatch] target_nc=1149 -> nc=1158 gamma=144 Q_orig=0.510348 (12 calls, 6.0s)
+    dspar        ret=0.3462[ok] nc=    1149 frag= 27.59% dQ_mean=-0.27283 dQ_best5=-0.27382 dQ_match=-0.27357(r=1) dQ_res=-0.02181 T_sp=0.0s spd=1.06x
+
+  ---- operating point target_ret=0.2 ----
+    [resmatch] target_nc=3663 -> nc=3654 gamma=1152 Q_orig=0.250470 (15 calls, 8.8s)
+    kn           ret=0.2015[ok] nc=    3663 frag= 84.19% dQ_mean=-0.50787 dQ_best5=-0.50886 dQ_match=-0.50860(r=2) dQ_res=+0.00303 T_sp=0.0s spd=0.88x
+    ld           ret=0.3466[at_floor] nc=     127 frag=  0.69% dQ_mean=-0.15480 dQ_best5=-0.15580 dQ_match=-0.15554(r=1) dQ_res=-0.12651 T_sp=0.1s spd=1.29x
+    lsim         ret=0.2726[at_floor] nc=    1877 frag= 77.33% dQ_mean=-0.30937 dQ_best5=-0.31036 dQ_match=-0.31010(r=1) dQ_res=+0.02655 T_sp=0.1s spd=0.99x
+    mst_jaccard  SKIPPED: target 0.2 < backbone floor 0.3482
+    mst_random   SKIPPED: target 0.2 < backbone floor 0.3482
+    lspar        ret=0.2760[at_floor] nc=    1875 frag= 77.95% dQ_mean=-0.30846 dQ_best5=-0.30946 dQ_match=-0.30920(r=1) dQ_res=+0.02745 T_sp=0.0s spd=1.07x
+    [resmatch] target_nc=3841 -> nc=3893 gamma=1280 Q_orig=0.234278 (14 calls, 8.1s)
+    dspar        ret=0.1980[ok] nc=    3841 frag= 75.31% dQ_mean=-0.50056 dQ_best5=-0.50155 dQ_match=-0.50129(r=2) dQ_res=+0.02653 T_sp=0.0s spd=0.82x
+
+  ca-HepTh DONE in 78.5s

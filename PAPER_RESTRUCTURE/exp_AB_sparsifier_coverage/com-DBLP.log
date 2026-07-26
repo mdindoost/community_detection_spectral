@@ -1,0 +1,53 @@
+
+==============================================================================
+com-DBLP: n=317,080 m=1,049,866 d_avg=6.62 (load 1.6s)
+==============================================================================
+  ground truth: 5000 communities (>= 3 nodes)
+  baseline Q=0.825701+-0.000840 best5=0.826604 nc=229 frag_nodes=345 T=19.98s
+  jaccard 0.74s  lspar_rank 0.38s  mst 0.30s  nk_build 0.87s  ld_score 0.05s  lsim_score 0.29s
+  RETENTION FLOORS: mst_backbone=(n-1)/m=0.3020  lspar(e->0)=0.2441  ld(param=1)=0.3013  lsim(param=1)=0.2337  kn(integer k=1)=0.2774
+  operating points (target realized retention): [0.5, 0.3022, 0.2]
+
+  ---- operating point target_ret=0.5 ----
+    [resmatch] target_nc=1429 -> nc=1469 gamma=20 Q_orig=0.792813 (8 calls, 164.6s)
+    kn           ret=0.5006[ok] nc=    1429 frag=  1.56% dQ_mean=-0.06594 dQ_best5=-0.06684 dQ_match=-0.06778(r=1) dQ_res=-0.03305 T_sp=0.9s spd=1.19x
+    [resmatch] target_nc=423 -> nc=438 gamma=3.5 Q_orig=0.815351 (5 calls, 100.3s)
+    ld           ret=0.4996[ok] nc=     423 frag=  0.35% dQ_mean=-0.04213 dQ_best5=-0.04303 dQ_match=-0.04397(r=1) dQ_res=-0.03178 T_sp=2.8s spd=1.20x
+    [resmatch] target_nc=27641 -> nc=27908 gamma=3072 Q_orig=0.573854 (14 calls, 333.5s)
+    lsim         ret=0.5000[ok] nc=   27641 frag= 26.86% dQ_mean=-0.11882 dQ_best5=-0.11973 dQ_match=-0.12066(r=2) dQ_res=+0.13302 T_sp=3.2s spd=0.95x
+    [resmatch] target_nc=716 -> nc=728 gamma=7 Q_orig=0.806993 (6 calls, 122.7s)
+    mst_jaccard  ret=0.5000[ok] nc=     716 frag=  0.00% dQ_mean=-0.06948 dQ_best5=-0.07039 dQ_match=-0.07132(r=1) dQ_res=-0.05078 T_sp=1.1s spd=1.44x
+    [resmatch] target_nc=290 -> nc=292 gamma=2 Q_orig=0.821536 (2 calls, 40.0s)
+    mst_random   ret=0.5000[ok] nc=     290 frag=  0.02% dQ_mean=-0.03461 dQ_best5=-0.03551 dQ_match=-0.03645(r=1) dQ_res=-0.03045 T_sp=1.1s spd=1.20x
+    [resmatch] target_nc=10948 -> nc=10812 gamma=576 Q_orig=0.696786 (14 calls, 314.1s)
+    lspar        ret=0.5030[ok] nc=   10948 frag= 13.14% dQ_mean=-0.09922 dQ_best5=-0.10012 dQ_match=-0.10106(r=1) dQ_res=+0.02969 T_sp=1.3s spd=1.20x
+    [resmatch] target_nc=3044 -> nc=3059 gamma=64 Q_orig=0.773036 (7 calls, 144.2s)
+    dspar        ret=0.5002[ok] nc=    3044 frag=  2.29% dQ_mean=-0.08441 dQ_best5=-0.08531 dQ_match=-0.08625(r=1) dQ_res=-0.03174 T_sp=0.4s spd=1.24x
+
+  ---- operating point target_ret=0.3022 ----
+    [resmatch] target_nc=19666 -> nc=18731 gamma=1536 Q_orig=0.635588 (13 calls, 297.6s)
+    kn           ret=0.3042[ok] nc=   19666 frag= 20.17% dQ_mean=-0.25433 dQ_best5=-0.25523 dQ_match=-0.25616(r=1) dQ_res=-0.06421 T_sp=0.8s spd=1.23x
+    [resmatch] target_nc=1291 -> nc=1247 gamma=16 Q_orig=0.795988 (6 calls, 123.7s)
+    ld           ret=0.3022[ok] nc=    1291 frag=  0.55% dQ_mean=-0.14778 dQ_best5=-0.14869 dQ_match=-0.14962(r=1) dQ_res=-0.11807 T_sp=2.3s spd=1.60x
+    [resmatch] target_nc=52558 -> nc=53732 gamma=9216 Q_orig=0.449198 (18 calls, 517.3s)
+    lsim         ret=0.3025[ok] nc=   52558 frag= 51.50% dQ_mean=-0.24655 dQ_best5=-0.24746 dQ_match=-0.24839(r=2) dQ_res=+0.12995 T_sp=2.5s spd=0.87x
+    [resmatch] target_nc=581 -> nc=579 gamma=5 Q_orig=0.810656 (6 calls, 123.5s)
+    mst_jaccard  ret=0.3022[ok] nc=     581 frag=  0.00% dQ_mean=-0.07554 dQ_best5=-0.07644 dQ_match=-0.07738(r=1) dQ_res=-0.06049 T_sp=1.1s spd=1.44x
+    mst_random   ret=0.3022[ok] nc=     576 frag=  0.00% dQ_mean=-0.07690 dQ_best5=-0.07780 dQ_match=-0.07873(r=1) dQ_res=-0.06185 T_sp=1.1s spd=1.44x
+    [resmatch] target_nc=72736 -> nc=70529 gamma=14336 Q_orig=0.391147 (17 calls, 480.6s)
+    lspar        ret=0.2441[coarse_grid] nc=   72736 frag= 78.06% dQ_mean=-0.39744 dQ_best5=-0.39834 dQ_match=-0.39927(r=2) dQ_res=+0.03712 T_sp=2.3s spd=0.85x
+    [resmatch] target_nc=45137 -> nc=46081 gamma=7168 Q_orig=0.480539 (16 calls, 417.3s)
+    dspar        ret=0.3021[ok] nc=   45137 frag= 27.53% dQ_mean=-0.30449 dQ_best5=-0.30540 dQ_match=-0.30633(r=2) dQ_res=+0.04067 T_sp=0.4s spd=0.99x
+
+  ---- operating point target_ret=0.2 ----
+    [resmatch] target_nc=112921 -> nc=117206 gamma=32768 Q_orig=0.276044 (16 calls, 445.7s)
+    kn           ret=0.1960[ok] nc=  112921 frag= 71.22% dQ_mean=-0.54674 dQ_best5=-0.54764 dQ_match=-0.54857(r=2) dQ_res=+0.00292 T_sp=0.8s spd=0.72x
+    ld           ret=0.3013[at_floor] nc=    1408 frag=  0.55% dQ_mean=-0.15093 dQ_best5=-0.15183 dQ_match=-0.15277(r=1) dQ_res=-0.11804 T_sp=2.3s spd=1.60x
+    lsim         ret=0.2337[at_floor] nc=   71689 frag= 76.98% dQ_mean=-0.39728 dQ_best5=-0.39818 dQ_match=-0.39911(r=2) dQ_res=+0.03728 T_sp=2.3s spd=0.87x
+    mst_jaccard  SKIPPED: target 0.2 < backbone floor 0.3020
+    mst_random   SKIPPED: target 0.2 < backbone floor 0.3020
+    lspar        ret=0.2441[at_floor] nc=   72736 frag= 78.06% dQ_mean=-0.39744 dQ_best5=-0.39834 dQ_match=-0.39927(r=2) dQ_res=+0.03712 T_sp=1.2s spd=0.90x
+    [resmatch] target_nc=116991 -> nc=117206 gamma=32768 Q_orig=0.276044 (16 calls, 445.3s)
+    dspar        ret=0.2000[ok] nc=  116991 frag= 61.63% dQ_mean=-0.50955 dQ_best5=-0.51045 dQ_match=-0.51139(r=2) dQ_res=+0.04011 T_sp=0.4s spd=0.64x
+
+  com-DBLP DONE in 5252.0s

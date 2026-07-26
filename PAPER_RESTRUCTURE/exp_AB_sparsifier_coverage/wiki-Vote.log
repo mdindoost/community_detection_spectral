@@ -1,0 +1,54 @@
+
+==============================================================================
+wiki-Vote: n=7,066 m=100,736 d_avg=28.51 (load 0.2s)
+==============================================================================
+  baseline Q=0.424425+-0.002497 best5=0.426804 nc=6 frag_nodes=5 T=0.63s
+  jaccard 0.22s  lspar_rank 0.03s  mst 0.02s  nk_build 0.07s  ld_score 0.00s  lsim_score 0.02s
+  RETENTION FLOORS: mst_backbone=(n-1)/m=0.0701  lspar(e->0)=0.0673  ld(param=1)=0.0701  lsim(param=1)=0.0674  kn(integer k=1)=0.0691
+  operating points (target realized retention): [0.5, 0.2]
+
+  ---- operating point target_ret=0.5 ----
+    kn           ret=0.5000[ok] nc=       7 frag=  0.11% dQ_mean=-0.00923 dQ_best5=-0.01161 dQ_match=-0.01417(r=1)  T_sp=0.1s spd=1.24x
+    [resmatch] target_nc=14 -> nc=14 gamma=1.375 Q_orig=0.412795 (5 calls, 3.3s)
+    ld           ret=0.4999[ok] nc=      14 frag=  0.46% dQ_mean=-0.03355 dQ_best5=-0.03593 dQ_match=-0.03849(r=2) dQ_res=-0.02192 T_sp=0.3s spd=0.97x
+    [resmatch] target_nc=9 -> nc=10 gamma=1.25 Q_orig=0.414083 (4 calls, 2.7s)
+    lsim         ret=0.5000[ok] nc=       9 frag=  0.09% dQ_mean=-0.01486 dQ_best5=-0.01723 dQ_match=-0.01980(r=1) dQ_res=-0.00451 T_sp=0.2s spd=1.02x
+    [resmatch] target_nc=116 -> nc=116 gamma=4.5 Q_orig=0.218526 (7 calls, 9.4s)
+    mst_jaccard  ret=0.5000[ok] nc=     116 frag=  5.46% dQ_mean=-0.02663 dQ_best5=-0.02901 dQ_match=-0.03157(r=2) dQ_res=+0.17927 T_sp=0.3s spd=0.98x
+    mst_random   ret=0.5000[ok] nc=      14 frag=  0.39% dQ_mean=-0.01439 dQ_best5=-0.01677 dQ_match=-0.01933(r=2) dQ_res=-0.00276 T_sp=0.2s spd=0.94x
+    [resmatch] target_nc=8 -> nc=7 gamma=1.125 Q_orig=0.415283 (5 calls, 3.3s)
+    lspar        ret=0.5018[ok] nc=       8 frag=  0.13% dQ_mean=-0.00931 dQ_best5=-0.01169 dQ_match=-0.01425(r=2) dQ_res=-0.00017 T_sp=0.3s spd=0.97x
+    [resmatch] target_nc=9 -> nc=10 gamma=1.25 Q_orig=0.414083 (4 calls, 2.7s)
+    dspar        ret=0.4997[ok] nc=       9 frag=  0.20% dQ_mean=-0.01174 dQ_best5=-0.01412 dQ_match=-0.01668(r=1) dQ_res=-0.00140 T_sp=0.0s spd=1.34x
+
+  ---- operating point target_ret=0.2 ----
+    [resmatch] target_nc=17 -> nc=17 gamma=1.5 Q_orig=0.412076 (3 calls, 2.1s)
+    kn           ret=0.2034[ok] nc=      17 frag=  0.42% dQ_mean=-0.05162 dQ_best5=-0.05399 dQ_match=-0.05656(r=1) dQ_res=-0.03927 T_sp=0.0s spd=1.54x
+    [resmatch] target_nc=51 -> nc=50 gamma=2.875 Q_orig=0.306977 (7 calls, 6.5s)
+    ld           ret=0.2000[ok] nc=      51 frag=  2.21% dQ_mean=-0.21453 dQ_best5=-0.21691 dQ_match=-0.21947(r=1) dQ_res=-0.09709 T_sp=0.2s spd=1.37x
+    lsim         ret=0.2000[ok] nc=      17 frag=  0.38% dQ_mean=-0.03756 dQ_best5=-0.03994 dQ_match=-0.04250(r=1) dQ_res=-0.02521 T_sp=0.2s spd=1.55x
+    [resmatch] target_nc=246 -> nc=240 gamma=7.25 Q_orig=0.156176 (8 calls, 12.3s)
+    mst_jaccard  ret=0.2000[ok] nc=     246 frag= 13.67% dQ_mean=-0.10496 dQ_best5=-0.10734 dQ_match=-0.10990(r=1) dQ_res=+0.16329 T_sp=0.3s spd=1.24x
+    [resmatch] target_nc=44 -> nc=43 gamma=2.75 Q_orig=0.312754 (6 calls, 5.4s)
+    mst_random   ret=0.2000[ok] nc=      44 frag=  1.84% dQ_mean=-0.06504 dQ_best5=-0.06742 dQ_match=-0.06998(r=1) dQ_res=+0.04663 T_sp=0.2s spd=1.09x
+    lspar        ret=0.1970[ok] nc=      14 frag=  0.09% dQ_mean=-0.04470 dQ_best5=-0.04707 dQ_match=-0.04964(r=1) dQ_res=-0.03307 T_sp=0.3s spd=1.19x
+    dspar        ret=0.1996[ok] nc=      17 frag=  0.25% dQ_mean=-0.06416 dQ_best5=-0.06654 dQ_match=-0.06910(r=1) dQ_res=-0.05181 T_sp=0.0s spd=1.63x
+
+  ==== Metis (fixed k = nc_base) on wiki-Vote ====
+    metis base k=6 Q=0.382183+-0.000771 best=0.382885 AMI=nan T=0.068s
+    metis kn           t=0.5 ret=0.5000 dQ_mean=+0.013463 dQ_worst=+0.011502 dAMI=+nan davgF1=+nan
+    metis ld           t=0.5 ret=0.4999 dQ_mean=-0.028771 dQ_worst=-0.029749 dAMI=+nan davgF1=+nan
+    metis lsim         t=0.5 ret=0.5000 dQ_mean=+0.015210 dQ_worst=+0.012831 dAMI=+nan davgF1=+nan
+    metis mst_jaccard  t=0.5 ret=0.5000 dQ_mean=-0.018077 dQ_worst=-0.019192 dAMI=+nan davgF1=+nan
+    metis mst_random   t=0.5 ret=0.5000 dQ_mean=-0.007045 dQ_worst=-0.009059 dAMI=+nan davgF1=+nan
+    metis lspar        t=0.5 ret=0.5018 dQ_mean=+0.017314 dQ_worst=+0.016076 dAMI=+nan davgF1=+nan
+    metis dspar        t=0.5 ret=0.4997 dQ_mean=+0.013626 dQ_worst=+0.011491 dAMI=+nan davgF1=+nan
+    metis kn           t=0.2 ret=0.2034 dQ_mean=-0.022223 dQ_worst=-0.030284 dAMI=+nan davgF1=+nan
+    metis ld           t=0.2 ret=0.2000 dQ_mean=-0.173972 dQ_worst=-0.185974 dAMI=+nan davgF1=+nan
+    metis lsim         t=0.2 ret=0.2000 dQ_mean=+0.004328 dQ_worst=+0.002389 dAMI=+nan davgF1=+nan
+    metis mst_jaccard  t=0.2 ret=0.2000 dQ_mean=-0.042886 dQ_worst=-0.051312 dAMI=+nan davgF1=+nan
+    metis mst_random   t=0.2 ret=0.2000 dQ_mean=-0.029111 dQ_worst=-0.032028 dAMI=+nan davgF1=+nan
+    metis lspar        t=0.2 ret=0.1970 dQ_mean=+0.007184 dQ_worst=+0.005792 dAMI=+nan davgF1=+nan
+    metis dspar        t=0.2 ret=0.1996 dQ_mean=-0.023870 dQ_worst=-0.025485 dAMI=+nan davgF1=+nan
+
+  wiki-Vote DONE in 71.8s

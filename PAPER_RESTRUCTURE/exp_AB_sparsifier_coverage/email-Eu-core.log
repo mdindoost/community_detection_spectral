@@ -1,0 +1,55 @@
+
+==============================================================================
+email-Eu-core: n=986 m=16,064 d_avg=32.58 (load 0.0s)
+==============================================================================
+  labels: 986/986 nodes, 42 classes
+  baseline Q=0.416048+-0.000429 best5=0.416430 nc=8 frag_nodes=0 T=0.08s
+  jaccard 0.08s  lspar_rank 0.00s  mst 0.00s  nk_build 0.01s  ld_score 0.01s  lsim_score 0.00s
+  RETENTION FLOORS: mst_backbone=(n-1)/m=0.0613  lspar(e->0)=0.0533  ld(param=1)=0.0613  lsim(param=1)=0.0534  kn(integer k=1)=0.0604
+  operating points (target realized retention): [0.5, 0.2]
+
+  ---- operating point target_ret=0.5 ----
+    kn           ret=0.5031[ok] nc=      10 frag=  0.00% dQ_mean=-0.01008 dQ_best5=-0.01046 dQ_match=-0.00862(r=1)  T_sp=0.0s spd=1.22x
+    ld           ret=0.4999[ok] nc=       8 frag=  0.00% dQ_mean=-0.07650 dQ_best5=-0.07688 dQ_match=-0.07781(r=2)  T_sp=0.1s spd=0.66x
+    [resmatch] target_nc=13 -> nc=13 gamma=1.5 Q_orig=0.402403 (3 calls, 0.3s)
+    lsim         ret=0.5001[ok] nc=      13 frag=  0.61% dQ_mean=-0.03544 dQ_best5=-0.03582 dQ_match=-0.03675(r=2) dQ_res=-0.02179 T_sp=0.1s spd=0.71x
+    [resmatch] target_nc=16 -> nc=17 gamma=1.625 Q_orig=0.397817 (5 calls, 0.5s)
+    mst_jaccard  ret=0.5000[ok] nc=      16 frag=  1.22% dQ_mean=-0.04174 dQ_best5=-0.04213 dQ_match=-0.04306(r=2) dQ_res=-0.02351 T_sp=0.1s spd=0.61x
+    mst_random   ret=0.5000[ok] nc=       9 frag=  0.30% dQ_mean=-0.01370 dQ_best5=-0.01408 dQ_match=-0.01501(r=2)  T_sp=0.1s spd=0.54x
+    [resmatch] target_nc=12 -> nc=13 gamma=1.5 Q_orig=0.402403 (3 calls, 0.3s)
+    lspar        ret=0.5021[ok] nc=      12 frag=  0.00% dQ_mean=-0.02812 dQ_best5=-0.02850 dQ_match=-0.02943(r=2) dQ_res=-0.01447 T_sp=0.1s spd=0.58x
+    dspar        ret=0.4983[ok] nc=       9 frag=  0.00% dQ_mean=-0.01121 dQ_best5=-0.01159 dQ_match=-0.00975(r=1)  T_sp=0.0s spd=1.14x
+
+  ---- operating point target_ret=0.2 ----
+    [resmatch] target_nc=11 -> nc=11 gamma=1.25 Q_orig=0.406557 (4 calls, 0.4s)
+    kn           ret=0.1968[ok] nc=      11 frag=  0.00% dQ_mean=-0.07767 dQ_best5=-0.07805 dQ_match=-0.07621(r=1) dQ_res=-0.06818 T_sp=0.0s spd=1.36x
+    [resmatch] target_nc=13 -> nc=13 gamma=1.5 Q_orig=0.402403 (3 calls, 0.3s)
+    ld           ret=0.2003[ok] nc=      13 frag=  1.05% dQ_mean=-0.27747 dQ_best5=-0.27785 dQ_match=-0.27601(r=1) dQ_res=-0.26382 T_sp=0.0s spd=1.11x
+    [resmatch] target_nc=20 -> nc=20 gamma=1.875 Q_orig=0.390475 (5 calls, 0.5s)
+    lsim         ret=0.2000[ok] nc=      20 frag=  0.81% dQ_mean=-0.06789 dQ_best5=-0.06827 dQ_match=-0.06920(r=2) dQ_res=-0.04231 T_sp=0.1s spd=0.59x
+    [resmatch] target_nc=29 -> nc=30 gamma=2.25 Q_orig=0.376341 (6 calls, 0.6s)
+    mst_jaccard  ret=0.2000[ok] nc=      29 frag=  5.41% dQ_mean=-0.08231 dQ_best5=-0.08269 dQ_match=-0.08363(r=2) dQ_res=-0.04260 T_sp=0.1s spd=0.68x
+    [resmatch] target_nc=12 -> nc=13 gamma=1.5 Q_orig=0.402403 (3 calls, 0.3s)
+    mst_random   ret=0.2000[ok] nc=      12 frag=  0.30% dQ_mean=-0.06976 dQ_best5=-0.07014 dQ_match=-0.07107(r=2) dQ_res=-0.05611 T_sp=0.1s spd=0.61x
+    [resmatch] target_nc=18 -> nc=18 gamma=1.75 Q_orig=0.393343 (4 calls, 0.4s)
+    lspar        ret=0.2014[ok] nc=      18 frag=  0.00% dQ_mean=-0.05725 dQ_best5=-0.05763 dQ_match=-0.05857(r=2) dQ_res=-0.03455 T_sp=0.1s spd=0.64x
+    dspar        ret=0.1990[ok] nc=      13 frag=  0.17% dQ_mean=-0.06947 dQ_best5=-0.06985 dQ_match=-0.06801(r=1) dQ_res=-0.05583 T_sp=0.0s spd=1.53x
+
+  ==== Metis (fixed k = nc_base) on email-Eu-core ====
+    metis base k=8 Q=0.359624+-0.006403 best=0.371260 AMI=0.4513 T=0.011s
+    metis kn           t=0.5 ret=0.5031 dQ_mean=+0.023576 dQ_worst=+0.005523 dAMI=+0.0794 davgF1=+nan
+    metis ld           t=0.5 ret=0.4999 dQ_mean=-0.102298 dQ_worst=-0.124173 dAMI=-0.1539 davgF1=+nan
+    metis lsim         t=0.5 ret=0.5001 dQ_mean=-0.009438 dQ_worst=-0.025051 dAMI=+0.0389 davgF1=+nan
+    metis mst_jaccard  t=0.5 ret=0.5000 dQ_mean=-0.006228 dQ_worst=-0.018827 dAMI=+0.0406 davgF1=+nan
+    metis mst_random   t=0.5 ret=0.5000 dQ_mean=+0.006847 dQ_worst=-0.032823 dAMI=+0.0272 davgF1=+nan
+    metis lspar        t=0.5 ret=0.5021 dQ_mean=-0.004497 dQ_worst=-0.023927 dAMI=+0.0480 davgF1=+nan
+    metis dspar        t=0.5 ret=0.4983 dQ_mean=+0.027197 dQ_worst=+0.014267 dAMI=+0.0777 davgF1=+nan
+    metis kn           t=0.2 ret=0.1968 dQ_mean=-0.021299 dQ_worst=-0.042873 dAMI=+0.0099 davgF1=+nan
+    metis ld           t=0.2 ret=0.2003 dQ_mean=-0.246161 dQ_worst=-0.265042 dAMI=-0.3064 davgF1=+nan
+    metis lsim         t=0.2 ret=0.2000 dQ_mean=-0.010436 dQ_worst=-0.030022 dAMI=+0.0753 davgF1=+nan
+    metis mst_jaccard  t=0.2 ret=0.2000 dQ_mean=-0.032839 dQ_worst=-0.053198 dAMI=+0.0362 davgF1=+nan
+    metis mst_random   t=0.2 ret=0.2000 dQ_mean=-0.024862 dQ_worst=-0.056026 dAMI=-0.0017 davgF1=+nan
+    metis lspar        t=0.2 ret=0.2014 dQ_mean=+0.000519 dQ_worst=-0.016543 dAMI=+0.0955 davgF1=+nan
+    metis dspar        t=0.2 ret=0.1990 dQ_mean=-0.037561 dQ_worst=-0.066605 dAMI=-0.0045 davgF1=+nan
+
+  email-Eu-core DONE in 7.9s

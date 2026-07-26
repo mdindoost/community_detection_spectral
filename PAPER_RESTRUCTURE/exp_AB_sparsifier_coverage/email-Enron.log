@@ -1,0 +1,35 @@
+
+==============================================================================
+email-Enron: n=33,696 m=180,811 d_avg=10.73 (load 0.4s)
+==============================================================================
+  baseline Q=0.607097+-0.001873 best5=0.609357 nc=171 frag_nodes=637 T=1.91s
+  jaccard 0.35s  lspar_rank 0.06s  mst 0.03s  nk_build 0.14s  ld_score 0.02s  lsim_score 0.05s
+  RETENTION FLOORS: mst_backbone=(n-1)/m=0.1864  lspar(e->0)=0.1586  ld(param=1)=0.1862  lsim(param=1)=0.1546  kn(integer k=1)=0.1792
+  operating points (target realized retention): [0.5, 0.2]
+
+  ---- operating point target_ret=0.5 ----
+    [resmatch] target_nc=108 -> nc=110 gamma=0.079895 Q_orig=0.069641 (15 calls, 24.5s)
+    kn           ret=0.5042[ok] nc=     108 frag=  0.61% dQ_mean=-0.02035 dQ_best5=-0.02261 dQ_match=-0.01838(r=1) dQ_res=+0.51711 T_sp=0.1s spd=1.17x
+    ld           ret=0.5005[ok] nc=     107 frag=  0.86% dQ_mean=-0.02649 dQ_best5=-0.02875 dQ_match=-0.02452(r=1) dQ_res=+0.51097 T_sp=0.4s spd=1.06x
+    [resmatch] target_nc=1186 -> nc=1223 gamma=56 Q_orig=0.356678 (9 calls, 28.1s)
+    lsim         ret=0.4990[ok] nc=    1186 frag= 11.18% dQ_mean=-0.04482 dQ_best5=-0.04708 dQ_match=-0.04285(r=1) dQ_res=+0.20560 T_sp=0.5s spd=1.02x
+    [resmatch] target_nc=365 -> nc=348 gamma=12 Q_orig=0.461817 (6 calls, 15.3s)
+    mst_jaccard  ret=0.5000[ok] nc=     365 frag=  2.75% dQ_mean=-0.05603 dQ_best5=-0.05829 dQ_match=-0.05406(r=1) dQ_res=+0.08925 T_sp=0.4s spd=1.17x
+    mst_random   ret=0.5000[ok] nc=     195 frag=  1.61% dQ_mean=-0.02876 dQ_best5=-0.03102 dQ_match=-0.02678(r=2)  T_sp=0.4s spd=1.00x
+    lspar        ret=0.5054[ok] nc=     367 frag=  3.90% dQ_mean=-0.02192 dQ_best5=-0.02418 dQ_match=-0.01994(r=2) dQ_res=+0.12336 T_sp=0.6s spd=1.00x
+    dspar        ret=0.4999[ok] nc=     110 frag=  0.64% dQ_mean=-0.02454 dQ_best5=-0.02680 dQ_match=-0.02257(r=1) dQ_res=+0.51291 T_sp=0.1s spd=1.22x
+
+  ---- operating point target_ret=0.2 ----
+    [resmatch] target_nc=917 -> nc=941 gamma=40 Q_orig=0.373725 (9 calls, 28.4s)
+    kn           ret=0.2018[ok] nc=     917 frag=  8.07% dQ_mean=-0.28013 dQ_best5=-0.28238 dQ_match=-0.27815(r=1) dQ_res=-0.04675 T_sp=0.1s spd=1.63x
+    ld           ret=0.1999[ok] nc=     181 frag=  0.19% dQ_mean=-0.24564 dQ_best5=-0.24790 dQ_match=-0.24367(r=1)  T_sp=0.3s spd=1.73x
+    [resmatch] target_nc=3694 -> nc=3768 gamma=208 Q_orig=0.288117 (12 calls, 43.1s)
+    lsim         ret=0.1993[ok] nc=    3694 frag= 32.36% dQ_mean=-0.18841 dQ_best5=-0.19067 dQ_match=-0.18644(r=1) dQ_res=+0.13057 T_sp=0.4s spd=1.16x
+    mst_jaccard  ret=0.2000[ok] nc=     188 frag=  0.00% dQ_mean=-0.23284 dQ_best5=-0.23510 dQ_match=-0.23087(r=1)  T_sp=0.4s spd=1.44x
+    mst_random   ret=0.2000[ok] nc=     144 frag=  0.00% dQ_mean=-0.21138 dQ_best5=-0.21364 dQ_match=-0.20941(r=1)  T_sp=0.4s spd=1.36x
+    [resmatch] target_nc=5860 -> nc=5634 gamma=320 Q_orig=0.262136 (12 calls, 43.9s)
+    lspar        ret=0.1586[coarse_grid] nc=    5860 frag= 54.23% dQ_mean=-0.38925 dQ_best5=-0.39151 dQ_match=-0.38728(r=1) dQ_res=-0.04429 T_sp=0.5s spd=1.06x
+    [resmatch] target_nc=3867 -> nc=4003 gamma=224 Q_orig=0.284843 (11 calls, 38.3s)
+    dspar        ret=0.2006[ok] nc=    3867 frag= 17.15% dQ_mean=-0.27709 dQ_best5=-0.27935 dQ_match=-0.27511(r=1) dQ_res=+0.04517 T_sp=0.1s spd=1.33x
+
+  email-Enron DONE in 292.2s
