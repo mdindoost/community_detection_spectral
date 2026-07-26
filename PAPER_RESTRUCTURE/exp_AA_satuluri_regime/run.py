@@ -591,7 +591,10 @@ class ResGrid:
             memb, _ = leiden(g, seed, resolution=gam)
             spent += time.perf_counter() - t0
             self.rows.append(dict(gamma=gam, **evaluate(g, memb, y)))
-            if spent > budget:          # truncated on the largest graphs;
+            dt = time.perf_counter() - t0
+            # truncate on the largest graphs: cost grows steeply with gamma, so
+            # stop on either the cumulative budget or a slow single run.
+            if spent > budget or dt > 60.0:
                 break                   # nc_resmatch records the achieved match
 
     def nearest(self, target_nc):
