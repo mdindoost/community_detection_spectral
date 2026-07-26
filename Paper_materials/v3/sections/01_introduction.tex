@@ -90,7 +90,7 @@ reports a synthetic sweep in which the method begins to outperform clustering on
 the unsparsified graph at an average degree of approximately 50. To our
 knowledge, no subsequent work examines that threshold.
 
-% [B4: the lost control and what its absence costs (THE HINGE)]
+% [B4: what has to be measured, and the requirements each method class imposes]
 These extensions also change what has to be measured. The question a
 sparsify-then-detect pipeline is meant to answer is whether the communities of
 the original graph can still be recovered after most of its edges are removed.
@@ -101,32 +101,19 @@ running it on the original graph directly. Both partitions cover the same vertex
 set, so both can be scored on the same object, and the difference between those
 two scores is the effect of sparsification.
 
-Evaluating the first partition on the sparsified graph instead measures something
-else. A sparsifier intended for community detection removes edges lying between
-communities in preference to edges lying within them, and quality measures for a
-partition, including modularity and conductance, penalize exactly those
-between-community edges. A partition scored on the sparsified graph is thus
-scored against a graph from which part of its own penalty term has been deleted,
-and the resulting value reflects how selectively the sparsifier removed edges
-rather than how much community structure survived. The two quantities are not
-comparable, and only the first answers the question.
-
-This requirement is stated in the 2011 paper, whose authors write that they
-``cannot simply measure the conductance using the very same sparsified graph,
-since that would tell us nothing about how well the sparsified graph retained the
-cluster structure in the original graph,'' and who report every quality figure on
-the original graph accordingly. It is absent from much of the work that followed.
-It is also absent from the released evaluation code accompanying the benchmark of
-Chen et al.~\cite{chen2024demystifying}, which computes modularity on the
-sparsified graph.
-
-The effect of the omission is large. Across 63 controlled configurations spanning
-four detection algorithms, two sparsifier families and seven networks, evaluating
-on the sparsified graph rather than on the original reverses the sign of the
-conclusion in 45 of them. In the most extreme configuration, a pipeline that
-reduces modularity by 0.40 under the correct evaluation appears to increase it by
-0.39 under the incorrect one. Under such an evaluation a boundary cannot be
-located, since improvement is reported throughout the parameter range.
+The sparsifier classes and detection algorithms described above each impose
+further requirements of the same kind. A sparsifier that removes edges
+preferentially between communities interacts with quality measures that penalize
+exactly those edges. A sparsifier that selects edges by degree reproduces effects
+that a heavy-tailed degree sequence produces on its own, independently of any
+community structure. A detection algorithm free to choose its own granularity
+returns finer partitions on a sparsified graph, and the standard recovery scores
+increase with the number of clusters. A pipeline that adds a preprocessing step
+must be charged for it when its running time is compared with anything else. Each
+of these is a property of a specific method class rather than a general caveat,
+and each determines what a comparison involving that class is entitled to
+conclude. Section~\ref{sec:protocol} states the resulting requirements and the
+control that establishes each one.
 
 % [B5: what we did]
 We therefore rebuilt the evaluation before re-asking the question. Partitions are
