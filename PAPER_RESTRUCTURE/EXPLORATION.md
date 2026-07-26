@@ -82,11 +82,19 @@ into prose happens afterwards, story-first, per the discipline in STORY.md.
   remaining referee hole.
 - **Exp Q — δ root-cause causal test**: triangle-preserving vs triangle-breaking double-edge
   swaps at matched modularity; direct test of hub_inter_lift hypothesis (exp_M V4). Claim: C8.
+  GREENLIT by Mohammad 2026-07-25 ("we should do"); design AFTER exp_M heavy-tail correlations
+  land (they decide whether hub_inter_lift enters the causal arms).
 - **Exp R — iteration-matched Enron control**: plain Leiden n_iterations matched to pipeline
   cost (exp_N caveat C4). Small.
 - **Exp S — com-Orkut feasibility demo** (117M edges, needs Fuji, dataset must be downloaded):
   memory-bound regime where edge reduction = feasibility, not speed. The one unconditional
-  "sparsification pays" statement.
+  "sparsification pays" statement. BLOCKED on Fuji disk cleanup — Mohammad will say when.
+- **Small threads APPROVED by Mohammad 2026-07-25** (do if they help the paper — they do):
+  H-O1 leaf-shedding (pre-registered follow-up of exp_O, cheap, sharpens the exp_O negative
+  into a degree/k-core statement) and a Youtube mini-anatomy (C9's second gain gets the exp_N
+  treatment: statistical reality + granularity check + boundary-removal mechanism; run on
+  Fuji, com-Youtube dataset needs rsync ~35MB). Queue after P/Q are in flight.
+- **Exp T decision deferred until after Exp P** (Mohammad 2026-07-25).
 
 - **Exp V — "spending the signal"** (greenlit, DESIGN.md pre-registered, commit ba85b8a):
   can L-Spar's verified structure-aware Jaccard signal be deployed for an honest gain —
