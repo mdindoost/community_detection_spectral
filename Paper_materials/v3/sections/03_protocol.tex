@@ -136,12 +136,15 @@ max $\Delta Q_{\mathrm{self}}$ & $+0.312$ & $+0.260$ & $+0.537$ & $+0.537$\\
 Sparsification fragments a graph, and an algorithm that chooses its own
 granularity responds by returning more communities. Chen et
 al.~\cite{chen2024demystifying} report community counts rising by three orders of
-magnitude across a pruning sweep. Best-match $F_1$, purity and normalized mutual
-information all increase with the number of communities, so a recovery comparison
-between partitions of different granularity measures that difference along with
-whatever else it is meant to measure. Hamann et al.~\cite{hamann2016structure}
-published the warning for normalized mutual information and recommended
-chance-corrected indices in its place; the control below operationalizes it.
+magnitude across a pruning sweep. Purity, normalized mutual information and the
+average best-match $F_1$ over reference communities that we report all increase
+with the number of communities, so a recovery comparison between partitions of
+different granularity measures that difference along with whatever else it is
+meant to measure. Hamann et al.~\cite{hamann2016structure} warned that normalized
+mutual information is unsuitable for comparing partitions of sparsified networks,
+because it reports higher similarity for larger numbers of
+communities~\cite{vinh2010information}, and pointed to the adjusted Rand index
+instead; the control below operationalizes that warning.
 
 The control is a partition of the \emph{original} graph at a matched community
 count, obtained by raising the resolution parameter $\gamma$ in
