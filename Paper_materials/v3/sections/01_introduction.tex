@@ -102,18 +102,29 @@ set, so both can be scored on the same object, and the difference between those
 two scores is the effect of sparsification.
 
 The sparsifier classes and detection algorithms described above each impose
-further requirements of the same kind. A sparsifier that removes edges
-preferentially between communities interacts with quality measures that penalize
-exactly those edges. A sparsifier that selects edges by degree reproduces effects
-that a heavy-tailed degree sequence produces on its own, independently of any
-community structure. A detection algorithm free to choose its own granularity
-returns finer partitions on a sparsified graph, and the standard recovery scores
-increase with the number of clusters. A pipeline that adds a preprocessing step
-must be charged for it when its running time is compared with anything else. Each
-of these is a property of a specific method class rather than a general caveat,
-and each determines what a comparison involving that class is entitled to
-conclude. Section~\ref{sec:protocol} states the resulting requirements and the
-control that establishes each one.
+further requirements of the same kind, and several have been noted individually
+in the literature. Similarity-based sparsifiers~\cite{satuluri2011local} retain
+edges whose endpoints share neighbours, and therefore remove between-community
+edges preferentially; these are the edges that modularity and conductance
+penalize, so the sparsifier and the quality measure act on the same quantity.
+Degree-based sparsifiers~\cite{liu2023dspar} select edges by a function of the
+endpoint degrees alone, and a heavy-tailed degree sequence reproduces several of
+the resulting effects without any community structure being present, so
+comparison against a degree-preserving random
+graph~\cite{molloy1995critical} is required to separate the two. Detection
+algorithms that choose their own granularity~\cite{blondel2008fast,
+traag2019louvain} return finer partitions on a sparsified graph: Chen et
+al.~\cite{chen2024demystifying} document community counts rising by three orders
+of magnitude across a pruning sweep, and Hamann et al.~\cite{hamann2016structure}
+warn that normalized mutual information is inflated when sparsification
+fragments the graph, recommending chance-corrected indices in its place. Finally,
+sparsification is itself a computation, and Gottesb\"{u}ren et
+al.~\cite{gottesburen2025linear} observe that its overhead can counteract the
+speedup it is intended to produce. Each requirement is a property of a specific
+method class rather than a general caveat, and each determines what a comparison
+involving that class is entitled to conclude.
+Section~\ref{sec:protocol} states the resulting requirements and the control that
+establishes each one.
 
 % [B5: what we did]
 We therefore rebuilt the evaluation before re-asking the question. Partitions are
