@@ -1,0 +1,182 @@
+% ============================================================
+% SECTION 2: BACKGROUND AND RELATED WORK. Written 2026-07-27.
+%
+% Job, per PAPER_STRUCTURE.md and the HANDOFF: introduce only what the rest of
+% the paper uses; define "removable redundancy", which Section 1 uses as a
+% technical term and which nothing else in the paper defines; and hold the
+% contemporary instances of the missing control, with the arithmetic (decision
+% D1). The literature is motivation and related work here, never the spine.
+%
+% Mohammad, 2026-07-27: Socievole and Pizzuti are cited as current practice,
+% briefly, with no tables and no numbers. This is a related-work section.
+%
+% Every characterization below comes from a paper read in full, and the reading
+% is recorded in PAPER_RESTRUCTURE/references/:
+%   NOTES_satuluri2011.md          the 4.3 transfer control and the fixed-k arms
+%   NOTES_chen_and_fastcd.md       Chen (what they own, what they do not) and
+%                                  Laeuchli (the regime where sparsification pays)
+%   NOTES_effres_2026.md           Pari et al., football 0.87 against max 0.6046
+%   NOTES_kcore_ijain2026.md       Setiadi et al., karate 0.63 against max 0.4198
+%   NOTES_socievole_pizzuti_2026.md  read in full; cited here as practice only
+%   P1_EVIDENCE.md                 Hamann, Blagus, sampling line, IJCAI survey
+%   P2_BACKGROUND_RESEARCH.md      metric backbone, Maslov-Sneppen, Graclus/MLR-MCL
+% STYLE: no em-dashes, no AI-characteristic phrasing (see STYLE.md).
+% ============================================================
+
+\subsection{Detection algorithms and their degrees of freedom}
+
+Community detection algorithms divide into two families, and the division is the
+first of the two conditions this paper identifies.
+
+One family chooses its own number of communities. Modularity
+optimizers~\cite{newman2004finding} such as Louvain~\cite{blondel2008fast} and
+Leiden~\cite{traag2019louvain} maximize \eqref{eq:modularity} by agglomeration,
+stopping when no move improves the objective. Infomap~\cite{rosvall2008maps}
+minimizes the description length of a random walk, and label
+propagation~\cite{raghavan2007near} iterates a local majority rule to a fixed
+point. None takes the number of communities as an input, and each returns
+whatever count its objective and its search prefer. Modularity in particular has
+a resolution limit~\cite{fortunato2007resolution}: at $\gamma = 1$ it cannot
+resolve communities below a size set by the total number of edges, so the count
+it returns is a property of the graph's size as much as of its structure.
+
+The other family takes the number of communities as an input. Multilevel graph
+partitioners such as Metis~\cite{karypis1998metis} and
+Graclus~\cite{dhillon2007weighted} coarsen the graph, partition the coarsest
+level into a requested $k$ parts, and refine on the way back up, subject to a
+balance constraint on part sizes. Flow-based clustering with a coarsening
+schedule, as in MLR-MCL~\cite{satuluri2009scalable}, sits between the two: the
+count follows from an inflation parameter rather than from a requested $k$.
+
+The difference matters here because sparsification changes what a
+free-granularity algorithm returns, and does not change what a fixed-$k$
+algorithm returns. Section~\ref{sec:protocol} makes that a control and
+Section~\ref{sec:experiments} makes it a result.
+
+\subsection{Sparsification and what it is guaranteed to preserve}
+
+Spectral sparsification is the part of this literature with proofs. Benczúr and
+Karger~\cite{benczur2015randomized} preserve all cuts to within $1 \pm \epsilon$
+by sampling edges according to connectivity, and Spielman and
+Srivastava~\cite{spielman2008graph} preserve the Laplacian quadratic form by
+sampling according to effective resistance. The guarantee is about the Laplacian,
+not about communities, and Section~\ref{sec:intro} states why the two are related
+without being the same.
+
+The methods actually used before community detection are cheaper and carry no
+such guarantee. Similarity-based methods rank each edge by the overlap of its
+endpoints' neighbourhoods, as in the local sparsification of Satuluri et
+al.~\cite{satuluri2011local}. Degree-based methods score an edge from its
+endpoints' degrees alone, as in DSpar~\cite{liu2023dspar}, which approximates
+effective resistance by $1/d_u + 1/d_v$. Backbone extraction keeps edges that are
+statistically surprising against a local null, as in the disparity
+filter~\cite{serrano2009extracting} and its noise-corrected
+successor~\cite{coscia2017backboning}. Learned methods train a model to choose the
+subgraph~\cite{wu2020gsgan}. Hamann et al.~\cite{hamann2016structure} compared
+these families systematically on social networks and released the
+implementations that are now distributed in standard graph libraries.
+
+Two recent surveys bound the field. Chen et al.~\cite{chen2024demystifying}
+benchmark twelve sparsifiers against sixteen graph properties on fourteen
+networks and conclude that no single sparsifier preserves all of them and that
+the choice should follow the downstream task. They also establish, at benchmark
+scale, that pruning fragments graphs and that fidelity to the full graph's
+partition degrades monotonically with the prune rate. Both facts are theirs and
+this paper does not claim them. Hashemi et al.~\cite{hashemi2024survey} survey
+the wider reduction field of sparsification, coarsening and condensation, and
+their task list is a useful negative: the modern literature has reoriented around
+graph neural network prediction, and community detection has largely dropped out
+of it as an evaluation target.
+
+\subsection{Removable redundancy}\label{sec:background:redundancy}
+
+The second condition in this paper's claim is that a graph carry edges whose
+removal does not destroy its community structure. The quantity has an established
+formal relative. The \emph{metric backbone} of a weighted graph is the union of
+its all-pairs shortest paths, so every edge outside it is redundant in the exact
+sense that no shortest path uses it. Correia et
+al.~\cite{correia2023contact} report that the backbone is a small fraction of the
+edges of real contact networks, and Dreveton et al.~\cite{dreveton2024metric}
+prove that deleting everything outside it leaves community structure intact on a
+broad class of weighted random graphs with communities.
+
+Removable redundancy in the sense used here is broader than the metric one, since
+the edges a sparsifier may delete without cost are not only those absent from
+shortest paths, and we do not have a procedure that measures it directly. What
+the results of Section~\ref{sec:experiments:boundary} establish is that the
+quantity varies across graphs, that average degree is its strongest measured
+correlate, and that degree heterogeneity is not a correlate at all.
+
+\subsection{Sparsify, then detect}
+
+Satuluri et al.~\cite{satuluri2011local} introduced the pipeline this paper
+examines and reported speedups commonly between $10\times$ and $50\times$ with
+little or no loss of cluster quality, together with improved accuracy for two of
+the four clustering algorithms they tested. Those two were the partitioners that
+take $k$ as an input.
+
+The practice spread. Reference implementations entered graph
+libraries~\cite{hamann2016structure}, sparsification was applied before community
+detection at industrial scale~\cite{satuluri2020simclusters}, generative models
+were trained to produce the subgraph~\cite{wu2020gsgan}, and triangle-aware
+spectral sparsifiers were proposed specifically because sparsification appeared
+to be a route to community detection~\cite{sotiropoulos2021triangle}. It remains
+current: Socievole and Pizzuti weight a graph by effective resistance, apply a
+kernel, sparsify, and then detect communities on what
+remains~\cite{socievole2024community, socievole2026effective}, and further
+effective-resistance and $k$-core variants of the same pipeline have appeared
+since~\cite{pari2026effective, setiadi2025community}.
+
+A parallel line asks whether sampling preserves community structure at all.
+Leskovec and Faloutsos~\cite{leskovec2006sampling} set the sampling problem,
+Maiya and Berger-Wolf~\cite{maiya2010sampling} sample explicitly for community
+structure, and Blagus et al.~\cite{blagus2015sampling} report that sampling can
+manufacture the appearance of community structure rather than preserve it. Peng
+et al.~\cite{peng2014accelerating} reduce the graph by $k$-core before detecting,
+which is the coarsening-flavoured version of the same idea and removes vertices
+as well as edges.
+
+\subsection{How the pipeline is evaluated}
+
+The evaluation question that Section~\ref{sec:protocol} formalizes was raised in
+the paper that introduced the pipeline. Satuluri et al.\ state in their \S4.3
+that the clusters obtained from a sparsified graph cannot be scored on that same
+graph, because doing so says nothing about how well the sparsification retained
+the structure of the original, and they report every conductance on the original
+graph accordingly. They also fix the number of communities once per network and
+supply it to every arm, so their comparisons are matched on granularity by
+construction, and they charge the sparsification time to the speedup. On all
+three counts the original paper is stricter than much of what followed it.
+
+What followed is less uniform. In the released code of the most thorough public
+benchmark of sparsification, modularity for the sparsified condition is computed
+on the sparsified graph~\cite{chen2024demystifying}. Two recent
+sparsify-then-detect papers report objective values that exceed what their graphs
+admit: an effective-resistance method reports modularity $0.87$ on the American
+College Football network~\cite{girvan2002community}, whose maximum over all
+partitions is $0.6046$, and a $k$-core method reports $0.63$ on Zachary's karate
+club~\cite{zachary1977information}, whose maximum is
+$0.4198$~\cite{pari2026effective, setiadi2025community}. A modularity above the
+graph's maximum is not a matter of interpretation; it identifies the graph being
+scored as the sparsified one. Section~\ref{sec:experiments:accounting} measures
+what that choice is worth.
+
+Two further hazards are documented prior art rather than findings of this paper.
+Hamann et al.~\cite{hamann2016structure} warn that normalized mutual information
+reports higher similarity for larger numbers of communities, which makes it
+unsuitable for comparing partitions of sparsified networks, and point to
+chance-corrected indices~\cite{vinh2010information} in its place. Gottesb\"{u}ren
+et al.~\cite{gottesburen2025linear} observe that the cost of sparsifying can
+cancel the speedup it is meant to produce. Separating a degree-driven effect from
+a community-driven one requires a null that holds the degree sequence fixed, for
+which the standard instrument is the degree-preserving edge
+swap~\cite{maslov2002specificity} over configuration-model
+graphs~\cite{molloy1995critical}.
+
+Finally, one paper marks the boundary of this paper's scope rather than falling
+inside it. Laeuchli~\cite{laeuchli2020fast} analyses community detection on
+sparsified graphs for spectral solvers on dense planted-partition models, which
+is the regime in which sparsification genuinely pays, because the detection cost
+there is superlinear in the number of edges and the planted structure survives
+heavy deletion. The graphs and detectors examined here are the ones the pipeline
+is applied to in practice, and they are not that regime.
