@@ -84,6 +84,17 @@ partition against that rather than against the optimizer's default. If a finer
 partition of the untouched graph recovers the reference communities as well, the
 sparsifier has contributed nothing that the resolution parameter does not.
 
+Two baselines follow from this and they bound different things. The matched
+control holds the community count fixed, so it isolates what the sparsifier
+contributes at the granularity the sparsifier itself selected, and a result that
+survives it is one the resolution parameter cannot reproduce at that granularity.
+A sweep over $\gamma$, taking the best the untouched graph reaches at any
+granularity, bounds something stronger: whether the sparsified partition is worth
+having when the baseline is free to choose its own resolution. A result can
+survive the first and fail the second. Where a result is said to survive the
+granularity control, the matched control is meant, and where the sweep is used we
+say so.
+
 Where the counts cannot be brought together we draw no recovery conclusion. The
 comparability rule is $|\Delta k|/k < 25\%$, and the cells it excludes are
 reported as excluded.
@@ -191,7 +202,8 @@ How the comparison can mislead & Control\\
 Quality read off the sparsified graph, which admits higher modularity &
 Score both partitions on the original graph, Eq.~\eqref{eq:transfer}\\
 Finer partitions score higher on agreement measures &
-Partition the original graph at a matched community count\\
+Partition the original graph at a matched community count, and separately at its
+own best resolution\\
 Uncorrected measures pay for nothing, and pay more as parts multiply &
 Chance-corrected indices, and a size-matched random-partition floor\\
 The pipeline has spent more compute than the baseline &
