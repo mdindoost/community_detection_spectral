@@ -57,9 +57,9 @@ conditional. On the networks and detection algorithms examined here, two
 conditions have to hold together: the
 algorithm must take the number of communities as an input, and the graph must
 carry edges whose removal does not destroy its community structure. Where either
-condition fails we find no gain on the objective, no end-to-end speed benefit,
-and no gain in recovery that survives comparison with an unsparsified run of a
-better detector.
+condition fails we find no gain on the objective, no end-to-end speed benefit in
+the implementations we measure, and no gain in recovery that survives comparison
+with an unsparsified run of a better detector.
 
 
 % [B2+B3 merged: the claim, the line of work, and the conditions that did not travel]
@@ -197,15 +197,15 @@ test, no sparsifier improves modularity measured on the original graph beyond
 run-to-run variation, at any retention that preserves quality. This holds for
 every such algorithm we tested, and the only cells that clear a strict baseline
 belong to one algorithm on one network whose unsparsified baseline is itself
-pathological. There is no speed benefit either. Measured end to end, including
-the cost of the sparsifier, no configuration that preserves quality runs faster
-than clustering the original graph directly, and the fastest of them runs at two
-thirds of that speed. The configurations that do run faster all lose
-modularity. Every apparent gain we found in this regime dissolves when granularity is
+pathological. There is no speed benefit either. Measured end to end in our
+implementations, including the cost of the sparsifier, no configuration that
+preserves quality runs faster than clustering the original graph directly, and
+the fastest of them runs at two thirds of that speed. The configurations that do
+run faster all lose modularity. Every apparent gain we found in this regime dissolves when granularity is
 matched, when chance is subtracted, or when the baseline is given an equal
-compute budget, with one exception on one network, where the surviving recovery
-gain is instead exceeded by an unsparsified run of a different detection
-algorithm.
+compute budget, with exceptions on two of the three networks that carry reference
+communities, where the surviving recovery gains are instead exceeded by an
+unsparsified run of a different detection algorithm.
 
 Where both conditions hold, the gain is real. On synthetic graphs with planted
 communities, with the number of communities fixed by construction so that no

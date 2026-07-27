@@ -53,9 +53,11 @@ Q(P, G) \;=\; \sum_{C \in P} \left[ \frac{m_C}{m} - \gamma
 \end{equation}
 with $m_C$ the number of edges inside community $C$, $D_C$ the sum of degrees in
 $C$, and $\gamma$ a resolution parameter equal to one in the standard definition.
-Removing edges does not by itself move this quantity for a fixed partition: the
-intra-community fraction and the subtracted term fall together. What changes is
-the value an optimizer can reach. A graph with fewer edges admits higher
+Under uniform deletion, removing edges does not in expectation move this quantity
+for a fixed partition, because the intra-community fraction and the subtracted
+term fall together. A sparsifier that selects on structure can move it, and
+Section~\ref{sec:experiments:mechanism} treats that separately. What changes here
+is the value an optimizer can reach. A graph with fewer edges admits higher
 modularity, and does so even when it has no community structure at
 all~\cite{guimera2004modularity}, so a partition optimized on $G'$ can score well
 on $G'$ while describing $G$ worse than the baseline does.
@@ -159,8 +161,10 @@ the realized value everywhere.
 
 A comparison must also be like for like in what is removed. A method that deletes
 vertices as well as edges scores its partition on a smaller and denser
-subpopulation, which is an easier problem, so the fraction of vertices retained
-belongs beside the fraction of edges.
+subpopulation, which is an easier problem, so comparing it on equal terms would
+require reporting the fraction of vertices retained beside the fraction of edges.
+We exclude that class of method rather than attempt the comparison, and
+Section~\ref{sec:experiments:setup} states the exclusion.
 
 \subsection{Cost measured end to end}\label{sec:protocol:cost}
 
@@ -197,7 +201,7 @@ Degree-preserving rewiring\\
 A weighting is credited to similarity &
 Permute the weights across edges\\
 Nominal and realized retention differ, and differ by method &
-Compare at measured retention; report floors and vertex coverage\\
+Compare at measured retention and report the floors\\
 Sparsification is charged to nobody &
 Time the whole pipeline, sparsifier included\\
 \bottomrule
