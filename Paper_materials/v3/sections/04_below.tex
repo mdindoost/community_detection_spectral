@@ -29,10 +29,12 @@
 Seven sparsifiers were run through the protocol of Section~\ref{sec:protocol}, chosen
 so that a negative result cannot be attributed to the selection.
 
-Two are the methods whose quality claims motivate the pipeline: local similarity
-sparsification~\cite{satuluri2011local} and the degree-based
-sampler~\cite{liu2023dspar}, one from each family described in
-Section~\ref{sec:background}. Three more are the methods that the largest
+Two are the methods whose quality claims motivate the pipeline: local
+sparsification, L-Spar~\cite{satuluri2011local}, and the degree-based sampler
+DSpar~\cite{liu2023dspar}, one from each family described in
+Section~\ref{sec:background}. L-Spar and the method NetworKit calls Local
+Similarity are distinct and both appear below; L-Spar always refers to the method
+of Satuluri et al. Three more are the methods that the largest
 independent benchmark of sparsification ranks highest at preserving clustering
 structure, namely K-Neighbor, Local Degree and Local
 Similarity~\cite{chen2024demystifying, hamann2016structure}, so that the arms
@@ -127,7 +129,7 @@ Total                 & 102 & \textbf{0} & $-0.0105$ & $-0.667$\\
 \end{table}
 
 The sweep that isolates one method across its full retention range agrees. Local
-similarity sparsification on the same seven networks loses between $0.014$ and
+L-Spar on the same seven networks loses between $0.014$ and
 $0.404$ against a compute-matched baseline in every configuration that runs, with
 the loss growing as retention falls, and its three most aggressive configurations
 cannot be run at all because of the floors in Table~\ref{tab:floors}.
@@ -239,7 +241,7 @@ sparsified graph and do more work per pass.
 
 One result in this section survives every control we have.
 
-On com-Amazon, local similarity sparsification at realized retention $0.542$
+On com-Amazon, L-Spar at realized retention $0.542$
 reaches average best-match $F_1$ of $0.402$ against a baseline of $0.142$. The
 granularity control does not remove it: partitioning the original graph to the
 same community count gives $0.319$, and deliberately over-matching by 37 per cent

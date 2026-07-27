@@ -38,8 +38,16 @@ version is kept below because what falsified it is instructive.**
 
 > **Sparsification's effect on community detection is decided by the detector's degrees of
 > freedom and by the graph's removable redundancy rather than by the sparsifier; outside those
-> two conditions there is no benefit of any kind, and the accounting in common use reports one
-> anyway.**
+> two conditions there is no gain on the objective, no end-to-end speed benefit, and no gain in
+> recovery that survives comparison with an unsparsified run of a better detector, and the
+> accounting in common use reports one anyway.**
+
+*Amended 2026-07-26 (late): "no benefit of any kind" was a universal with two disclosed
+exceptions, which is a rhetorical liability for a two-word saving. Both reviewers flagged it. The
+three-part form is what the data supports: 0/102 matched Leiden cells and 90/90 fixed-k cells on
+sparse real graphs give no objective gain; the fastest quality-preserving configuration is 0.66x;
+and the recovery gains that do survive granularity and chance (com-Amazon under Leiden, exp_AB's
+Local Degree) are beaten by an unsparsified run of a different detector.*
 
 Every section either supports that sentence or explains why nobody had found it. Anything that
 does neither is cut.

@@ -47,13 +47,15 @@ conditional. On the networks and detection algorithms examined here, two
 conditions have to hold together: the
 algorithm must take the number of communities as an input, and the graph must
 carry edges whose removal does not destroy its community structure. Where either
-condition fails, we find no benefit of any kind, in quality or in speed.
+condition fails we find no gain on the objective, no end-to-end speed benefit,
+and no gain in recovery that survives comparison with an unsparsified run of a
+better detector.
 
 
 % [B2+B3 merged: the claim, the line of work, and the conditions that did not travel]
-Satuluri et al.~\cite{satuluri2011local} introduced local similarity
-sparsification, in which each vertex retains the incident edges whose endpoints
-have the highest Jaccard similarity of neighbourhoods. They reported speedups
+Satuluri et al.~\cite{satuluri2011local} introduced local sparsification,
+L-Spar, in which each vertex retains the incident edges whose endpoints have the
+highest Jaccard similarity of neighbourhoods. They reported speedups
 commonly between $10\times$ and $50\times$ with little or no loss of cluster
 quality, and improved accuracy for two of the four clustering algorithms they
 tested.
@@ -156,7 +158,8 @@ gain correlates with average degree at Spearman $+0.65$ and with degree
 variability at $-0.26$. The measurement noise present in how a graph was
 collected remains a correlate we have not separated.
 
-Where either condition fails, no benefit of any kind is present. For detection
+Where either condition fails, the three ways a benefit could appear all close.
+For detection
 algorithms that choose their own granularity, on the sparse real networks we
 test, no sparsifier improves modularity measured on the original graph beyond
 run-to-run variation, at any retention that preserves quality, and this holds for
