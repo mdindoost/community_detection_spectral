@@ -24,7 +24,9 @@
 % STYLE: no em-dashes, no AI-characteristic phrasing (see STYLE.md).
 % ============================================================
 
-\subsection{The objective}\label{sec:negative:objective}
+\subsection{Where sparsification does not help}\label{sec:experiments:negative}
+
+\paragraph{The objective}
 
 Table~\ref{tab:negative} reports the result. Across 102 matched-retention cells,
 seven sparsifiers on seven networks under a modularity optimizer, not one cell
@@ -116,7 +118,7 @@ similarity signal subtracts.
 
 \subsection{The same result under a fixed-\texorpdfstring{$k$}{k} partitioner}\label{sec:negative:metis}
 
-Sections~\ref{sec:negative:objective} and~\ref{sec:negative:artifact} concern
+The results above concern
 detectors that choose their own granularity. The condition under which
 sparsification does help, established in this paper on synthetic benchmarks,
 involves a detector that takes the number of communities as an input, so the

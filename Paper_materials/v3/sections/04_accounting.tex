@@ -1,0 +1,190 @@
+% ============================================================
+% SECTION 4.2: WHAT THE ACCOUNTING COSTS. Assembled 2026-07-26 (late).
+%
+% RELOCATION, not rewriting. Every table and every number here is moved verbatim
+% from sections/_mined/03_protocol_v1_full.tex, which held them while the
+% protocol section was still carrying its own evidence. Only the connective
+% prose is new, and its job is to make one argument out of what used to be six
+% separate control demonstrations.
+%
+% Provenance of each figure is unchanged and was verified against CSVs earlier:
+%   uniform table      exp_G/results.csv (arm=artifact1, 3 seeds, means)
+%   63-cell table      exp_P/results.csv (dQ_naive, dQ_honest_vs_mean)
+%   granularity table  exp_P/recovery.csv (com-DBLP, louvain)
+%   compute inversion  exp_P/results.csv + bestof.csv; exp_C/results_summary.csv
+%   permuted weights   exp_V/results.csv + null_arm.csv
+%   retention audit    exp_J_figures/clip_fractions.csv; exp_C; exp_B
+% STYLE: no em-dashes, no AI-characteristic phrasing (see STYLE.md).
+% ============================================================
+
+\subsection{What the accounting costs}\label{sec:experiments:accounting}
+
+Each control in Section~\ref{sec:protocol} exists because a comparison can favour
+the pipeline without any improvement having occurred. This subsection measures
+how much each one is worth. The measurements are of the evaluation and not of the
+sparsifiers, and they set the size of the correction that the rest of the paper
+applies.
+
+\paragraph{Scoring on the sparsified graph}
+Table~\ref{tab:uniform} takes uniform random edge deletion, whose selection rule
+uses no information whatever, and scores it both ways on three networks at two
+retentions. Read off the sparsified graph it improves modularity in all six
+cells. The same partitions scored on the original graph are worse than the
+baseline in all six. The sign of the conclusion is opposite in every cell, and
+the gap widens as retention falls, which is what
+Section~\ref{sec:protocol:transfer} predicts: the sparser the graph, the higher
+the modularity an optimizer can reach on it.
+
+\begin{table}[t]
+\centering
+\caption{Uniform random edge deletion under the two accountings, Leiden, mean of
+three seeds. $\Delta Q_{\mathrm{self}}$ is positive in every cell and
+$\Delta Q_{\mathrm{transfer}}$ is negative in every cell. Uniform deletion uses
+no structural information, so the inflation comes from the objective rather than
+from any selection rule.}
+\label{tab:uniform}
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}lccrr@{}}
+\toprule
+Network & $Q_{\mathrm{base}}$ & $\rho$ & $\Delta Q_{\mathrm{self}}$ &
+$\Delta Q_{\mathrm{transfer}}$\\
+\midrule
+ca-CondMat  & 0.729 & 0.800 & $+0.0111$ & $-0.0164$\\
+ca-CondMat  & 0.729 & 0.900 & $+0.0053$ & $-0.0064$\\
+email-Enron & 0.611 & 0.800 & $+0.0052$ & $-0.0162$\\
+email-Enron & 0.611 & 0.900 & $+0.0011$ & $-0.0086$\\
+com-DBLP    & 0.826 & 0.800 & $+0.0078$ & $-0.0247$\\
+com-DBLP    & 0.826 & 0.900 & $+0.0040$ & $-0.0098$\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The effect is not particular to that sparsifier or that detector.
+Table~\ref{tab:accounting} covers 63 configurations spanning three detection
+algorithms, seven networks and three sparsifier settings. Modularity read off the
+sparsified graph is positive in 60 of them and reaches $+0.537$; the same
+partitions scored on the original graph are positive in 15. Between the two
+accountings the sign of the conclusion differs in 45 of the 63 configurations.
+Eleven cells exceed a compute-matched baseline, all of them under label
+propagation, and they are not a subset of the 15: two sit below the plain
+baseline mean while beating a matched control that had drawn too few restarts,
+which is the failure the compute control addresses.
+
+\begin{table}[t]
+\centering
+\caption{The two accountings across 63 configurations, seven networks by three
+sparsifier settings under each algorithm. Both quantities are measured against
+the mean of the plain restarts, the weakest of the baselines in
+Section~\ref{sec:protocol:compute}; counts against the stricter best-of-$N$
+baseline appear in Section~\ref{sec:experiments:negative}. A flip is a cell where
+$\Delta Q_{\mathrm{self}} > 0$ and $\Delta Q_{\mathrm{transfer}} < 0$, so that
+the two accountings disagree on the sign of the conclusion.}
+\label{tab:accounting}
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+ & Infomap & Louvain & Lab.\ prop. & Total\\
+\midrule
+Cells                              & 21 & 21 & 21 & 63\\
+$\Delta Q_{\mathrm{self}} > 0$     & 20 & 20 & 20 & 60\\
+$\Delta Q_{\mathrm{transfer}} > 0$ & 6  & 0  & 9  & 15\\
+Flips                              & 14 & 20 & 11 & 45\\
+max $\Delta Q_{\mathrm{self}}$ & $+0.312$ & $+0.260$ & $+0.537$ & $+0.537$\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Granularity}
+Table~\ref{tab:granularity} gives the anatomy of a recovery gain on com-DBLP
+under Louvain. L-Spar at realized retention $0.503$ raises average best-match
+$F_1$ from $0.102$ to $0.193$, an apparent gain of $+0.091$, while taking the
+number of communities of at least three members from 220 to 10{,}947.
+Partitioning the original graph to the same count reaches $0.300$. The finer
+partition is worth more than twice what the sparsification appeared to be worth
+and requires no sparsifier. The same pattern holds for the degree-based arm on
+the same network, where the apparent change is negative and the matched control
+is positive. Leiden reproduces the sparsified figure to four decimal places and
+its own control, at $\gamma = 576$ and 10{,}812 communities, reaches $0.297$, so
+the effect belongs to the modularity objective's default granularity and not to
+one optimizer's search.
+
+\begin{table}[t]
+\centering
+\caption{Granularity control on com-DBLP under Louvain, average best-match $F_1$
+over reference communities of size at least three. $k_{\geq 3}$ counts
+communities of that size; $\gamma$ is the resolution used on the \emph{original}
+graph. Each sparsified arm is followed by its control, a partition of the
+original graph at the same $k_{\geq 3}$. The floor is a size-matched random
+partition at the arm's own $k_{\geq 3}$. Baseline and sparsified rows are means
+over three to six seeds; controls are single runs.}
+\label{tab:granularity}
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}lrrcc@{}}
+\toprule
+Condition & $k_{\geq 3}$ & $\gamma$ & $F_1$ & floor\\
+\midrule
+Original graph               & 220    & 1   & $0.102 \pm 0.005$ & 0.019\\
+DSpar, $\rho = 0.500$        & 1{,}684  & 1   & $0.098 \pm 0.002$ & 0.049\\
+\quad matched control        & 1{,}657  & 24  & $0.125$           & \\
+L-Spar, $\rho = 0.503$       & 10{,}947 & 1   & $0.193 \pm 0.000$ & 0.090\\
+\quad matched control        & 11{,}159 & 640 & $0.300$           & \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Where the counts cannot be brought together, we draw no recovery conclusion. The
+comparability rule is $|\Delta k|/k < 25\%$, and the cells it excludes are
+reported as excluded rather than compared.
+
+\paragraph{Chance}
+The floor column of Table~\ref{tab:granularity} carries the second artifact. A
+random partition with the same community size distribution scores $0.019$ against
+the reference communities at 220 communities and $0.090$ at 10{,}947, so a
+comparison that reads $+0.091$ from a fragmenting sparsifier is reading a floor
+that rose by $0.071$ underneath it. The same measurement on com-Amazon gives
+$0.009$ at 231 communities and $0.057$ at 8{,}651, a $6.6\times$ rise from
+fragmentation alone.
+
+\paragraph{The compute budget}
+The registered compute-matched control buys less than it appears to. In a sweep
+of 48 cells over six networks, four retention targets and two samplers under
+Leiden, it bought exactly two restarts in every cell; across the 63
+configurations of Table~\ref{tab:accounting} it bought between 1 and 16, and 1 in
+13 of the 18 cells on the two largest networks. Label propagation shows the
+consequence. Under the compute-matched control it is the strongest of the three
+algorithms in that table, with a mean change of $+0.009$; against the best of 20
+plain restarts of the same baseline, 10 on the two largest networks, it is the
+weakest, at $-0.106$. On email-Enron its two apparent gains of $+0.146$ and
+$+0.161$ become $-0.068$ and $-0.053$. The compute-matched baseline drew four and
+five restarts in those two cells and still never sampled the algorithm's good
+mode, whose modularity is $0.523$ against the matched control's $0.308$.
+
+\paragraph{Weighting credited to similarity}
+On email-Enron, weighting each edge by $1 + J(u,v)$, with $J$ the Jaccard
+similarity of the endpoint neighbourhoods, raises modularity measured on the
+original graph to $0.6153 \pm 0.0034$ against a baseline of $0.6071$ and a
+compute-matched best of $0.6051$, a gain of $+0.0102$ at $3.7$ times the pooled
+standard deviation. Permuting those same weights across edges, which preserves
+their distribution and destroys their placement, gives $0.6168 \pm 0.0020$, a
+gain of $+0.0117$ at $6.0$ pooled standard deviations. The null reproduces the
+gain and exceeds it. On a degree-preserving rewiring of ca-CondMat, where the
+similarity signal is absent by construction, weighting still produces $+0.0023$
+and clears the same significance test. What the weights contribute is
+heterogeneity in the optimizer's search and not information about communities.
+
+\paragraph{Nominal retention}
+The parameter a sampler is given does not determine what it deletes. The scheme
+in common use clips per-edge probabilities at one, and across six networks at
+four targets between 12\% and 36\% of edges reach that clip, so the expected
+number retained falls below the nominal $\alpha m$ and saturates: on
+email-Eu-core the expected retention at $\alpha = 1.0$ is $0.665$, and on
+wiki-Vote at $\alpha = 0.95$ it is $0.447$. Three samplers that describe
+themselves by the same $\alpha$ realize different fractions. Sampling with
+replacement gives $0.33$ to $0.52$ across seventeen networks at a nominal $0.8$,
+the clipped no-replacement scheme gives $0.37$ to $0.68$ across those six
+networks and four targets, and solving the scale factor by bisection on the same
+cells gives $0.70$ to $0.95$. A comparison at equal nominal parameters is a
+comparison at unequal deletion.
