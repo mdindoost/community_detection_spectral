@@ -45,15 +45,9 @@ under test an instrument built by deleting edges from the other one.
 The requirement is not ours. It is stated, and followed, in the paper that
 introduced the pipeline~\cite[\S4.3]{satuluri2011local}.
 
-Why \eqref{eq:self} favours the treatment follows from the objective. Modularity
-scores a partition $P$ of a graph with $m$ edges by
-\begin{equation}\label{eq:modularity}
-Q(P, G) \;=\; \sum_{C \in P} \left[ \frac{m_C}{m} - \gamma
-\left( \frac{D_C}{2m} \right)^{\!2} \right],
-\end{equation}
-with $m_C$ the number of edges inside community $C$, $D_C$ the sum of degrees in
-$C$, and $\gamma$ a resolution parameter equal to one in the standard definition.
-Under uniform deletion, removing edges does not in expectation move this quantity
+Why \eqref{eq:self} favours the treatment follows from the objective, modularity
+\eqref{eq:modularity}.
+Under uniform deletion, removing edges does not in expectation move that quantity
 for a fixed partition, because the intra-community fraction and the subtracted
 term fall together. A sparsifier that selects on structure can move it, and
 Section~\ref{sec:experiments:mechanism} treats that separately. What changes here
