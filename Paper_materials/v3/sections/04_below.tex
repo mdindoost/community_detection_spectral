@@ -43,17 +43,21 @@ construction and is included as an instrument rather than as a competitor. Unifo
 random deletion supplies the no-information baseline wherever a selection rule has
 to be shown to be doing work.
 
-Three classes are excluded, and the exclusions bound what follows. Node-removing
-methods such as $k$-core peeling are not tested, because they score their
-partition on a smaller and denser vertex set, which is a different comparison
-requiring the coverage control of
+Two classes of sparsifier are excluded, and the exclusions bound what follows.
+Node-removing methods such as $k$-core peeling are not tested, because they score
+their partition on a smaller and denser vertex set, which is a different
+comparison requiring the coverage control of
 Section~\ref{sec:protocol:retention}. Learned sparsifiers~\cite{wu2020gsgan} are
-not tested, because matching them on realized retention requires retraining per
-operating point. And of the detection algorithms, the two for which the founding
-accuracy claim was made, Metis and Graclus, together with MLR-MCL, have no
-implementation in the library used here, so the real-network arms of this section
-use four other algorithms. That last exclusion is the most consequential one in
-the paper and we return to it in Section~\ref{sec:discussion}.
+not tested, because matching them on realized retention requires retraining at
+each operating point.
+
+Two detection algorithms are also absent, and the reason is not a design choice.
+The founding accuracy claim concerns Metis, Graclus and MLR-MCL. Metis is tested
+here, on every network, through the \texttt{pymetis} bindings. For Graclus and
+MLR-MCL we could find no maintained implementation that we were able to run, so
+the algorithm whose behaviour the original claim is largest about, MLR-MCL,
+remains untested by us. That is the most consequential gap in this paper and we
+return to it in Section~\ref{sec:discussion}.
 
 Before any quality measurement, one structural fact constrains the design. Four of
 the seven methods cannot reach aggressive retention on a sparse graph, because
@@ -128,57 +132,93 @@ $0.404$ against a compute-matched baseline in every configuration that runs, wit
 the loss growing as retention falls, and its three most aggressive configurations
 cannot be run at all because of the floors in Table~\ref{tab:floors}.
 
-\subsection{The loss is not fragmentation}\label{sec:negative:fragmentation}
+\subsection{Four ways the loss could be an artifact}\label{sec:negative:artifact}
 
-Sparsification breaks graphs apart, and a natural reading of the previous table is
-that the optimizer is being handed a shattered graph and is penalized for it. The
-backbone arms test that reading directly, because they retain a spanning structure
-and so cannot increase the number of connected components.
+A negative result is only as good as the explanations it excludes. Four are
+available, and each was tested rather than argued.
 
-They do what they were built to do. Under the backbone with random fill, no
+\paragraph{Fragmentation}
+Sparsification breaks graphs apart, and the optimizer may be penalized for being
+handed a shattered graph. The backbone arms test this directly, because they
+retain a spanning structure and cannot increase the number of connected
+components. They behave as designed: under the backbone with random fill no
 detected community is a singleton in any of its fourteen cells, and the fraction
-of vertices sitting in communities of fewer than three members never exceeds
-$1.8\%$. The shattering arms reach $86\%$ on the same networks. The conclusion
-does not move: the backbone's best cell is $-0.0141$, worse than four of the arms
-that fragment freely.
+of vertices in communities of fewer than three members never exceeds $1.8\%$,
+where the shattering arms reach $86\%$ on the same networks. The conclusion does
+not move. The backbone's best cell is $-0.0141$, worse than three of the arms that
+fragment freely. Removing half the edges costs modularity on the original graph
+whether or not the graph stays in one piece.
 
-The fragmentation explanation is therefore tested and rejected as sufficient. What
-is left is the edges themselves. Removing half of them costs modularity on the
-original graph whether or not the graph stays in one piece.
+\paragraph{The choice of optimizer}
+Everything above uses a modularity optimizer, so the objective and the algorithm
+may be too closely coupled. Two sparsifiers across three further algorithms, one
+flow-based, one a local majority rule and a second modularity optimizer, give the
+63 configurations of Table~\ref{tab:accounting}. Against the best of $N$ plain
+restarts, 60 are negative, with mean changes of $-0.082$ under Infomap, $-0.046$
+under Louvain and $-0.106$ under label propagation. The three positive cells are
+label propagation on one network whose unsparsified baseline is pathological: its
+own best of twenty restarts reaches modularity $0.079$ where a modularity
+optimizer on the same graph reaches $0.416$. Relieving a known failure mode of one
+algorithm is not a benefit of sparsification.
 
-A second observation follows from the same arms and points the same way. The
-backbone's two fills differ only in which edges top up the spanning structure,
-random or highest Jaccard similarity. Random fill scores better in ten of the
-fourteen paired cells. On these graphs, in this regime, the similarity signal
-subtracts.
+\paragraph{A benign loss}
+The loss might be harmless if sparsification sheds peripheral vertices while
+leaving community cores intact. It does not. The fragments subdivide communities
+without mixing them, but they cut the most embedded vertices as readily as the
+least, and a resolution-matched partition of the original graph preserves cores
+better in sixteen of twenty comparisons. Restricting the damage to leaf and
+near-leaf vertices does not rescue it either.
 
-\subsection{The loss is not an artifact of one optimizer}\label{sec:negative:algorithms}
+\paragraph{The retention regime}
+The loss might be an artifact of pushing the methods too hard. It is not: it is
+already present at the mildest retention any of them can reach. On the three
+sparsest networks that is about a third of the edges, by Table~\ref{tab:floors},
+and every arm loses there. The regime in which sparsification would pay for itself
+is not merely unprofitable on these graphs, it is unreachable.
 
-Everything above uses a modularity optimizer, which raises the question of whether
-the objective and the algorithm are too closely coupled. Running two sparsifiers
-across three further algorithms, one flow-based and one a local majority rule
-alongside a second modularity optimizer, gives 63 configurations on the same seven
-networks. Against the best of $N$ plain restarts, 60 are negative. The mean change
-is $-0.082$ under Infomap, $-0.046$ under Louvain and $-0.106$ under label
-propagation. The three positive cells are all label propagation on one network,
-where the unsparsified baseline is pathological: its own best of twenty restarts
-reaches modularity $0.079$ where a modularity optimizer on the same graph reaches
-$0.416$. Relieving a known failure mode of one algorithm is not a benefit of
-sparsification.
+One observation from the same arms does not belong to this list, because it
+supports no rival explanation. The backbone's two fills differ only in which edges
+top up the spanning structure, random or highest Jaccard similarity, and random
+fill scores better in ten of the fourteen paired cells. In this regime the
+similarity signal subtracts.
+
+\subsection{The same result under a fixed-\texorpdfstring{$k$}{k} partitioner}\label{sec:negative:metis}
+
+Sections~\ref{sec:negative:objective} and~\ref{sec:negative:artifact} concern
+detectors that choose their own granularity. The condition under which
+sparsification does help, established in this paper on synthetic benchmarks,
+involves a detector that takes the number of communities as an input, so the
+question is whether such a detector escapes the negative on these graphs.
+
+It does not. Metis was run on all seven networks at the same operating points and
+under the same protocol, with ten partitioner seeds per cell and the worst
+sparsified run compared against the best baseline run. On the five networks with
+average degree between $5.5$ and $10.7$, no cell is positive: 90 cells, seven
+sparsifiers, two ways of choosing $k$, and the best of them loses $0.017$. Fixing
+the community count removes the granularity artifact by construction and leaves
+the loss exactly where it was.
+
+The two conventions for choosing $k$ agree throughout, whether $k$ is taken from
+the community count a modularity optimizer returns on the original graph or, on
+the three networks with reference communities, from the number of those
+communities. On com-Amazon the two values differ by a factor of sixteen, 306
+against 5,000, and both give the same answer.
+
+Above that range the picture changes, and Section~\ref{sec:discussion} takes it up:
+on the densest network we test, four of the seven sparsifiers produce a gain that
+survives the worst case over ten seeds.
 
 \subsection{Recovery, and what happens to it under control}\label{sec:negative:recovery}
 
 Agreement with reference communities behaves differently from the objective, and
 the difference is instructive rather than encouraging.
 
-Raw agreement often rises. It rises because the sparsified partition is finer, and
-both of the controls in Sections~\ref{sec:protocol:granularity}
-and~\ref{sec:protocol:chance} are needed to see it. On com-DBLP, local similarity
-sparsification lifts average best-match $F_1$ from $0.102$ to $0.193$ while taking
-the community count from 220 to 10,947; the original graph partitioned to the same
-count reaches $0.300$, and the random-partition floor at that count is $0.090$
-against $0.019$ at the baseline count. Nearly all of the apparent gain is
-granularity, and what is left of it is chance.
+Raw agreement often rises, and it rises because the sparsified partition is finer.
+Table~\ref{tab:granularity} shows the anatomy on com-DBLP: an apparent gain of
+$+0.091$ in average best-match $F_1$, against a control that gains $+0.198$ without
+touching the graph, over a chance floor that itself rises from $0.019$ to $0.090$
+as the partition fragments. Both controls are needed to see it, and after both
+there is nothing left.
 
 This is the pattern across the labelled networks, with one exception, which is the
 subject of Section~\ref{sec:negative:exception}.
@@ -194,35 +234,6 @@ sparsifier away for free, the median speedup is $1.21\times$, $1.63\times$ and
 $1.15\times$ by algorithm, well short of the factor of two that halving the edge
 count suggests, because all three algorithms return more communities on the
 sparsified graph and do more work per pass.
-
-\subsection{Hypotheses of ours that did not survive}\label{sec:negative:killed}
-
-Four explanations for the negative result were our own, were pre-registered, and
-failed.
-
-We proposed that sparsification preserves community cores while shedding
-peripheral vertices, which would make the loss benign. Four of that hypothesis's
-five predictions failed: the fragments subdivide communities without mixing them,
-but they cut the most embedded vertices as readily as the least, and a
-resolution-matched partition of the original graph preserves cores better in
-sixteen of twenty comparisons.
-
-We proposed that the damage is concentrated in leaf and near-leaf vertices, so
-that shedding them first would be harmless. It was not.
-
-We proposed that triangle structure governs which edges a degree-based sparsifier
-removes. A causal test moved the triangle count in both directions while the
-score-separation quantity fell uniformly, which rules the explanation out rather
-than leaving it unsupported.
-
-Finally, we found a statistically clean gain on a large network, replicated it
-exactly, and then killed it ourselves: its cluster count correlates with its
-modularity at $-0.799$, the seeded run's community count falls below all twenty
-plain restarts, and its mean lands on the regression line those restarts trace, so
-the gain is granularity and not structure.
-
-Reporting these is not a courtesy. Each is an explanation a reader would otherwise
-have to wonder about, and each was closed by a test rather than by argument.
 
 \subsection{The exception}\label{sec:negative:exception}
 

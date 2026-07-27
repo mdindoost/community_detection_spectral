@@ -123,7 +123,9 @@ sparsifiers, spanning the degree-based and similarity-based families that have
 claimed quality gains, the method of Satuluri et al.\ among them, and a
 connectivity-preserving class that cannot fragment a graph by construction; four
 detection algorithms drawn from the two families identified above; seventeen real
-networks of up to 25 million edges; and two families of synthetic benchmark, LFR
+networks of up to 25 million edges, seven of which carry the full quality sweep
+and all seventeen the mechanism measurements; and two families of synthetic
+benchmark, LFR
 graphs and stochastic block models, in which average degree is swept over an
 order of magnitude while community structure is held fixed. One arm of the
 synthetic study uses a fixed-$k$ partitioner, so that the number of communities is
@@ -139,9 +141,9 @@ regimes is sharp within a given family of graphs while its location is not
 universal. On the LFR benchmark graphs~\cite{lancichinetti2008benchmark} we
 generate it falls near an average degree of 50, which is also the threshold
 reported in the original synthetic sweep. On the real networks we test it has
-already occurred at an average degree of 29, the lowest density at which we
-tested a fixed-$k$ partitioner. On stochastic block models it occurs no later
-than on LFR. We therefore state a condition rather than a threshold.
+already occurred by an average degree of 29 and is absent on every network below
+11, so it lies between those two densities. On stochastic block models it occurs
+no later than on LFR. We therefore state a condition rather than a threshold.
 
 What the transition tracks is how many edges can be removed without destroying
 community structure, rather than density as such. Injecting spurious edges into a
@@ -173,9 +175,12 @@ communities, with the number of communities fixed by construction so that no
 granularity effect is possible, similarity-based sparsification raises both the
 objective measured on the original graph and chance-corrected agreement with the
 planted labels. Recovery turns positive at a lower density than the objective
-does. Degree-based and uniform sparsification at identical retention do not
-reproduce the effect, so it belongs to the similarity signal rather than to the
-edge budget.
+does. On the benchmark graphs, degree-based and uniform sparsification at
+identical retention do not reproduce the effect, which places it in the selection
+rule rather than in the edge budget; on the one real network above the transition,
+a degree-based sampler reproduces it as well, while the two methods that preserve
+connectivity by construction do not. What the gain requires is a rule that scores
+individual edges, and we do not identify the property of that rule which matters.
 
 A fixed-$k$ partitioner applied to a sparse graph shows no gain on the objective
 in any configuration we tested, and a free-granularity optimizer applied to a

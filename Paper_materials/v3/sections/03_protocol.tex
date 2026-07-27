@@ -62,9 +62,14 @@ Q(P, G) \;=\; \sum_{C \in P} \left[ \frac{m_C}{m} - \gamma
 \end{equation}
 with $m_C$ the number of edges inside community $C$, $D_C$ the sum of degrees in
 $C$, and $\gamma$ a resolution parameter equal to one in the standard definition.
-The subtracted term is normalized by $m$. Deleting edges shrinks it, so
-modularity computed on a sparsified graph rises whether or not the partition has
-improved, and the rise is larger the more edges are removed.
+Deleting edges does not by itself change this quantity. Under uniform deletion
+the intra-community fraction and the subtracted term shrink together, and a
+partition held fixed scores the same on the sparsified graph as on the original
+to within $0.001$ on every network we tested. What changes is what an optimizer
+can find. A graph with fewer edges admits higher modularity, including a graph
+with no community structure at all~\cite{guimera2004modularity}, so a partition
+optimized on $G'$ scores higher there than the baseline partition scores on $G$,
+and \eqref{eq:self} credits the difference to the sparsifier.
 
 The effect is not small and it is not confined to sparsifiers that select
 intelligently. Table~\ref{tab:uniform} scores uniform random edge deletion, whose
@@ -112,7 +117,10 @@ which is the failure Section~\ref{sec:protocol:compute} treats.
 \begin{table}[t]
 \centering
 \caption{The two accountings across 63 configurations, seven networks by three
-sparsifier settings under each algorithm. A flip is a cell where
+sparsifier settings under each algorithm. Both quantities are measured against
+the mean of the plain restarts, the weakest of the baselines in
+Section~\ref{sec:protocol:compute}; counts against the stricter best-of-$N$
+baseline appear in Section~\ref{sec:negative}. A flip is a cell where
 $\Delta Q_{\mathrm{self}} > 0$ and $\Delta Q_{\mathrm{transfer}} < 0$, so that
 the two accountings disagree on the sign of the conclusion.}
 \label{tab:accounting}
@@ -321,17 +329,11 @@ al.~\cite{gottesburen2025linear} recommend after measuring the same overhead in
 graph partitioning. The comparison is the whole pipeline, sparsifier included,
 against one run of the same detection algorithm on the original graph.
 
-Of the 63 configurations in Table~\ref{tab:accounting}, four preserve quality, in
-the sense of coming within $0.005$ of the best-of-$N$ baseline, and the greatest
-end-to-end speedup among them is $0.66\times$, which is slower than not
-sparsifying. Speedups above $1.5\times$ occur in 12 of the 63 cells, and all 12
-lose modularity, by $0.015$ to $0.162$ against the compute-matched baseline.
-Discounting the sparsifier entirely and timing only the detection step, the
-median speedup is $1.21\times$ for Infomap, $1.63\times$ for Louvain and
-$1.15\times$ for label propagation, well short of the factor of two that halving
-the edges suggests, because all three algorithms return more communities on a
-sparsified graph, on average $1.4$, $8.9$ and $2.3$ times as many, and do more
-work per pass.
+The price of not doing this is that a configuration can be reported as fast while
+losing quality, or as free while the sparsifier consumes the saving. Of the 63
+configurations in Table~\ref{tab:accounting}, the fastest one that preserves
+quality runs at $0.66\times$ the speed of clustering the original graph directly.
+Section~\ref{sec:negative} reports the cost measurements in full.
 
 \begin{table*}[t]
 \centering
