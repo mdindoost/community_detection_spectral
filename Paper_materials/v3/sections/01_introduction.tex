@@ -11,6 +11,16 @@
 %   of B1, immediately after the question, so the boundary is known before the
 %   prior-work beats. Worded to avoid duplicating B6's opening clause; B6 keeps
 %   the full statement with its numbers.
+% 2026-07-26 (audit, "fix 2"): B4 gains the measurement it was planned to carry
+%   (INTRO_PLAN B4) and did not. It argued the correct comparison from a
+%   definition and left 45/63 to a contribution bullet, so the claim's second
+%   clause, "the accounting in common use reports one anyway", was never argued
+%   in the introduction. New paragraph two of B4. All figures re-verified against
+%   exp_P/results.csv and exp_G/results.csv this session:
+%     63 cells, 3 algorithms (Infomap, Louvain, label prop), 7 networks x 3
+%     settings; self>0 in 60; transfer>0 in 15; flips 45; max self +0.5365.
+%     Uniform arm: exp_G artifact1, 6 cells, self>0 in 6, transfer<0 in 6.
+%   NOTE: three algorithms, not four. TERMINOLOGY.md's "four" is loose.
 % STYLE: no em-dashes, no AI-characteristic phrasing (see STYLE.md).
 % ============================================================
 
@@ -96,6 +106,23 @@ running the detection algorithm on the sparsified graph, and the one obtained by
 running it on the original graph directly. Both partitions cover the same vertex
 set, so both can be scored on the same object, and the difference between those
 two scores is the effect of sparsification.
+
+A second accounting is also in use, in which the partition obtained on the
+sparsified graph is scored on that graph and compared against a baseline scored
+on the original. It grades the treatment against evidence the treatment has
+already edited, and it favours the treatment for a reason unrelated to community
+structure: a graph with fewer edges admits higher modularity even when it has no
+community structure at
+all~\cite{guimera2004modularity}. The cost of the substitution can be measured.
+Across 63 configurations spanning three detection algorithms, seven networks and
+three sparsifier settings, modularity read off the sparsified graph is positive
+in 60 of them and reaches $+0.537$; the same partitions scored on the original
+graph are positive in 15. The two accountings disagree on the sign of the
+conclusion in 45 of the 63. The inflation does not require a sparsifier that
+selects well. Uniform random edge deletion, whose rule uses no information about
+the graph, improves modularity in every cell we measure under the first
+accounting and is worse than the baseline in every cell under the second.
+Section~\ref{sec:experiments:accounting} reports both measurements.
 
 The sparsifier classes and detection algorithms described above each impose
 further requirements of the same kind, and several have been noted individually
