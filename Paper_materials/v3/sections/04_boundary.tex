@@ -52,7 +52,10 @@ the same number of communities by definition.
 Table~\ref{tab:boundary} reports, for LFR graphs at each average degree, the
 number of configurations in which L-Spar improves modularity measured on the
 original graph under Metis, and the number in which it improves chance-corrected
-agreement with the planted labels.
+agreement with the planted labels. Figure~\ref{fig:boundary} plots the mean
+changes behind those counts, against the free-granularity arm on the same graphs.
+
+\input{figures/fig_boundary}
 
 \begin{table}[t]
 \centering
@@ -100,8 +103,41 @@ baseline seed spread by factors of $4.9$ to $19.8$, and it clears it at every
 degree at or above $49$. On the objective it is not: the same cells reach factors
 of only $7.8$ down to $-0.4$, so one of them fails to clear at all, and at the
 mildest retention the cells at $201$ and $261$ are negative in the worst case on
-both measures. The recovery result survives a hostile reading of the seeds; the
-modularity result survives at the aggressive operating points with one exception.
+both measures. Table~\ref{tab:seeds} gives every cell. The recovery result
+survives a hostile reading of the seeds; the modularity result survives at the
+aggressive operating points with one exception.
+
+\begin{table}[t]
+\centering
+\caption{Every decisive cell under a hostile reading of the partitioner seeds.
+Each entry is the worst sparsified run minus the best unsparsified run over ten
+Metis seeds, divided by the standard deviation of the baseline across those
+seeds, so a value above $1$ means the worst sparsified run beats the best
+baseline run by more than the baseline's own seed noise. L-Spar, one row per LFR
+graph. Recovery clears at every degree and both aggressive retentions; the
+objective does not clear at $51.2$, and neither measure clears at the mildest
+retention on the three densest graphs.}
+\label{tab:seeds}
+\footnotesize
+\setlength{\tabcolsep}{3.5pt}
+\begin{tabular}{@{}rrrrcrrr@{}}
+\toprule
+& \multicolumn{3}{c}{$\Delta\mathrm{AMI}$, retention} & &
+  \multicolumn{3}{c}{$\Delta Q$, retention}\\
+\cmidrule(lr){2-4}\cmidrule(lr){6-8}
+$d_{\mathrm{avg}}$ & $0.15$ & $0.20$ & $0.50$ & & $0.15$ & $0.20$ & $0.50$\\
+\midrule
+ 49.0 & 19.8 & 17.0 &  3.2 & &  5.5 & 7.8 &  3.2\\
+ 51.2 & 13.5 & 12.7 &  3.3 & & $-0.4$ & 1.7 &  1.3\\
+100.1 & 14.6 & 13.3 &  3.5 & &  1.5 & 4.0 &  1.3\\
+101.8 & 13.6 & 13.0 &  1.3 & &  1.5 & 3.5 &  0.5\\
+103.9 & 11.8 & 11.6 &  1.0 & &  2.6 & 4.6 &  0.4\\
+200.7 &  7.7 &  6.7 &  1.3 & &  3.8 & 4.3 & $-0.3$\\
+201.3 &  6.6 &  5.9 & $-0.6$ & &  4.3 & 5.2 & $-0.2$\\
+260.8 &  5.4 &  4.9 & $-1.8$ & &  3.5 & 4.9 & $-1.5$\\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \paragraph{Generality across generators}
 LFR graphs are one family with one degree distribution, and the mechanism runs
