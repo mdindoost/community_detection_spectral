@@ -96,12 +96,12 @@ Metis is not deterministic across option seeds, so the decisive cells were
 repeated with ten seeds per graph and the worst sparsified run compared against
 the best unsparsified run. The comparison separates the two measures again. On
 recovery it is comfortable: at aggressive retention the worst case clears the
-baseline seed spread by factors of $8.0$ to $14.4$ at every degree at or above
-$49$. On the objective it is not: the same cells clear it by factors between
-$1.0$ and $5.8$, and at the mildest retention several cells at $51$, $201$ and
-$261$ are negative in the worst case. The recovery result survives a hostile
-reading of the seeds; the modularity result survives only at the aggressive
-operating points.
+baseline seed spread by factors of $4.9$ to $19.8$, and it clears it at every
+degree at or above $49$. On the objective it is not: the same cells reach factors
+of only $7.8$ down to $-0.4$, so one of them fails to clear at all, and at the
+mildest retention the cells at $201$ and $261$ are negative in the worst case on
+both measures. The recovery result survives a hostile reading of the seeds; the
+modularity result survives at the aggressive operating points with one exception.
 
 \paragraph{Generality across generators}
 LFR graphs are one family with one degree distribution, and the mechanism runs
@@ -113,15 +113,17 @@ explanation we expected. We predicted that a degree-homogeneous generator would
 push the transition to higher density, since a degree-based selector has less to
 work with, and that the degree-corrected variant would sit closer to LFR. Neither
 holds. All four block-model variants cross at essentially the same place while
-their degree coefficient of variation spans an order of magnitude, from $0.14$ to
-$1.47$, and across sixty generator-by-degree cells the gain correlates with
+their degree coefficient of variation spans an order of magnitude: at the degree
+where the transition sits it runs from $0.14$ to $1.47$ across the four
+generators. Across sixty generator-by-degree cells the gain correlates with
 average degree at Spearman $+0.65$ and with degree variability at $-0.26$. Degree
 heterogeneity is not the operative variable.
 
 \paragraph{Real networks}
 The same arm on the seven real networks places the transition without resolving
-what sits on the far side of it. Below average degree $11$ there is nothing: 90
-cells across five networks, seven sparsifiers, two ways of choosing $k$, and not
+what sits on the far side of it. Below average degree $11$ there is nothing: 128
+cells across five networks, seven sparsifiers, and both ways of choosing $k$ on
+the two of those networks that carry reference communities, with not
 one positive in the worst case over ten seeds. On wiki-Vote, at average degree
 $28.5$, four of the seven sparsifiers produce a worst-case positive gain, the
 largest being $+0.0124$. On email-Eu-core, at $32.6$, none does: two arms are
@@ -145,9 +147,10 @@ that network.
 The denoising account makes a testable prediction. If sparsification helps by
 deleting edges that do not belong to the generative structure, its benefit should
 grow with the proportion of such edges. Injecting uniformly random edges into
-benchmark graphs while holding the planted labels fixed confirms it for
-similarity-based selection: recovery gain rises monotonically with the injected
-fraction in every one of the four configurations tested, and at average degree
+benchmark graphs while holding the planted labels fixed is consistent with it for
+similarity-based selection: recovery gain rises with the injected
+fraction in three of the four configurations tested and rises with one reversal
+in the fourth, and at average degree
 $50$ with $20\%$ retention it grows from $+0.061$ with no injected noise to
 $+0.185$ when the number of spurious edges equals the number of real ones. The
 gain does not vanish at zero noise, so denoising adds to an effect already
@@ -179,16 +182,16 @@ detection.
 The quality gain is not a speed gain in our implementation. Computing exact
 pairwise similarity costs more than it saves, and the deficit grows with density
 because the similarity computation grows faster than the detection it
-accelerates: the median end-to-end speedup falls from $0.75\times$ at average
-degree $10$ to $0.26\times$ at $200$. The original speedups were obtained with an
+accelerates: the median end-to-end speedup falls from $0.89\times$ at average
+degree $11$ to $0.18\times$ at $221$. The original speedups were obtained with an
 approximate similarity computation reported as two orders of magnitude cheaper,
 measured against clustering runs lasting hours, so both cost bases differ from
 ours by enough to explain the discrepancy without disagreement about what should
 be counted.
 
 One part of the original report does not reproduce. At high mixing, where the
-planted structure is barely detectable and baseline recovery sits between $0.06$
-and $0.14$, no gain appears at any degree: across 104 configurations L-Spar
+planted structure is barely detectable and baseline recovery sits between $0.03$
+and $0.17$, no gain appears at any degree: across 104 configurations L-Spar
 improves modularity in 9, and the mean change is negative at every degree. The
 original sweep reports its largest improvement in that regime. Whether this is a
 genuine non-reproduction or a floor effect of the metrics we use cannot be

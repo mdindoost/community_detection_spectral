@@ -53,9 +53,10 @@ Total                 & 102 & \textbf{0} & $-0.0105$ & $-0.667$\\
 
 The sweep that isolates one method across its full retention range agrees. Local
 L-Spar on the same seven networks loses between $0.014$ and
-$0.404$ against a compute-matched baseline in every configuration that runs, with
-the loss growing as retention falls, and its three most aggressive configurations
-cannot be run at all because of the floors in Table~\ref{tab:floors}.
+$0.404$ against a compute-matched baseline in every configuration, with
+the loss growing as retention falls. Its three most aggressive configurations
+cannot reach the retention they were given and run at the floors of
+Table~\ref{tab:floors} instead.
 
 \paragraph{Under a fixed-$k$ partitioner}
 The results above concern
@@ -67,8 +68,9 @@ question is whether such a detector escapes the negative on these graphs.
 It does not. Metis was run on all seven networks at the same operating points and
 under the same protocol, with ten partitioner seeds per cell and the worst
 sparsified run compared against the best baseline run. On the five networks with
-average degree between $5.5$ and $10.7$, no cell is positive: 90 cells, seven
-sparsifiers, two ways of choosing $k$, and the best of them loses $0.017$. Fixing
+average degree between $5.5$ and $10.7$, no cell is positive: 128 cells, seven
+sparsifiers, and both ways of choosing $k$ on the two of those networks that
+carry reference communities. The best cell loses $0.017$. Fixing
 the community count removes the granularity artifact by construction and leaves
 the loss exactly where it was.
 
@@ -79,15 +81,17 @@ communities. On com-Amazon the two values differ by a factor of sixteen, 306
 against 5,000, and both give the same answer.
 
 Above that range the picture changes, and Section~\ref{sec:experiments:boundary} takes it up:
-on the densest network we test, four of the seven sparsifiers produce a gain that
-survives the worst case over ten seeds.
+on one of the two networks above it, four of the seven sparsifiers produce a gain
+that survives the worst case over ten seeds. On the other, which is denser, none
+does.
 
 \paragraph{Recovery}
 Agreement with reference communities behaves differently from the objective, and
 the difference is instructive rather than encouraging. Raw agreement often rises,
 and Table~\ref{tab:granularity} has already shown why: the sparsified partition is
 finer, the measure rewards that, and the floor beneath it rises at the same time.
-After both controls there is nothing left, on every labelled network but one.
+After both controls something still remains on two of the three labelled
+networks, and Section~\ref{sec:experiments:exception} takes those up.
 
 \paragraph{Speed}
 The pipeline is not faster. Of the 63 configurations, four preserve quality in the
@@ -111,7 +115,7 @@ handed a shattered graph. The backbone arms test this directly, because they
 retain a spanning structure and cannot increase the number of connected
 components. They behave as designed: under the backbone with random fill no
 detected community is a singleton in any of its fourteen cells, and the fraction
-of vertices in communities of fewer than three members never exceeds $1.8\%$,
+of vertices in communities of fewer than ten members never exceeds $1.8\%$,
 where the shattering arms reach $86\%$ on the same networks. The conclusion does
 not move. The backbone's best cell is $-0.0141$, worse than three of the arms that
 fragment freely. Removing half the edges costs modularity on the original graph
@@ -152,22 +156,27 @@ similarity signal subtracts.
 
 \subsection{The exception}\label{sec:experiments:exception}
 
-One result in this section survives every control we have.
+Two networks carry a result that clears the matched control of
+Section~\ref{sec:protocol:granularity} and the chance floor.
 
 On com-Amazon, L-Spar at realized retention $0.542$
 reaches average best-match $F_1$ of $0.402$ against a baseline of $0.142$. The
-granularity control does not remove it: partitioning the original graph to the
+matched control does not remove it: partitioning the original graph to the
 same community count gives $0.319$, and deliberately over-matching by 37 per cent
 more communities still gives only $0.372$. The chance floor does not remove it
 either, and subtracting the floor widens the margin rather than narrowing it,
-because the floor rises with the community count. A second, independent instance
+because the floor rises with the community count. A second instance
 appears in the same experiments from an unrelated method, Local Degree, on
-com-Amazon and com-DBLP.
+com-Amazon and on com-DBLP. The two baselines separate on com-DBLP: that instance
+clears the matched control, at $0.163$ against $0.123$ at the same community
+count, and does not clear the sweep, whose best point on the untouched graph
+reaches $0.397$.
 
-What removes it is a different comparison. Both non-modularity algorithms reach
+What removes both is a different comparison. Both non-modularity algorithms reach
 higher agreement on com-Amazon without any sparsification at all, $0.465$ under
 Infomap and $0.480$ under label propagation, against the $0.402$ that the
-sparsified modularity pipeline attains. The effect is real, and it is the
+sparsified modularity pipeline attains, and the same holds on com-DBLP at
+$0.326$ and $0.382$ against $0.163$. The effect is real, and it is the
 modularity objective's default granularity being partially repaired by shattering
 the graph, in a metric that rewards fine partitions. It is not a capability that
 sparsification confers.
