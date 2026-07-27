@@ -1,26 +1,17 @@
 % ============================================================
-% SECTION 4: BELOW THE BOUNDARY. Written clean 2026-07-26 (evening).
-% Weight: MEDIUM-HEAVY (PAPER_STRUCTURE.md). Delivers the "no benefit of any
-% kind" half of the one-sentence claim.
+% SECTION 4.3-4.5: THE NEGATIVE, ITS RIVAL EXPLANATIONS, AND THE EXCEPTION.
+% Restructured 2026-07-26 (late) from sections/04_below.tex, whose full previous
+% form is preserved at sections/_mined/04_below_v1_full.tex.
 %
-% DECISIONS TAKEN WITH MOHAMMAD BEFORE DRAFTING:
-%   (1) counts, not per-cell values: the claim is delimitation
-%   (2) the com-Amazon exception gets its own subsection, named as an exception
-%   (3) the section opens with the seven-sparsifier rationale and its exclusions
-%
-% CROSS-REFERENCE WARNING: sections/05_boundary.tex is currently commented out of
-% main.tex, so \ref{sec:boundary} would be undefined. This section therefore
-% refers to the fixed-k result in words. WHEN SECTION 5 RETURNS, replace those
-% phrasings with real references (marked below with "% XREF").
-%
-% Evidence, all recomputed from CSVs this session, not from SUMMARY files:
-%   exp_AB/results.csv     102 matched Leiden cells, 7 arms, 7 networks; 0/102
-%                          positive; per-arm best cells; fragmentation columns;
-%                          28 Metis rows, 8 positive at d_avg 28.5-32.6
-%   exp_L/results.csv      L-Spar 7 networks, 11 ok cells, -0.0142 .. -0.4035
-%   exp_P/results.csv      63 cells, 3 algorithms, 60/63 negative vs best-of-N
-%   exp_P/bestof.csv       per-network best-of-N baselines
-%   exp_V/results.csv      four deployments of the verified signal
+% Changes in this pass, all structural:
+%   - promoted from a standalone section to subsections of Experiments
+%   - the fixed-k result and the speed result become paragraphs of 4.3 rather
+%     than subsections of their own, since each is one measurement
+%   - the recovery subsection is deleted: it restated the com-DBLP anatomy that
+%     4.2 now owns, so 4.3 points at Table 5 instead of retelling it
+%   - "four ways the loss could be an artifact" keeps its own subsection because
+%     its four legs need paragraph headings of their own
+% No numbers changed in this pass.
 % STYLE: no em-dashes, no AI-characteristic phrasing (see STYLE.md).
 % ============================================================
 
@@ -66,7 +57,50 @@ $0.404$ against a compute-matched baseline in every configuration that runs, wit
 the loss growing as retention falls, and its three most aggressive configurations
 cannot be run at all because of the floors in Table~\ref{tab:floors}.
 
-\subsection{Four ways the loss could be an artifact}\label{sec:negative:artifact}
+\paragraph{Under a fixed-$k$ partitioner}
+The results above concern
+detectors that choose their own granularity. The condition under which
+sparsification does help, established in this paper on synthetic benchmarks,
+involves a detector that takes the number of communities as an input, so the
+question is whether such a detector escapes the negative on these graphs.
+
+It does not. Metis was run on all seven networks at the same operating points and
+under the same protocol, with ten partitioner seeds per cell and the worst
+sparsified run compared against the best baseline run. On the five networks with
+average degree between $5.5$ and $10.7$, no cell is positive: 90 cells, seven
+sparsifiers, two ways of choosing $k$, and the best of them loses $0.017$. Fixing
+the community count removes the granularity artifact by construction and leaves
+the loss exactly where it was.
+
+The two conventions for choosing $k$ agree throughout, whether $k$ is taken from
+the community count a modularity optimizer returns on the original graph or, on
+the three networks with reference communities, from the number of those
+communities. On com-Amazon the two values differ by a factor of sixteen, 306
+against 5,000, and both give the same answer.
+
+Above that range the picture changes, and Section~\ref{sec:experiments:boundary} takes it up:
+on the densest network we test, four of the seven sparsifiers produce a gain that
+survives the worst case over ten seeds.
+
+\paragraph{Recovery}
+Agreement with reference communities behaves differently from the objective, and
+the difference is instructive rather than encouraging. Raw agreement often rises,
+and Table~\ref{tab:granularity} has already shown why: the sparsified partition is
+finer, the measure rewards that, and the floor beneath it rises at the same time.
+After both controls there is nothing left, on every labelled network but one.
+
+\paragraph{Speed}
+The pipeline is not faster. Of the 63 configurations, four preserve quality in the
+sense of coming within $0.005$ of the best-of-$N$ baseline, and the fastest of
+those four runs at $0.66\times$ the speed of clustering the original graph
+directly. Twelve configurations exceed $1.5\times$, and every one of them loses
+modularity, by $0.015$ to $0.162$. Timing only the detection step and giving the
+sparsifier away for free, the median speedup is $1.21\times$, $1.63\times$ and
+$1.15\times$ by algorithm, well short of the factor of two that halving the edge
+count suggests, because all three algorithms return more communities on the
+sparsified graph and do more work per pass.
+
+\subsection{Four ways the loss could be an artifact}\label{sec:experiments:artifact}
 
 A negative result is only as good as the explanations it excludes. Four are
 available, and each was tested rather than argued.
@@ -116,60 +150,7 @@ top up the spanning structure, random or highest Jaccard similarity, and random
 fill scores better in ten of the fourteen paired cells. In this regime the
 similarity signal subtracts.
 
-\subsection{The same result under a fixed-\texorpdfstring{$k$}{k} partitioner}\label{sec:negative:metis}
-
-The results above concern
-detectors that choose their own granularity. The condition under which
-sparsification does help, established in this paper on synthetic benchmarks,
-involves a detector that takes the number of communities as an input, so the
-question is whether such a detector escapes the negative on these graphs.
-
-It does not. Metis was run on all seven networks at the same operating points and
-under the same protocol, with ten partitioner seeds per cell and the worst
-sparsified run compared against the best baseline run. On the five networks with
-average degree between $5.5$ and $10.7$, no cell is positive: 90 cells, seven
-sparsifiers, two ways of choosing $k$, and the best of them loses $0.017$. Fixing
-the community count removes the granularity artifact by construction and leaves
-the loss exactly where it was.
-
-The two conventions for choosing $k$ agree throughout, whether $k$ is taken from
-the community count a modularity optimizer returns on the original graph or, on
-the three networks with reference communities, from the number of those
-communities. On com-Amazon the two values differ by a factor of sixteen, 306
-against 5,000, and both give the same answer.
-
-Above that range the picture changes, and Section~\ref{sec:discussion} takes it up:
-on the densest network we test, four of the seven sparsifiers produce a gain that
-survives the worst case over ten seeds.
-
-\subsection{Recovery, and what happens to it under control}\label{sec:negative:recovery}
-
-Agreement with reference communities behaves differently from the objective, and
-the difference is instructive rather than encouraging.
-
-Raw agreement often rises, and it rises because the sparsified partition is finer.
-Table~\ref{tab:granularity} shows the anatomy on com-DBLP: an apparent gain of
-$+0.091$ in average best-match $F_1$, against a control that gains $+0.198$ without
-touching the graph, over a chance floor that itself rises from $0.019$ to $0.090$
-as the partition fragments. Both controls are needed to see it, and after both
-there is nothing left.
-
-This is the pattern across the labelled networks, with one exception, which is the
-subject of Section~\ref{sec:negative:exception}.
-
-\subsection{No speed benefit either}\label{sec:negative:speed}
-
-The pipeline is not faster. Of the 63 configurations, four preserve quality in the
-sense of coming within $0.005$ of the best-of-$N$ baseline, and the fastest of
-those four runs at $0.66\times$ the speed of clustering the original graph
-directly. Twelve configurations exceed $1.5\times$, and every one of them loses
-modularity, by $0.015$ to $0.162$. Timing only the detection step and giving the
-sparsifier away for free, the median speedup is $1.21\times$, $1.63\times$ and
-$1.15\times$ by algorithm, well short of the factor of two that halving the edge
-count suggests, because all three algorithms return more communities on the
-sparsified graph and do more work per pass.
-
-\subsection{The exception}\label{sec:negative:exception}
+\subsection{The exception}\label{sec:experiments:exception}
 
 One result in this section survives every control we have.
 
