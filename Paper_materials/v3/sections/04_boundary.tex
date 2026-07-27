@@ -1,0 +1,195 @@
+% ============================================================
+% SECTION 4.6: THE BOUNDARY. Written fresh 2026-07-26 (late) from the CSVs.
+% This REPLACES sections/05_boundary.tex, which Mohammad retired: it predated
+% the protocol section, and three of its numbers did not survive checking.
+%
+% Numbers verified in this pass, with what changed from the retired section:
+%   LFR counts by degree      exp_AA via exp_AC/analyse.py LFR reference block
+%   seed robustness           RECOMPUTED from exp_AA/metis_noise.csv. The retired
+%                             text said the effect clears noise "by a factor of
+%                             between two and sixty". True range at d>=49 is
+%                             -1.32 to 5.79 in modularity and -1.88 to 14.36 in
+%                             AMI, and several cells at retention 0.5 are
+%                             negative. Restated per retention point.
+%   "harmful on both measures below 25"  CONTRADICTED by exp_AA's own table
+%                             (6/12 positive on AMI at 24.6). Removed.
+%   speed                     RECOMPUTED from exp_AA/results_armB.csv: median
+%                             pipeline speedup 0.75x at d=10 falling to 0.26x at
+%                             d=200. The retired text's 1.49x / 1.01x / 0.58x
+%                             does not match arm B.
+%   edge-budget control       DSpar is positive in 2/12 and 3/12 cells at the two
+%                             highest degrees even on LFR, and on the one real
+%                             network above the transition it reproduces the gain
+%                             outright (exp_AD). "Does not reproduce at any
+%                             degree" is retired.
+%   Leiden arm                exp_AA/results_armA.csv: 28/144 lspar cells beat
+%                             best-of-5, none above +0.005; resolution-matched
+%                             control wins 104/144.
+%   generalization            exp_AC/SUMMARY.md and analysis_full.txt
+%   real networks             exp_AD/results.csv
+%   denoising                 exp_AA/results_armC.csv, leiden+lspar 4/4 monotone
+% STYLE: no em-dashes, no AI-characteristic phrasing (see STYLE.md).
+% ============================================================
+
+\subsection{The boundary}\label{sec:experiments:boundary}
+
+Everything so far is measured on one side of a line. The networks in
+Table~\ref{tab:networks} have average degrees between $5.5$ and $32.6$, and the
+detectors used for most of it choose their own granularity. Both conditions in
+this paper's claim are therefore held at one setting, and a negative result
+obtained that way says nothing about where the setting stops mattering. This
+subsection varies both.
+
+\paragraph{What the setting requires}
+Three properties are needed. Density must vary over an order of magnitude while
+community structure is held fixed, which real networks cannot provide. Community
+membership must be known rather than inferred. And the granularity artifact of
+Section~\ref{sec:experiments:accounting} must be removed by construction rather
+than by control, which a detector taking $k$ as an input does: both arms return
+the same number of communities by definition.
+
+\paragraph{The transition}
+Table~\ref{tab:boundary} reports, for LFR graphs at each average degree, the
+number of configurations in which L-Spar improves modularity measured on the
+original graph under Metis, and the number in which it improves chance-corrected
+agreement with the planted labels.
+
+\begin{table}[t]
+\centering
+\caption{Metis with $k$ pinned to the planted community count, LFR, realized
+mixing near $0.6$. Counts are configurations out of twelve in which L-Spar
+improves the quantity named, with the mean change beside them. Modularity is
+measured on the original graph. Because $k$ is an input, both arms return
+identical community counts and no granularity effect is possible.}
+\label{tab:boundary}
+\small
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+$d_{\mathrm{avg}}$ & $\Delta Q > 0$ & mean $\Delta Q$ &
+$\Delta\mathrm{AMI} > 0$ & mean $\Delta\mathrm{AMI}$\\
+\midrule
+11.2  & 0/12  & $-0.103$ & 0/12  & $-0.216$\\
+24.6  & 0/12  & $-0.046$ & 6/12  & $-0.072$\\
+49.4  & 8/12  & $-0.016$ & 9/12  & $+0.042$\\
+101.9 & 10/12 & $+0.006$ & 12/12 & $+0.116$\\
+220.9 & 12/12 & $+0.009$ & 12/12 & $+0.093$\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The two measures cross at different places. Recovery turns positive first, with
+half the configurations improving at average degree $24.6$ and three quarters at
+$49.4$, while the objective is still negative on average there and only becomes
+positive in the mean at $101.9$. The location of the crossing was not chosen by
+us and was not known to us when the experiment was designed: it coincides with
+the degree at which the original authors reported their method beginning to
+overtake the unsparsified baseline.
+
+The size of the effect should be read with the counts. At the degree where the
+objective crosses, the mean change is still negative and the positive cells are
+worth thousandths of a modularity point. The recovery gains are an order of
+magnitude larger, reaching a mean of $+0.116$.
+
+\paragraph{Run-to-run variation}
+Metis is not deterministic across option seeds, so the decisive cells were
+repeated with ten seeds per graph and the worst sparsified run compared against
+the best unsparsified run. The comparison separates the two measures again. On
+recovery it is comfortable: at aggressive retention the worst case clears the
+baseline seed spread by factors of $8.0$ to $14.4$ at every degree at or above
+$49$. On the objective it is not: the same cells clear it by factors between
+$1.0$ and $5.8$, and at the mildest retention several cells at $51$, $201$ and
+$261$ are negative in the worst case. The recovery result survives a hostile
+reading of the seeds; the modularity result survives only at the aggressive
+operating points.
+
+\paragraph{Generality across generators}
+LFR graphs are one family with one degree distribution, and the mechanism runs
+through a degree-derived or similarity-derived score, so the family could be
+doing the work. Repeating the arm on stochastic block models and on
+degree-corrected block models, calibrated cell by cell to the LFR graphs'
+realized degree and mixing, reproduces the sign flip on both. It also refutes the
+explanation we expected. We predicted that a degree-homogeneous generator would
+push the transition to higher density, since a degree-based selector has less to
+work with, and that the degree-corrected variant would sit closer to LFR. Neither
+holds. All four block-model variants cross at essentially the same place while
+their degree coefficient of variation spans an order of magnitude, from $0.14$ to
+$1.47$, and across sixty generator-by-degree cells the gain correlates with
+average degree at Spearman $+0.65$ and with degree variability at $-0.26$. Degree
+heterogeneity is not the operative variable.
+
+\paragraph{Real networks}
+The same arm on the seven real networks places the transition without resolving
+what sits on the far side of it. Below average degree $11$ there is nothing: 90
+cells across five networks, seven sparsifiers, two ways of choosing $k$, and not
+one positive in the worst case over ten seeds. On wiki-Vote, at average degree
+$28.5$, four of the seven sparsifiers produce a worst-case positive gain, the
+largest being $+0.0124$. On email-Eu-core, at $32.6$, none does: two arms are
+positive in the mean and every worst case is negative. The transition on real
+graphs therefore lies between $10.7$ and $28.5$, and above it the effect is
+present on one of the two networks we can test.
+
+\paragraph{What produces the gain}
+On the benchmark graphs the selection rule matters: degree-based and uniform
+sparsification at identical retention are negative at every degree except the two
+highest, where DSpar turns positive in 2 and 3 of twelve cells against L-Spar's
+10 and 12. On wiki-Vote that separation disappears. The four arms that score
+individual edges locally all produce the gain, DSpar among them at $+0.0076$
+against L-Spar's $+0.0124$, and the two connectivity-preserving backbones destroy
+it. What the gain requires is a rule that scores edges one at a time; which
+signal the rule uses matters less than we expected, and we do not identify the
+property that separates Local Degree, which is also local and is the worst arm on
+that network.
+
+\paragraph{Why density}
+The denoising account makes a testable prediction. If sparsification helps by
+deleting edges that do not belong to the generative structure, its benefit should
+grow with the proportion of such edges. Injecting uniformly random edges into
+benchmark graphs while holding the planted labels fixed confirms it for
+similarity-based selection: recovery gain rises monotonically with the injected
+fraction in every one of the four configurations tested, and at average degree
+$50$ with $20\%$ retention it grows from $+0.061$ with no injected noise to
+$+0.185$ when the number of spurious edges equals the number of real ones. The
+gain does not vanish at zero noise, so denoising adds to an effect already
+present rather than being its sole cause, and a benchmark's noise is random by
+construction whereas a measurement process need not be. The experiment
+establishes the direction, not the magnitude in the field.
+
+\paragraph{The same graphs, the other detector family}
+Running a free-granularity optimizer on the identical graphs gives a different
+answer, which is what makes the boundary a boundary rather than a threshold in
+density alone. Honest modularity gains appear in 28 of 144 configurations and
+none exceeds $+0.005$, within the spread of five random restarts. Recovery gains
+do appear and grow with degree, but they do not survive the granularity control:
+partitioning the original graph at a resolution tuned to the sparsified
+partition's community count recovers the planted communities as well or better in
+104 of the 144 configurations where that comparison is defined. What looked like
+a benefit of sparsification is the benefit of a finer partition, available
+without touching the graph.
+
+\paragraph{Three things the positive result does not say}
+Sparsification repairs a weaker detector rather than producing the best available
+partition. At average degree $49$, Metis with L-Spar reaches AMI $0.75$ against
+its own baseline of $0.62$, a real improvement to that algorithm, while a
+resolution-tuned optimizer on the untouched graph reaches $0.94$ on the same
+graphs. The defensible statement is that similarity-based selection repairs a
+fixed-$k$ cut partitioner on dense graphs, not that it improves community
+detection.
+
+The quality gain is not a speed gain in our implementation. Computing exact
+pairwise similarity costs more than it saves, and the deficit grows with density
+because the similarity computation grows faster than the detection it
+accelerates: the median end-to-end speedup falls from $0.75\times$ at average
+degree $10$ to $0.26\times$ at $200$. The original speedups were obtained with an
+approximate similarity computation reported as two orders of magnitude cheaper,
+measured against clustering runs lasting hours, so both cost bases differ from
+ours by enough to explain the discrepancy without disagreement about what should
+be counted.
+
+One part of the original report does not reproduce. At high mixing, where the
+planted structure is barely detectable and baseline recovery sits between $0.06$
+and $0.14$, no gain appears at any degree: across 104 configurations L-Spar
+improves modularity in 9, and the mean change is negative at every degree. The
+original sweep reports its largest improvement in that regime. Whether this is a
+genuine non-reproduction or a floor effect of the metrics we use cannot be
+settled at that mixing level, and we report it unresolved.
