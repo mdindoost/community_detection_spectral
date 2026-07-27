@@ -45,13 +45,16 @@
   publisher={{APS}}
 }
 
+% CORRECTED 2026-07-27 (Claude): the Google Scholar form of this entry had
+% number={1--46} and pages={4}, which inverts the page range. Canonical form is
+% volume 2, pages 1--46; title carries the ": A survey" subtitle. Verified
+% against Lovasz's own publication list at ELTE.
 @article{lovasz1993random,
-  title={Random walks on graphs},
+  title={Random walks on graphs: A survey},
   author={Lov{\'a}sz, L{\'a}szl{\'o}},
   journal={Combinatorics, Paul Erd{\H{o}}s Is Eighty},
   volume={2},
-  number={1--46},
-  pages={4},
+  pages={1--46},
   year={1993}
 }
 
@@ -517,4 +520,32 @@
   booktitle = {33rd Annual European Symposium on Algorithms (ESA)},
   year      = {2025},
   note      = {arXiv:2504.17615}
+}
+
+% ---- added 2026-07-27 (Claude): the two detection algorithms named in the
+% ---- experimental setup of Section 4.1. Both were cited in the text and absent
+% ---- from this file, so they rendered as [?]. Metadata verified against the
+% ---- publisher records (APS and SIAM), not against Google Scholar.
+@article{raghavan2007near,
+  author  = {Raghavan, Usha Nandini and Albert, R{\'e}ka and Kumara, Soundar},
+  title   = {Near linear time algorithm to detect community structures in
+             large-scale networks},
+  journal = {Physical Review E},
+  volume  = {76},
+  number  = {3},
+  pages   = {036106},
+  year    = {2007},
+  doi     = {10.1103/PhysRevE.76.036106}
+}
+
+@article{karypis1998metis,
+  author  = {Karypis, George and Kumar, Vipin},
+  title   = {A fast and high quality multilevel scheme for partitioning
+             irregular graphs},
+  journal = {{SIAM} Journal on Scientific Computing},
+  volume  = {20},
+  number  = {1},
+  pages   = {359--392},
+  year    = {1998},
+  doi     = {10.1137/S1064827595287997}
 }
