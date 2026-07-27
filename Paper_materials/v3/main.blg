@@ -3,8 +3,11 @@ Capacity: max_strings=35307, hash_size=35307, hash_prime=30011
 The top-level auxiliary file: main.aux
 The style file: IEEEtran.bst
 Database file #1: refs.bib
+Warning--I didn't find a database entry for "raghavan2007near"
+Warning--I didn't find a database entry for "karypis1998metis"
 -- IEEEtran.bst version 1.14 (2015/08/26) by Michael Shell.
 -- http://www.michaelshell.org/tex/ieeetran/bibtex/
 -- See the "IEEEtran_bst_HOWTO.pdf" manual for usage information.
 
 Done.
+(There were 2 warnings)

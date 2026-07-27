@@ -1,0 +1,166 @@
+% ============================================================
+% SECTION 4 OPENING + 4.1 SETUP. Written 2026-07-26 (late).
+%
+% Part of the restructure to Mohammad's shape: introduction, background,
+% protocol (argument only), experiments (everything measured), discussion,
+% conclusion. This file is the opening and the setup; the result subsections
+% follow in 04_below.tex until that is mined and replaced.
+%
+% Numbers here come from exp_AB/results.csv (the seven networks),
+% exp_B/results.csv (the seventeen), exp_AA (LFR), exp_AC (SBM/dcSBM),
+% exp_AD (Metis on real graphs). All verified against CSVs, not summaries.
+% STYLE: no em-dashes, no AI-characteristic phrasing (see STYLE.md).
+% ============================================================
+
+Everything below runs under the protocol of Section~\ref{sec:protocol}. The
+experiments answer three questions in order. What does the accounting cost, that
+is, how much of the reported benefit in this literature is a property of how it
+is measured. Where the pipeline is used in practice, does it help. And where it
+does help, what are the conditions.
+
+\subsection{Setup}\label{sec:experiments:setup}
+
+\paragraph{Networks}
+The quality measurements use the seven real networks of Table~\ref{tab:networks},
+chosen to span an order of magnitude in average degree while remaining tractable
+under a protocol that reruns every configuration with multiple seeds and computes
+several controls per cell. Three carry reference communities: email-Eu-core has
+department labels, and com-DBLP and com-Amazon carry the overlapping communities
+distributed with them. The mechanism measurements, which require only one
+partition per graph and no restarts, run on a larger suite of seventeen networks
+extending to 25 million edges, listed in Section~\ref{sec:experiments:mechanism}.
+All graphs are reduced to their largest connected component and treated as
+simple and undirected.
+
+\begin{table}[t]
+\centering
+\caption{The seven networks carrying the quality measurements, ordered by average
+degree. Sizes are of the largest connected component. GT marks the three with
+reference communities.}
+\label{tab:networks}
+\small
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{@{}lrrrc@{}}
+\toprule
+Network & $n$ & $m$ & $d_{\mathrm{avg}}$ & GT\\
+\midrule
+com-Amazon    & 334{,}863 &   925{,}872 &  5.53 & $\bullet$\\
+ca-HepTh      &   8{,}638 &    24{,}806 &  5.74 & \\
+com-DBLP      & 317{,}080 & 1{,}049{,}866 &  6.62 & $\bullet$\\
+ca-CondMat    &  21{,}363 &    91{,}286 &  8.55 & \\
+email-Enron   &  33{,}696 &   180{,}811 & 10.73 & \\
+wiki-Vote     &   7{,}066 &   100{,}736 & 28.51 & \\
+email-Eu-core &      986 &    16{,}064 & 32.58 & $\bullet$\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Real networks cannot answer questions about where a transition lies, because
+their density cannot be varied while their community structure is held fixed. Two
+families of synthetic benchmark do that. LFR
+graphs~\cite{lancichinetti2008benchmark} with $10^4$ vertices and degree exponent
+$2.1$ are generated at nominal average degrees of $10$, $25$, $50$, $100$ and
+$200$, three graphs per configuration, matching the generator settings of the
+original synthetic sweep. Stochastic block models and degree-corrected block
+models are generated at the same degrees, with degree and mixing calibrated per
+cell to the realized values of the LFR graphs, in two variants each so that
+degree heterogeneity and community-size heterogeneity form a $2 \times 2$
+factorial. Realized degree, realized mixing and degree coefficient of variation
+are recorded per graph and all results are reported against realized values.
+
+\paragraph{Sparsifiers}
+Seven methods are tested, chosen so that a negative result cannot be attributed
+to the selection. Two are the methods whose quality claims motivate the pipeline:
+local sparsification, L-Spar~\cite{satuluri2011local}, which lets each vertex keep
+the $\lceil d_v^{\,e} \rceil$ incident edges of highest neighbourhood Jaccard
+similarity, and the degree-based sampler DSpar~\cite{liu2023dspar}. Three more
+are the methods that the largest independent benchmark of sparsification ranks
+highest at preserving clustering structure, namely K-Neighbor, Local Degree and
+Local Similarity~\cite{chen2024demystifying, hamann2016structure}, so that the
+arms include the strongest candidates chosen by someone other than us. L-Spar and
+Local Similarity are distinct methods despite the similar names, and L-Spar
+always refers to the method of Satuluri et al. The remaining two are a
+connectivity-preserving backbone, a spanning structure topped up to the retention
+target either at random or by Jaccard similarity, which cannot disconnect a graph
+by construction and is included as an instrument rather than as a competitor.
+Uniform random deletion supplies the no-information baseline wherever a selection
+rule has to be shown to be doing work.
+
+Two classes are excluded and the exclusions bound what follows. Node-removing
+methods such as $k$-core peeling are not tested, because they score their
+partition on a smaller and denser vertex set, which is a different comparison
+requiring the coverage control of Section~\ref{sec:protocol:retention}. Learned
+sparsifiers~\cite{wu2020gsgan} are not tested, because matching them on realized
+retention requires retraining at each operating point.
+
+\paragraph{Detection algorithms}
+Four algorithms choose their own number of communities:
+Leiden~\cite{traag2019louvain} and Louvain~\cite{blondel2008fast}, which maximize
+\eqref{eq:modularity}, Infomap~\cite{rosvall2008maps}, which minimizes a
+description length, and label propagation~\cite{raghavan2007near}. One takes the
+number as an input: Metis~\cite{karypis1998metis}, through the \texttt{pymetis}
+bindings, which also imposes a balance constraint on part sizes. Where Metis is
+used, $k$ is fixed to the same value in the sparsified and unsparsified arms, so
+the two partitions have identical community counts by construction and no
+granularity effect is possible.
+
+On real networks $k$ has to be chosen, and we report both defensible choices: the
+community count a modularity optimizer returns on the original graph, and, on the
+three networks with reference communities, the number of those communities. The
+two differ by as much as a factor of sixteen and are reported separately
+throughout.
+
+Of the algorithms behind the founding accuracy claim, Metis is tested here on
+every network. For Graclus and MLR-MCL we could find no maintained implementation
+that we were able to run, so MLR-MCL, the algorithm that claim is largest about,
+remains untested by us. This is the most consequential gap in the paper and
+Section~\ref{sec:discussion} returns to it.
+
+\paragraph{Operating points}
+Sparsifiers are compared at matched realized retention, with targets of $0.5$ and
+$0.2$. Four of the seven methods cannot reach the lower target on a sparse graph,
+because each vertex retains at least one incident edge, so a third operating
+point is added per network at the largest floor among the arms, ensuring one
+aggressive point at which all seven are comparable. Table~\ref{tab:floors} gives
+the floors, and they are a result in their own right rather than a nuisance
+parameter, since they bound how far the pipeline can be pushed on the graphs
+where it would need to pay off most.
+
+\begin{table}[t]
+\centering
+\caption{Hard retention floors, as a fraction of edges. Below these values the
+method cannot run at all, whatever target it is given. Networks are ordered by
+average degree, which governs the floor. DSpar and uniform deletion have no
+floor.}
+\label{tab:floors}
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}lrrrrr@{}}
+\toprule
+Network & $d_{\mathrm{avg}}$ & Backbone & L-Spar & Loc.\ Deg. & K-Neigh.\\
+\midrule
+com-Amazon    &  5.53 & 0.362 & 0.301 & 0.352 & 0.330\\
+ca-HepTh      &  5.74 & 0.348 & 0.276 & 0.347 & 0.317\\
+com-DBLP      &  6.62 & 0.302 & 0.244 & 0.301 & 0.277\\
+ca-CondMat    &  8.55 & 0.234 & 0.186 & 0.234 & 0.218\\
+email-Enron   & 10.73 & 0.186 & 0.159 & 0.186 & 0.179\\
+wiki-Vote     & 28.51 & 0.070 & 0.067 & 0.070 & 0.069\\
+email-Eu-core & 32.58 & 0.061 & 0.053 & 0.061 & 0.060\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Replication}
+Stochastic sparsifiers are run with independent sparsification seeds and
+stochastic detectors with independent detection seeds; deterministic methods are
+run once and reused. Baselines receive the two comparisons of
+Section~\ref{sec:protocol:compute}, the compute-matched restarts and the best of
+a fixed number. Where Metis is used the comparison is the worst sparsified run
+against the best baseline run over ten partitioner seeds, which is the strictest
+form available and the one used throughout for that detector.
+
+\paragraph{Pre-registration}
+Each experiment has a design document written before its code, fixing what is
+measured, what is predicted, and what outcome would end that line of work.
+Several predictions were ours and failed, and where a result below contradicts a
+prediction we made, it is reported as such.
