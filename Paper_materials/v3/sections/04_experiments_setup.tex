@@ -112,10 +112,12 @@ two differ by as much as a factor of sixteen and are reported separately
 throughout.
 
 Of the algorithms behind the founding accuracy claim, Metis is tested here on
-every network. For Graclus and MLR-MCL we could find no maintained implementation
-that we were able to run, so MLR-MCL, the algorithm that claim is largest about,
-remains untested by us. This is the most consequential gap in the paper and
-Section~\ref{sec:discussion} returns to it.
+every network. Graclus~\cite{dhillon2007weighted} and
+MLR-MCL~\cite{satuluri2009scalable} are not. Both are distributed by their
+authors and both build and run on a current toolchain, so their absence from this
+study is a limitation of the study and not of the available software. MLR-MCL is
+the algorithm the founding claim is largest about, which makes it the most
+consequential gap in the paper, and Section~\ref{sec:discussion} returns to it.
 
 \paragraph{Operating points}
 Sparsifiers are compared at matched realized retention, with targets of $0.5$ and

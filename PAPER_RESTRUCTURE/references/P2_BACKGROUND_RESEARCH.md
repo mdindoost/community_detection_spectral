@@ -62,18 +62,32 @@ Graclus also appears as a pooling operator in maintained deep-learning libraries
 (`torch_geometric.nn.pool.graclus`, `rusty1s/pytorch_cluster`), which is the coarsening step rather
 than the full clustering tool. **[SECOND-HAND** — seen in search results, not fetched.**]**
 
-### What this forces
+### RESOLVED 2026-07-27: both build and both run  [FULL-TEXT, executed]
 
-"We could find no maintained implementation" is not defensible; both are published by their
-authors and reachable in one search. Two honest options:
+Not a wording problem. The claim is false, and it took under ten minutes to establish.
 
-1. **Run them.** MLR-MCL is the algorithm the founding accuracy claim is largest about. If it
-   builds, the most consequential gap in the paper closes.
-2. **Say precisely what happened.** "The published implementations date from 2008 and 2014 and do
-   not build under $X$; we did not port them" is a defensible sentence. "We could find no
-   implementation" is not.
+**Graclus.** `curl` from `cs.utexas.edu/users/dml/Software/graclus1.2.tar.gz` (archive dated
+2009-02-10), `make` under **gcc 15.2.0 / GNU Make 4.4.1**. Builds to a binary with warnings only,
+exit 0, no patching. Ran it on a 34-node 78-edge karate graph in METIS format:
 
-Either way §4.1's sentence and §5's planned discussion have to change. Flagged, not edited.
+    Graclus 1.2 Copyright 2008, Brian Kulis and Yuqiang Guan
+    #Vertices: 34, #Edges: 78, #Clusters: 2
+    Normalized-Cut...  Cut value: 0.358974, Balance:  1.06
+
+**MLR-MCL.** The author's own copy is on Google Drive, which `curl` cannot retrieve (302 to an
+interactive client). A verbatim mirror of `mlrmcl1.2` exists at
+`github.com/koadman/proxigenomics/tree/master/clustering/mlrmcl1.2`, carrying the OSU BSD LICENSE
+file ("MLR-MCL (Multi-Level Regularized Markov Clustering) - Version 1.2, Copyright 2010, The Ohio
+State University"). Sparse-checkout, `make`, same toolchain. Builds to `mlrmcl`, no errors. Same
+graph:
+
+    Clusters: 2 N-Cut: 0.346 AvgN-Cut: 0.173 Balance in cluster sizes: 1.24
+
+**Consequence.** Both algorithms behind the founding accuracy claim are available and executable
+today. Their absence from the study is our limitation, not the software's, and §4.1 now says so.
+The follow-on is a real opportunity rather than a caveat: MLR-MCL is the algorithm the 2011 claim
+is largest about, it runs, and the protocol that produced Tables VI and VIII would apply to it
+unchanged. Build artefacts are in the session scratchpad, not the repo.
 
 ---
 
@@ -223,7 +237,16 @@ credit them. **Do not write either sentence from the abstract.**
 ## Still to do
 
 1. Get the Dreveton et al. PDF and settle their evaluation protocol.
-2. Decide MLR-MCL and Graclus: build attempt, or a precise sentence.
+2. DONE. Both build and run; see Finding 1. What remains is the decision whether to run them
+   through the protocol.
+2b. **Socievole & Pizzuti 2026 could not be read.** Springer redirects to an auth gateway, the
+   Semantic Scholar record carries no open-access PDF, and no preprint or author copy exists that
+   a search could find. It is cited on verified metadata only. Whether it scores quality on the
+   sparsified graph or the original is therefore **unknown**, and no sentence in the paper may
+   characterize it until someone pulls it through NJIT institutional access. One search-result
+   fragment suggests the method *reweights* the graph by effective resistance rather than deleting
+   edges, which would put it in range of the permuted-weight null of §4.2, but that is
+   **[SECOND-HAND]** and must not be built on.
 3. Fetch and read the modularity-versus-ground-truth items in Finding 4 before §5 is drafted.
 4. Read Socievole & Pizzuti 2026 (Soft Computing) and settle whether it carries the transfer
    control. It is the closest recent work to our question.

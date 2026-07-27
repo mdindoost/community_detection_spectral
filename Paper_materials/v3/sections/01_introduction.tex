@@ -56,7 +56,13 @@ Whether they do is the question this paper addresses. The answer we obtain is
 conditional. On the networks and detection algorithms examined here, two
 conditions have to hold together: the
 algorithm must take the number of communities as an input, and the graph must
-carry edges whose removal does not destroy its community structure. Where either
+carry edges whose removal does not destroy its community structure. That such
+edges exist in quantity is not an assumption. The metric backbone of a graph, the
+union of its all-pairs shortest paths, is a small fraction of the edges of a real
+network~\cite{correia2023contact}, and deleting everything outside it provably
+leaves community structure intact on a broad class of random graphs with
+communities~\cite{dreveton2024metric}. What our second condition asks is how much
+of that redundancy a given graph carries. Where either
 condition fails we find no gain on the objective, no end-to-end speed benefit in
 the implementations we measure, and no gain in recovery that survives comparison
 with an unsparsified run of a better detector.
