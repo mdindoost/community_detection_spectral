@@ -1,0 +1,122 @@
+% ============================================================
+% SECTION 4.7: MECHANISM. Written 2026-07-26 (late) after the audit.
+%
+% SCOPE, established by the audit and easy to overstate: this explains the
+% DEGREE-BASED channel, not the boundary. The boundary's mechanism is the
+% denoising evidence in 4.6. PAPER_STRUCTURE.md called the old section
+% "Mechanism: why the boundary is there", which was wrong.
+%
+% Numbers, all recomputed this session:
+%   exp_B/results.csv        17 networks; dQ_fixed positive 17/17 real and
+%                            17/17 null, null larger in 15; delta larger on the
+%                            null in 16/17, median ratio 1.599
+%   exp_M/probe_results*.csv decomposition on the NULL rows (the terms are
+%                            defined relative to the real arm, so real rows are
+%                            zero by construction): sorting positive 16/16,
+%                            median +0.5743, range +0.08 to +3.42; identity
+%                            term_sum = log_ratio to 1.7e-14; facebook-combined
+%                            excluded, its real delta is -0.0014
+%   exp_Q/verdicts.csv       pfix arm only: delta moves 37 to 1322 neutral sd,
+%                            sign change 5/5; re-detection AMI 0.824-0.944 on the
+%                            UP ends and 0.410-0.540 on the DOWN ends; the
+%                            literal arm is excluded because it destroys the
+%                            partition (AMI <= 0.038, p_intra -> 0)
+% STYLE: no em-dashes, no AI-characteristic phrasing (see STYLE.md).
+% ============================================================
+
+\subsection{Mechanism of the degree-based channel}\label{sec:experiments:mechanism}
+
+A degree-based sparsifier keeps an edge with probability proportional to a score
+computed from its endpoints' degrees. Whether that helps or harms a partition
+depends on one quantity: the difference between the mean score on edges inside
+communities and the mean score on edges between them. Write it $\delta$. When
+$\delta > 0$ the sampler removes between-community edges preferentially, which
+raises the intra-community fraction of any fixed partition and therefore its
+modularity. This subsection establishes what controls $\delta$, and it concerns
+the degree-based channel only. The mechanism behind the boundary of
+Section~\ref{sec:experiments:boundary} is the denoising evidence given there.
+
+\paragraph{$\delta$ is not evidence about communities}
+Two quantities in this literature are read as showing that a sparsifier clarifies
+community structure: $\delta$ itself, and the modularity change of a fixed
+partition when the graph is sparsified. Both were measured on seventeen real
+networks ranging from $10^3$ to $3.8 \times 10^6$ vertices, and on
+degree-preserving rewirings of each, built by double edge swaps, which hold every
+vertex degree exactly and destroy the communities.
+
+Neither survives. The fixed-partition modularity change is positive on all
+seventeen real graphs; on their rewirings it is positive on all seventeen as
+well, and larger than the real value on fifteen. The separation $\delta$ is
+larger on the rewiring than on the real graph in sixteen of seventeen cases, with
+a median ratio of $1.60$. Real community structure suppresses the separation
+rather than producing it. Neither quantity is used as evidence anywhere else in
+this paper, and the fixed-partition measure in particular is the same
+self-scoring comparison that Section~\ref{sec:protocol:transfer} rejects.
+
+\paragraph{Where the null's advantage comes from}
+The ratio between the null's separation and the real graph's decomposes exactly.
+Writing $\delta = r_{pb}\, \sigma_s / \sqrt{p(1-p)}$, with $r_{pb}$ the
+point-biserial correlation between an edge's score and whether it lies inside a
+community, $\sigma_s$ the spread of the scores and $p$ the intra-community edge
+fraction, gives
+\begin{equation}\label{eq:delta-decomp}
+\log \frac{\delta_{\mathrm{null}}}{\delta_{\mathrm{real}}}
+= \underbrace{\log \frac{r_{pb}^{\mathrm{null}}}{r_{pb}^{\mathrm{real}}}}_{\text{sorting}}
++ \underbrace{\log \frac{\sigma_s^{\mathrm{null}}}{\sigma_s^{\mathrm{real}}}}_{\text{scale}}
++ \underbrace{\tfrac{1}{2}\log \frac{p^{\mathrm{real}}(1-p^{\mathrm{real}})}
+{p^{\mathrm{null}}(1-p^{\mathrm{null}})}}_{\text{granularity}} ,
+\end{equation}
+an identity that holds in our measurements to $1.7 \times 10^{-14}$. The sorting
+term accounts for the difference. It is positive on all sixteen networks where
+the ratio is defined, with a median of $+0.57$ and a range from $+0.08$ to
+$+3.42$, while the scale and granularity terms are small and mostly negative. The
+seventeenth network is excluded because its real separation is $-0.0014$, which
+makes the ratio undefined. What the rewiring changes is not the spread of the
+scores or the number of communities but how well the score sorts within-community
+edges from between-community ones, and it sorts them better once the communities
+are gone.
+
+\paragraph{What controls $\delta$}
+The correlational evidence points at where high-degree edges sit relative to
+community boundaries, but a graph statistic that co-varies with $\delta$ across
+networks does not establish that moving it moves $\delta$. We therefore steer it
+directly. Starting from a real graph and its detected partition, edges are
+rewired to increase or decrease the concentration of high-degree-product edges on
+community boundaries, while the degree sequence, the partition, the
+intra-community edge fraction and the modularity are all held exactly fixed. Only
+the placement of hub edges relative to the boundaries changes.
+
+$\delta$ follows. Across five networks it moves between 37 and 1322 standard
+deviations of the unsteered chains, in the direction it is steered, and it
+changes sign in all five when steered downward. The largest excursion takes
+ca-GrQc from $+0.087$ to $-0.875$ with its degree sequence, partition,
+intra-edge fraction and modularity unchanged.
+
+Two limits on that result are worth stating. The steered graphs remain
+recognizable in the upward direction, where re-detecting communities from scratch
+recovers the original partition at AMI $0.82$ to $0.94$, and less so downward,
+where re-detection agrees at $0.41$ to $0.54$. And a looser variant of the same
+procedure, which does not hold the intra-community fraction fixed, drives that
+fraction to zero and destroys the partition altogether, with re-detection AMI
+below $0.04$; nothing about the mechanism can be concluded from that variant and
+we exclude it.
+
+\paragraph{An explanation that fails}
+Triangle structure is the natural alternative: edges inside communities close more
+triangles, so a score correlated with triangle participation would produce
+$\delta > 0$ without any reference to degree placement. The steering experiment
+rules it out. Intra-community triangle density falls in both directions of the
+steering, from $11.7$ to $9.0$ upward and to $11.4$ downward on ca-GrQc and
+similarly elsewhere, while $\delta$ moves in opposite directions in the two arms.
+A quantity that decreases while the target rises in one arm and falls in the
+other does not control the target.
+
+\paragraph{What this explains}
+The degree-based channel is mechanical. It is governed by where high-degree-product
+edges sit relative to community boundaries, a property that a degree-preserving
+rewiring can reproduce and often exaggerate, and it is therefore not a route by
+which a degree-based sparsifier clarifies community structure. That is consistent
+with the negative territory of Section~\ref{sec:experiments:negative}, where the
+degree-based arm behaves like the others, and with the finding in
+Section~\ref{sec:experiments:boundary} that above the transition the gain does not
+depend on which local scoring rule is used.
