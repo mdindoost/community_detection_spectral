@@ -186,11 +186,47 @@ distinction explicitly or the contribution bullet will be read as overclaiming.
 
 ---
 
+## FINDING 5 — recent sparsification-and-community-detection work for the reference list
+
+Added at Mohammad's request: reviewers weigh the recency of a reference list, and §2 is where that
+is satisfied honestly. Everything here is on the paper's own subject, sparsification and community
+detection. Nothing was added merely to raise the year count.
+
+| Key | Work | Year | Verification |
+|---|---|---|---|
+| `sotiropoulos2021triangle` | Sotiropoulos & Tsourakakis, Triangle-aware spectral sparsifiers and community detection, KDD, pp. 1501--1509, doi 10.1145/3447548.3467260 | 2021 | **[FULL-TEXT]** author PDF read, quotes in P1_EVIDENCE §1.3 |
+| `liu2023dspar` *(already present)* | DSpar, TMLR | 2023 | [FULL-TEXT] local PDF + DSPAR_NOTES.md |
+| `correia2023contact` | Correia, Barrat & Rocha, Contact networks have small metric backbones..., PLOS Comput Biol 19(2):e1010854 | 2023 | **[META-VERIFIED]** PLOS article page |
+| `chen2024demystifying` *(already present)* | Chen et al., PVLDB 17(3) | 2024 | [FULL-TEXT] local PDF + NOTES_chen_and_fastcd.md |
+| `dreveton2024metric` | Dreveton, Chucri, Grossglauser & Thiran, Why the metric backbone preserves community structure, NeurIPS, arXiv:2406.03852 | 2024 | **[META-VERIFIED]** + abstract read verbatim |
+| `hashemi2024survey` | Hashemi, Gong, Ni, Fan, Prakash & Jin, A comprehensive survey on graph reduction, IJCAI Survey Track | 2024 | **[FULL-TEXT]** title page read; quotes in P1_EVIDENCE §5.1 |
+| `socievole2024community` | Socievole & Pizzuti, Community detection ... exploiting spectral graph sparsification for efficient disaster response, ASONAM, doi 10.1007/978-3-031-85386-9_14 | 2024 | **[META-VERIFIED]** Semantic Scholar Graph API by DOI; DBLP `conf/asunam/SocievoleP24` |
+| `gottesburen2025linear` *(already present)* | Gottesbueren et al., ESA | 2025 | [META-VERIFIED] |
+| `setiadi2025community` | Setiadi, Yaakub & Abu Bakar, Community preserving sparsification based on K-core, IJAIN 11(4):550--566, doi 10.26555/ijain.v11i4.2209 | 2025 | **[FULL-TEXT]** local PDF; reproduced and falsified, see NOTES_kcore_ijain2026.md |
+| `socievole2026effective` | Socievole & Pizzuti, Effective resistance and kernel-based graph sparsification for community detection, Soft Computing 30:2109--2133, doi 10.1007/s00500-025-10734-5 | 2026 | **[META-VERIFIED]** Semantic Scholar Graph API by DOI; DBLP `journals/soco/SocievoleP26` |
+| `pari2026effective` | Pari, Bhandari & Raha, Effective resistance-based graph sparsification and community detection, arXiv:2606.26766 | 2026 | **[FULL-TEXT]** local PDF; audited in NOTES_effres_2026.md |
+
+That is 2021, 2023 x2, 2024 x4, 2025 x2, 2026 x2 on the paper's exact subject, six of them read in
+full. Two of the recent ones, `setiadi2025community` and `pari2026effective`, are the contemporary
+instances of the missing control that decision D1 assigns to related work with the arithmetic, and
+both have already been reproduced and audited in this repo.
+
+**One caution.** Socievole and Pizzuti appear twice, and the 2026 Soft Computing paper is on
+exactly our question, using effective resistance for community detection. Neither has been read.
+Before §2 characterizes either, someone has to check whether they score quality on the sparsified
+graph or the original: if they score on the sparsified graph, they belong with the D1 instances and
+the paper should say so with the arithmetic; if they do not, the related-work paragraph has to
+credit them. **Do not write either sentence from the abstract.**
+
+---
+
 ## Still to do
 
 1. Get the Dreveton et al. PDF and settle their evaluation protocol.
 2. Decide MLR-MCL and Graclus: build attempt, or a precise sentence.
 3. Fetch and read the modularity-versus-ground-truth items in Finding 4 before §5 is drafted.
-4. Not yet searched: the granularity/resolution-comparison literature that motivates §3.2 beyond
+4. Read Socievole & Pizzuti 2026 (Soft Computing) and settle whether it carries the transfer
+   control. It is the closest recent work to our question.
+5. Not yet searched: the granularity/resolution-comparison literature that motivates §3.2 beyond
    Hamann et al.; the fixed-$k$ balanced-partitioning literature that §4.1's Metis balance
    constraint sits in; anything 2025–26 that post-dates P1_EVIDENCE.md's compilation.
