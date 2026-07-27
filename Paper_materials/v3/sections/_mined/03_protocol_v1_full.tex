@@ -1,0 +1,382 @@
+% ============================================================
+% SECTION 3: EVALUATION PROTOCOL. Written clean 2026-07-26.
+% Title chosen by Mohammad 2026-07-26 over "What Honest Evaluation Requires":
+%   "honest" implies the alternative is dishonesty, which is not this paper's
+%   position. Satuluri et al. stated the requirement correctly in 2011.
+% Weight: MEDIUM-HEAVY (PAPER_STRUCTURE.md). This is the instrument.
+%
+% Evidence, control by control:
+%   transfer scoring   TERMINOLOGY.md; exp_P SUMMARY V2 (45/63, 60/63, 15/63);
+%                      exp_G SUMMARY Table A (uniform, 6/6 sign flips)
+%   granularity        exp_P finding 4 (com-DBLP Louvain 0.1930 -> 0.2996 at
+%                      gamma=576); exp_L (Leiden 0.1930 / 0.2971)
+%   chance floor       exp_P finding 4 (com-Amazon 0.0086@k=231 -> 0.0567@k=8651)
+%   compute matching   exp_P V1/V3 and caveat C3; exp_C section 1 (2 restarts
+%                      in all 48 cells); exp_AA (budget buys 1 restart)
+%   configuration null exp_B SUMMARY (17 networks; dQ_fixed and delta tables)
+%   permuted weights   exp_V V2 (email-Enron; ca-CondMat rewiring)
+%   realized retention exp_C section 0 (sampler audit); exp_AB section 1 (floors)
+%   end-to-end cost    exp_P V5 (0.66x max among quality-preserving cells)
+%
+% NOTE: the modularity definition sits here because the m-dependence of its
+% null term IS the argument in 3.1. If Section 2 later defines it, delete
+% Eq. (1) here and cross-reference instead.
+% STYLE: no em-dashes, no AI-characteristic phrasing (see STYLE.md).
+% ============================================================
+
+Section~\ref{sec:intro} listed four requirements, each belonging to a specific
+class of method rather than to sparsification in general. This section states
+them as controls. Each is given with the failure it catches and with what we
+measure when it is absent. Table~\ref{tab:protocol} collects them. Every number
+in the sections that follow is produced under all of them.
+
+\subsection{One yardstick for two partitions}\label{sec:protocol:transfer}
+
+Detection may use any graph; scoring must use the original one. Let
+$\mathcal{A}$ be a detection algorithm, $G$ the original graph and $G'$ a
+sparsified copy of it. The two partitions under comparison are
+$P_{\mathrm{sparse}} = \mathcal{A}(G')$ and $P_{\mathrm{base}} = \mathcal{A}(G)$,
+and since both are partitions of the same vertex set, the question the pipeline
+raises is which of them better describes $G$. Two accountings of that question
+appear in this literature:
+\begin{align}
+\Delta Q_{\mathrm{transfer}} &= Q(P_{\mathrm{sparse}}, G) - Q(P_{\mathrm{base}},
+G), \label{eq:transfer}\\
+\Delta Q_{\mathrm{self}} &= Q(P_{\mathrm{sparse}}, G') - Q(P_{\mathrm{base}}, G).
+\label{eq:self}
+\end{align}
+They differ in one place, the graph on which the first term is evaluated.
+Equation~\eqref{eq:transfer} measures both partitions with a single instrument.
+Equation~\eqref{eq:self} changes the instrument between the arm under test and
+the arm it is tested against, and the instrument it applies to the former is the
+graph from which edges have been removed. We report
+$\Delta Q_{\mathrm{transfer}}$ throughout; $\Delta Q_{\mathrm{self}}$ appears in
+released benchmark tooling and in recent work in this line, documented in
+Section~\ref{sec:related}.
+
+The two accountings diverge systematically, and the objective shows why.
+Modularity scores a partition $P$ of a graph with $m$ edges by
+\begin{equation}\label{eq:modularity}
+Q(P, G) \;=\; \sum_{C \in P} \left[ \frac{m_C}{m} - \gamma
+\left( \frac{D_C}{2m} \right)^{\!2} \right],
+\end{equation}
+with $m_C$ the number of edges inside community $C$, $D_C$ the sum of degrees in
+$C$, and $\gamma$ a resolution parameter equal to one in the standard definition.
+Deleting edges does not by itself change this quantity. Under uniform deletion
+the intra-community fraction and the subtracted term shrink together, and a
+partition held fixed scores the same on the sparsified graph as on the original
+to within $0.001$ on every network we tested. What changes is what an optimizer
+can find. A graph with fewer edges admits higher modularity, including a graph
+with no community structure at all~\cite{guimera2004modularity}, so a partition
+optimized on $G'$ scores higher there than the baseline partition scores on $G$,
+and \eqref{eq:self} credits the difference to the sparsifier.
+
+The effect is not small and it is not confined to sparsifiers that select
+intelligently. Table~\ref{tab:uniform} scores uniform random edge deletion, whose
+selection rule uses no information at all, both ways on three networks at two
+retention levels. The sign of the conclusion is opposite in every one of the six
+cells, and the gap between the two accountings roughly doubles when retention
+falls from $0.9$ to $0.8$, which is the behaviour \eqref{eq:modularity} predicts.
+
+\begin{table}[t]
+\centering
+\caption{Uniform random edge deletion under the two accountings, Leiden, mean of
+three seeds. $\Delta Q_{\mathrm{self}}$ is positive in every cell and
+$\Delta Q_{\mathrm{transfer}}$ is negative in every cell. Uniform deletion uses
+no structural information, so the inflation comes from the objective rather than
+from any selection rule.}
+\label{tab:uniform}
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}lccrr@{}}
+\toprule
+Network & $Q_{\mathrm{base}}$ & $\rho$ & $\Delta Q_{\mathrm{self}}$ &
+$\Delta Q_{\mathrm{transfer}}$\\
+\midrule
+ca-CondMat  & 0.729 & 0.800 & $+0.0111$ & $-0.0164$\\
+ca-CondMat  & 0.729 & 0.900 & $+0.0053$ & $-0.0064$\\
+email-Enron & 0.611 & 0.800 & $+0.0052$ & $-0.0162$\\
+email-Enron & 0.611 & 0.900 & $+0.0011$ & $-0.0086$\\
+com-DBLP    & 0.826 & 0.800 & $+0.0078$ & $-0.0247$\\
+com-DBLP    & 0.826 & 0.900 & $+0.0040$ & $-0.0098$\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Across a larger grid the pattern holds under every algorithm we tested.
+Table~\ref{tab:accounting} covers 63 configurations spanning three detection
+algorithms, seven networks and three sparsifier settings. Modularity read off the
+sparsified graph is positive in 60 of them and reaches $+0.537$; the same
+partitions scored on the original graph are positive in 15. The sign of the
+conclusion differs between the two accountings in 45 of the 63 configurations.
+Eleven cells exceed a compute-matched baseline, all of them under label
+propagation, and they are not a subset of the 15: two of them sit below the plain
+baseline mean while beating a matched control that had drawn too few restarts,
+which is the failure Section~\ref{sec:protocol:compute} treats.
+
+\begin{table}[t]
+\centering
+\caption{The two accountings across 63 configurations, seven networks by three
+sparsifier settings under each algorithm. Both quantities are measured against
+the mean of the plain restarts, the weakest of the baselines in
+Section~\ref{sec:protocol:compute}; counts against the stricter best-of-$N$
+baseline appear in Section~\ref{sec:negative}. A flip is a cell where
+$\Delta Q_{\mathrm{self}} > 0$ and $\Delta Q_{\mathrm{transfer}} < 0$, so that
+the two accountings disagree on the sign of the conclusion.}
+\label{tab:accounting}
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+ & Infomap & Louvain & Lab.\ prop. & Total\\
+\midrule
+Cells                              & 21 & 21 & 21 & 63\\
+$\Delta Q_{\mathrm{self}} > 0$     & 20 & 20 & 20 & 60\\
+$\Delta Q_{\mathrm{transfer}} > 0$ & 6  & 0  & 9  & 15\\
+Flips                              & 14 & 20 & 11 & 45\\
+max $\Delta Q_{\mathrm{self}}$ & $+0.312$ & $+0.260$ & $+0.537$ & $+0.537$\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Matching granularity}\label{sec:protocol:granularity}
+
+Sparsification fragments a graph, and an algorithm that chooses its own
+granularity responds by returning more communities. Chen et
+al.~\cite{chen2024demystifying} report community counts rising by three orders of
+magnitude across a pruning sweep. Purity, normalized mutual information and the
+average best-match $F_1$ over reference communities that we report all increase
+with the number of communities, so a recovery comparison between partitions of
+different granularity measures that difference along with whatever else it is
+meant to measure. Hamann et al.~\cite{hamann2016structure} warned that normalized
+mutual information is unsuitable for comparing partitions of sparsified networks,
+because it reports higher similarity for larger numbers of
+communities~\cite{vinh2010information}, and pointed to the adjusted Rand index
+instead; the control below operationalizes that warning.
+
+The control is a partition of the \emph{original} graph at a matched community
+count, obtained by raising the resolution parameter $\gamma$ of the modularity
+objective~\eqref{eq:modularity} until the counts agree. Table~\ref{tab:granularity} applies
+it to com-DBLP under Louvain. L-Spar at realized
+retention $0.503$ raises average best-match $F_1$ from $0.102$ to $0.193$, an
+apparent gain of $+0.091$, while raising the number of communities of size at
+least three from 220 to 10,947. The original graph partitioned at $\gamma = 640$
+reaches 11,159 such communities and scores $0.300$. The finer partition is worth
+more than twice what the sparsification appeared to be worth, and it requires no
+sparsifier. The same holds for degree-based sparsification on the same network,
+where the apparent change is negative and the matched control is positive.
+Leiden reproduces the sparsified figure to four decimal places and its own
+control, at $\gamma = 576$ and 10,812 communities, reaches $0.297$, so the effect
+belongs to the modularity objective's default granularity rather than to one
+optimizer's search.
+
+\begin{table}[t]
+\centering
+\caption{Granularity control on com-DBLP under Louvain, average best-match $F_1$
+over reference communities of size at least three. $k_{\geq 3}$ counts
+communities of that size; $\gamma$ is the resolution used on the \emph{original}
+graph. Each sparsified arm is followed by its control, a partition of the
+original graph at the same $k_{\geq 3}$. The floor is a size-matched random
+partition at the arm's own $k_{\geq 3}$. Baseline and sparsified rows are means
+over three to six seeds; controls are single runs.}
+\label{tab:granularity}
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}lrrcc@{}}
+\toprule
+Condition & $k_{\geq 3}$ & $\gamma$ & $F_1$ & floor\\
+\midrule
+Original graph               & 220    & 1   & $0.102 \pm 0.005$ & 0.019\\
+DSpar, $\rho = 0.500$        & 1{,}684  & 1   & $0.098 \pm 0.002$ & 0.049\\
+\quad matched control        & 1{,}657  & 24  & $0.125$           & \\
+L-Spar, $\rho = 0.503$       & 10{,}947 & 1   & $0.193 \pm 0.000$ & 0.090\\
+\quad matched control        & 11{,}159 & 640 & $0.300$           & \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Where the counts cannot be brought together, we draw no recovery conclusion. The
+comparability rule is $|\Delta k|/k < 25\%$, and the cells it excludes are
+reported as excluded rather than compared.
+
+\subsection{Subtracting chance}\label{sec:protocol:chance}
+
+Recovery is reported with chance-corrected indices. Where an uncorrected measure
+is used because the reference communities are overlapping and numerous, as with
+average best-match $F_1$ on the largest networks, we also compute the score of a
+random partition with the same community size distribution, and report it beside
+the measurement.
+
+That floor moves with the quantity the previous control governs. On com-Amazon
+under Louvain, a size-matched random partition scores $0.009$ against the
+reference communities at 231 communities and $0.057$ at 8,651, a $6.6\times$ rise
+produced by fragmentation alone. Any comparison of best-match $F_1$ across
+different community counts reads part of that slope, and subtracting the floor is
+what separates the two.
+
+\subsection{An equal compute budget}\label{sec:protocol:compute}
+
+Every detection algorithm we use is stochastic, so a single run is a draw rather
+than an answer, and a pipeline that sparsifies and then detects has spent more
+time than one detection run. The registered control gives the baseline as many
+independent restarts as fit the pipeline's wall clock and takes the best of them.
+
+That control is weaker than it appears, and its weakness favours the treatment.
+When the pipeline is fast the budget buys very little. In a sweep of 48 cells
+over six networks, four retention targets and two samplers under Leiden, it
+bought exactly two restarts in every cell. Across the 63 configurations of
+Table~\ref{tab:accounting} it bought between 1 and 16, and 1 in 13 of the 18
+cells on the two largest networks. Label propagation shows what this costs. Under
+the compute-matched control it is the strongest of the three algorithms in
+Table~\ref{tab:accounting}, with a mean change of $+0.009$; against the best of 20 plain restarts of
+the same baseline, 10 on the two largest networks, it is the weakest, at
+$-0.106$. On email-Enron its two apparent gains of $+0.146$ and $+0.161$ become
+$-0.068$ and $-0.053$. The compute-matched baseline drew four and five restarts
+in those two cells and still never sampled the algorithm's good mode, whose
+modularity is $0.523$ against the matched control's $0.308$.
+
+We therefore report both: the compute-matched figure, which is the fair
+accounting of what the pipeline costs, and the best of a fixed number of
+restarts, which is a strictly more generous baseline that can only handicap the
+treatment. A result counts as surviving only if it survives both. This is also
+the reason the granularity control above is applied to results that have already
+passed the compute test, rather than in place of it.
+
+\subsection{Nulls}\label{sec:protocol:nulls}
+
+Two of the quantities this literature reads as evidence of community structure
+can be produced without any community structure at all. Each has a null that
+detects the substitution.
+
+\paragraph{A degree sequence without communities}
+A degree-based sparsifier selects on a function of the degree sequence, so an
+effect it produces on a heavy-tailed graph may follow from that sequence alone.
+The control is a degree-preserving rewiring~\cite{molloy1995critical}, built by
+double edge swaps, which holds every vertex degree exactly and destroys the
+community structure. A signal that reappears on the rewiring is not evidence
+about communities.
+
+Two quantities fail this test. Both are measured across seventeen real networks,
+from $10^3$ to $3.8 \times 10^6$ vertices, under degree-based sparsification with
+one Leiden partition held fixed per graph and nulls built from $10m$ double edge
+swaps. The first is the change in modularity of that fixed partition when the
+graph is sparsified, which is positive on all seventeen networks; on their
+rewirings it is positive on all seventeen as well, and larger than the real value
+on fifteen of them. The second is the separation
+between the scores a degree-based sparsifier assigns to within-community and
+between-community edges, which on the rewirings is larger than on the real graphs
+in sixteen of seventeen cases, with a median ratio of $1.60$. Real community
+structure suppresses that separation rather than producing it. Neither quantity
+is used as evidence in this paper. The mechanism they belong to is the subject of
+Section~\ref{sec:mechanism}, where the same null is what makes the causal test
+interpretable.
+
+\paragraph{Weights without their placement}
+A related family of proposals keeps every edge and reweights it by a similarity
+score. The corresponding null permutes the computed weights uniformly at random
+across the edges, which preserves the weight distribution exactly and destroys
+every association between a weight and the structure that produced it. We are not
+aware of its use in this literature.
+
+It changes the reading of the one modularity gain we obtained from four ways of
+deploying a similarity signal. On email-Enron, weighting each edge by
+$1 + J(u,v)$, with $J$ the Jaccard similarity of the endpoint neighbourhoods,
+raises modularity measured on the original graph to $0.6153 \pm 0.0034$ against a
+baseline of $0.6071$ and a compute-matched best of $0.6051$, a gain of $+0.0102$
+at $3.7$ times the pooled standard deviation. Permuting those same weights across
+edges gives $0.6168 \pm 0.0020$, a gain of $+0.0117$ at $6.0$ pooled standard
+deviations, which is larger. On a
+degree-preserving rewiring of ca-CondMat, where the similarity signal is absent
+by construction, weighting still produces $+0.0023$ and clears the same
+significance test. What the weights contribute is heterogeneity in the
+optimizer's search rather than information about communities.
+
+\subsection{Realized retention}\label{sec:protocol:retention}
+
+We report retention as the measured fraction of edges kept, because the nominal
+parameter of a sampler does not determine it. The scheme in common use clips
+per-edge probabilities at one, and across six networks at four targets between
+12\% and 36\% of edges reach that clip, so the expected number of retained edges
+falls below the nominal $\alpha m$ and saturates. On email-Eu-core the expected
+retention at $\alpha = 1.0$ is $0.665$, and on wiki-Vote at $\alpha = 0.95$ it is
+$0.447$. Three samplers that all describe themselves by the same $\alpha$ realize
+different fractions: sampling with replacement gives $0.33$ to $0.52$ across
+seventeen networks at a nominal $0.8$, the clipped no-replacement scheme gives
+$0.37$ to $0.68$ across those six networks and four targets, and solving the
+scale factor by bisection on the same cells gives $0.70$ to $0.95$. Sparsifiers
+are compared at matched realized retention throughout, and the realized value
+appears in every table.
+
+Two properties of the local selection rules limit what can be matched. The
+achievable retentions form a coarse grid, so that on com-Amazon local similarity
+sparsification can produce only $0.301$ and $0.542$ and nothing between them. And
+several methods cannot reach aggressive retention on a sparse graph at all,
+because each vertex keeps at least one incident edge. The resulting floors reach
+$0.36$ on com-Amazon, the sparsest network we test at average degree $5.5$, and
+we report them with the results.
+
+A comparison must also be like for like in what is removed. A method that deletes
+vertices as well as edges scores its partition on a smaller and denser
+subpopulation, so the fraction of vertices retained belongs in the table beside
+the fraction of edges. Every sparsifier in this study removes edges only, and we
+report both fractions.
+
+\subsection{Cost measured end to end}\label{sec:protocol:cost}
+
+The sparsifier is a computation and is charged to the pipeline that uses it, as
+it was in the original report~\cite{satuluri2011local} and as Gottesb\"{u}ren et
+al.~\cite{gottesburen2025linear} recommend after measuring the same overhead in
+graph partitioning. The comparison is the whole pipeline, sparsifier included,
+against one run of the same detection algorithm on the original graph.
+
+The price of not doing this is that a configuration can be reported as fast while
+losing quality, or as free while the sparsifier consumes the saving. Of the 63
+configurations in Table~\ref{tab:accounting}, the fastest one that preserves
+quality runs at $0.66\times$ the speed of clustering the original graph directly.
+Section~\ref{sec:negative} reports the cost measurements in full.
+
+\begin{table*}[t]
+\centering
+\caption{The protocol. Each control is motivated by a specific failure, and the
+last column reports what we measure when the control is absent.}
+\label{tab:protocol}
+\begin{tabular}{@{}p{0.19\textwidth}p{0.29\textwidth}p{0.42\textwidth}@{}}
+\toprule
+Failure & Control & Measured consequence of omitting it\\
+\midrule
+Quality read off the sparsified graph &
+Score both partitions on the original graph, Eq.~\eqref{eq:transfer} &
+The sign of the conclusion differs in 45 of 63 configurations; positive in 60 of
+63 one way and in 15 of 63 the other (\S\ref{sec:protocol:transfer})\\
+Finer partitions score higher &
+Partition the original graph at a matched community count &
+com-DBLP: an apparent $+0.091$ in best-match $F_1$ against a control that reaches
+$+0.198$ with no sparsifier (\S\ref{sec:protocol:granularity})\\
+Uncorrected agreement measures &
+Chance-corrected indices, and a size-matched random-partition floor &
+The floor rises $6.6\times$ between 231 and 8,651 communities on one graph
+(\S\ref{sec:protocol:chance})\\
+Unequal compute &
+Compute-matched restarts \emph{and} the best of a fixed number &
+One algorithm ranks first under the former and last under the latter; two gains
+near $+0.15$ become losses (\S\ref{sec:protocol:compute})\\
+Degree mechanics read as structure &
+Degree-preserving rewiring &
+Both quantities are reproduced by the null, and are larger on it in 15 of 17 and
+16 of 17 networks (\S\ref{sec:protocol:nulls})\\
+Weighting credited to similarity &
+Permute the weights across edges &
+The permuted weights reproduce the gain and exceed it, $+0.0117$ against
+$+0.0102$ (\S\ref{sec:protocol:nulls})\\
+Nominal retention &
+Report and match on measured retention &
+The same nominal $\alpha$ realizes retentions from $0.33$ to $0.95$ depending on
+the sampler (\S\ref{sec:protocol:retention})\\
+Sparsification charged to nobody &
+Time the pipeline, sparsifier included &
+No quality-preserving configuration exceeds $0.66\times$
+(\S\ref{sec:protocol:cost})\\
+\bottomrule
+\end{tabular}
+\end{table*}
+
