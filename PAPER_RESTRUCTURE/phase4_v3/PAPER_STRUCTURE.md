@@ -74,7 +74,16 @@ is itself a contribution.
 
 ---
 
-## Section weights (page targets are relative, not hard limits — D4: no length constraint while drafting)
+## Section weights
+
+**STALE as of 2026-07-26 (night). The table below describes the nine-section paper that was
+replaced. The current shape is six sections: introduction, background and related work,
+evaluation protocol (argument only), experiments (setup, accounting, negative, rival
+explanations, exception, boundary, mechanism), discussion, conclusion. See
+phase4_v3/HANDOFF.md for the current state. The framing and the one-sentence claim above are
+current; this table is kept only as a record of what the weights were when they were set.**
+
+## Section weights, as set on 2026-07-26 morning (superseded)
 
 | § | Section | Weight | Job | Evidence |
 |---|---|---|---|---|
