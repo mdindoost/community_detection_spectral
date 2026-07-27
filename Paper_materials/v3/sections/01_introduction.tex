@@ -120,8 +120,9 @@ in 60 of them and reaches $+0.537$; the same partitions scored on the original
 graph are positive in 15. The two accountings disagree on the sign of the
 conclusion in 45 of the 63. The inflation does not require a sparsifier that
 selects well. Uniform random edge deletion, whose rule uses no information about
-the graph, improves modularity in every cell we measure under the first
-accounting and is worse than the baseline in every cell under the second.
+the graph, improves modularity in every cell we measure when the result is read
+off the sparsified graph, and is worse than the baseline in every one of those
+cells when both partitions are scored on the original.
 Section~\ref{sec:experiments:accounting} reports both measurements.
 
 The sparsifier classes and detection algorithms described above each impose
@@ -150,8 +151,9 @@ requirements and the control that establishes each one.
 Applying these requirements, we re-examined the question across seven
 sparsifiers, spanning the degree-based and similarity-based families that have
 claimed quality gains, the method of Satuluri et al.\ among them, and a
-connectivity-preserving class that cannot fragment a graph by construction; four
-detection algorithms drawn from the two families identified above; seventeen real
+connectivity-preserving class that cannot fragment a graph by construction; five
+detection algorithms, four that choose their own number of communities and one
+that takes it as an input; seventeen real
 networks of up to 25 million edges, seven of which carry the full quality sweep
 and all seventeen the mechanism measurements; and two families of synthetic
 benchmark, LFR
@@ -159,7 +161,7 @@ graphs and stochastic block models, in which average degree is swept over an
 order of magnitude while community structure is held fixed. One arm of the
 synthetic study uses a fixed-$k$ partitioner, so that the number of communities is
 identical in the sparsified and unsparsified conditions and granularity is
-excluded by construction rather than by matching. The study comprises 23
+excluded by construction rather than by matching. The study comprises 24
 controlled experiments. Predictions and stopping rules were fixed before each
 experiment was run, and several of our own hypotheses did not survive them.
 
@@ -168,10 +170,13 @@ Of the two conditions, the second has a location. Average degree is the correlat
 we can vary under control, and measured against it the transition between the two
 regimes is sharp within a given family of graphs while its location is not
 universal. On the LFR benchmark graphs~\cite{lancichinetti2008benchmark} we
-generate it falls near an average degree of 50, which is also the threshold
-reported in the original synthetic sweep. On the real networks we test it has
-already occurred by an average degree of 29 and is absent on every network below
-11, so it lies between those two densities. On stochastic block models it occurs
+generate, most configurations turn positive near an average degree of 50, which
+is also the threshold reported in the original synthetic sweep, although the
+objective does not become positive in the mean until roughly twice that density.
+On the real networks we test the transition is absent on every network below
+average degree 11 and present at 28.5, so it lies between those two densities.
+It is not universal above that range: of the two networks we test that lie above
+it, one shows the effect and one does not. On stochastic block models it occurs
 no later than on LFR. We therefore state a condition rather than a threshold.
 
 What the transition tracks is how many edges can be removed without destroying
@@ -189,12 +194,14 @@ Where either condition fails, the three ways a benefit could appear all close.
 For detection
 algorithms that choose their own granularity, on the sparse real networks we
 test, no sparsifier improves modularity measured on the original graph beyond
-run-to-run variation, at any retention that preserves quality, and this holds for
-every such algorithm we tested. There is no speed benefit either. Measured end to
-end, including the cost of the sparsifier, the pipeline is no faster than
-clustering the original graph directly, and at aggressive retention it is slower,
-because a fragmented graph presents the optimizer with more work rather than
-less. Every apparent gain we found in this regime dissolves when granularity is
+run-to-run variation, at any retention that preserves quality. This holds for
+every such algorithm we tested, and the only cells that clear a strict baseline
+belong to one algorithm on one network whose unsparsified baseline is itself
+pathological. There is no speed benefit either. Measured end to end, including
+the cost of the sparsifier, no configuration that preserves quality runs faster
+than clustering the original graph directly, and the fastest of them runs at two
+thirds of that speed. The configurations that do run faster all lose
+modularity. Every apparent gain we found in this regime dissolves when granularity is
 matched, when chance is subtracted, or when the baseline is given an equal
 compute budget, with one exception on one network, where the surviving recovery
 gain is instead exceeded by an unsparsified run of a different detection
@@ -206,18 +213,20 @@ granularity effect is possible, similarity-based sparsification raises both the
 objective measured on the original graph and chance-corrected agreement with the
 planted labels. Recovery turns positive at a lower density than the objective
 does. On the benchmark graphs, degree-based and uniform sparsification at
-identical retention do not reproduce the effect, which places it in the selection
-rule rather than in the edge budget; on the one real network above the transition,
-a degree-based sampler reproduces it as well, while the two methods that preserve
-connectivity by construction do not. What the gain requires is a rule that scores
+identical retention are negative at every degree but the two highest, where a
+degree-based sampler turns positive in a minority of configurations against
+similarity-based selection in nearly all of them. On the real network above the
+transition that shows the effect, the degree-based sampler reproduces it
+outright, while the two methods that preserve connectivity by construction do
+not. What the gain requires is a rule that scores
 individual edges, and we do not identify the property of that rule which matters.
 
 A fixed-$k$ partitioner applied to a sparse graph shows no gain on the objective
 in any configuration we tested, and a free-granularity optimizer applied to a
 dense one shows none either once granularity is controlled. Neither condition is
 sufficient on its own. Which sparsifier is used matters less than either
-condition, provided its selection signal reflects local structure rather than
-degree alone. The mechanism is consistent with this: what governs a degree-based
+condition, provided its rule scores edges individually. The mechanism is
+consistent with this: what governs a degree-based
 sparsifier's effect on modularity is where high-degree-product edges sit relative
 to community boundaries, which we establish by direct intervention.
 
@@ -236,11 +245,13 @@ This paper contributes the following.
   namely a detection algorithm that takes the number of communities as an input
   and a graph carrying sufficient removable redundancy, established under controls
   that exclude granularity by construction, together with the negative territory
-  delimited across seven sparsifiers and four detection algorithms on seven real
-  networks. The negative result is not an artifact of the fragmentation that
-  sparsification induces: a connectivity-preserving sparsifier that cannot
-  disconnect a graph leaves no vertex in a small component, and modularity falls
-  by the same margin. We also report that these methods have a hard retention
+  delimited on seven real networks, across seven sparsifiers under a modularity
+  optimizer and under a fixed-$k$ partitioner, and across two sparsifiers under
+  three further detection algorithms. The negative result is not an artifact of
+  the fragmentation that sparsification induces: a connectivity-preserving
+  sparsifier that cannot disconnect a graph leaves no detected community a
+  singleton, and modularity falls by a comparable margin. We also report that
+  these methods have a hard retention
   floor on sparse graphs, so that aggressive sparsification is not merely
   unhelpful there but unreachable.
 
@@ -253,8 +264,9 @@ This paper contributes the following.
   are randomly permuted across edges.
 
   \item \textbf{A mechanism for the boundary.} A decomposition of the
-  score-separation quantity into a sorting term and a granularity term across
-  seventeen networks, and a direct causal test in which that quantity is steered
+  score-separation quantity into a sorting term, a scale term and a granularity
+  term, measured across sixteen networks, and a direct causal test in which that
+  quantity is steered
   through more than a full sign change while degree sequence, partition,
   intra-edge fraction and modularity are all held exactly fixed.
 
