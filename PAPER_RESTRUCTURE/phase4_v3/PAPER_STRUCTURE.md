@@ -33,14 +33,58 @@ Five original contributions. A review has zero.
 
 ## The one sentence the paper exists to defend
 
-**Updated 2026-07-26 (evening), after exp_AB, exp_AC and the section 3 audit. The previous
-version is kept below because what falsified it is instructive.**
+**Updated 2026-07-27, after exp_AE (Graclus on seven real networks) and exp_AF (Graclus on the
+LFR sweep). Both previous versions are kept below, because what falsified each is instructive
+and because this is now the second time a headline has been retired by adding one arm.**
 
-> **Sparsification's effect on community detection is decided by the detector's degrees of
-> freedom and by the graph's removable redundancy rather than by the sparsifier; outside those
-> two conditions there is no gain on the objective, no end-to-end speed benefit, and no gain in
-> recovery that survives comparison with an unsparsified run of a better detector, and the
-> accounting in common use reports one anyway.**
+**TITLE, settled 2026-07-27:**
+**"Graph Sparsification for Community Detection: Repair, Not Improvement."**
+Head-noun first, because that is how this venue's readers scan, and the colon form survives
+abbreviation in reference lists. `INTRO_PLAN.md` and `main.tex` still carry the old title and
+should be changed when §1 is rewritten, not before, or the compiled PDF will advertise a claim
+its introduction does not argue.
+
+> **Sparsification moves a detector toward the unsparsified frontier and never across it: its
+> real gains appear only where a detector falls short of the best result any detector we test
+> achieves on that graph and measure without sparsification, and every such gain is exceeded by
+> simply running that better detector. What density governs is the damage term, not the gain:
+> the cost of deletion falls as a graph's benign redundancy rises, so for a detector at the
+> frontier sparsification approaches a no-op on dense graphs, and the shrinking damage is what
+> lets a weaker detector's repair show. The remaining reported gains are the accounting artifact
+> of scoring on the sparsified graph and the granularity artifact of comparing partitions of
+> different resolution, and there is no end-to-end speed benefit in the implementations we
+> measure.**
+
+*Three sentences, not one. The one-sentence rule existed to enforce one CLAIM that every
+section must support, and the version it replaced was already three claims joined by
+semicolons. The rule is kept in function: sentence 1 alone is the quotable headline, each
+sentence must name the tables that defend it, and three is a ceiling.*
+
+**Scoping that must not be lost when this is paraphrased.**
+- "The best result any detector we test achieves" means across the **whole pool**, not within
+  the fixed-$k$ family. Within the family it has counterexamples in both directions: sparsified
+  Metis at LFR $d=50$ beats untouched Graclus on $Q$ by up to $+0.038$, and sparsified Graclus
+  on email-Eu-core at $k=42$ edges untouched Metis by $+0.002$. Against the full pool it is
+  clean everywhere checked.
+- It is also **not** "never exceeds the same detector's clean baseline". That is false:
+  sparsified noisy-graph Metis at $d=50$ with 100\% injected noise reaches AMI $0.624$ against
+  its own clean-graph baseline of $0.596$. Only the cross-detector frontier claim holds.
+- "Benign redundancy" presumes the §2 split between benign redundancy, which makes deletion
+  cheap, and spurious edges, whose presence damages the baseline so that removing them is
+  repair. Without that split the paper's own arm C reads as a counterexample to the density
+  sentence.
+
+**What each clause rests on.** Frontier and repair: exp_AE and exp_AF, plus the baseline tables
+in both. Domination: wiki-Vote, best sparsified Metis over all arms and seeds $0.4006$ against
+untouched Graclus $0.4164$; LFR $d=49$, sparsified Metis AMI $0.75$ against untouched Graclus
+$0.8238$; com-Amazon, sparsified $0.402$ against unsparsified Infomap $0.465$ and label
+propagation $0.480$. Damage falling with density: uniform random is the clean probe
+(Metis $-0.172 \to -0.027$, Graclus $-0.104 \to -0.035$ on $Q$; on recovery the absolute
+sparsified level rises monotonically for all four repair-free pairs and damage as a fraction of
+baseline falls monotonically, which is the form to print, because the raw $\Delta$AMI is
+non-monotone only through the baseline rising). Accounting: 45 of 63. Granularity: com-DBLP,
+apparent $+0.091$ against a matched control of $0.300$. Speed: fastest quality-preserving
+configuration $0.66\times$.
 
 *Amended 2026-07-26 (late): "no benefit of any kind" was a universal with two disclosed
 exceptions, which is a rhetorical liability for a two-word saving. Both reviewers flagged it. The
@@ -52,7 +96,36 @@ Local Degree) are beaten by an unsparsified run of a different detector.*
 Every section either supports that sentence or explains why nobody had found it. Anything that
 does neither is cut.
 
-*Superseded version, and why:*
+*Superseded version 2 (2026-07-26 evening to 2026-07-27), and why:*
+
+> ~~Sparsification's effect on community detection is decided by the detector's degrees of
+> freedom and by the graph's removable redundancy rather than by the sparsifier; outside those
+> two conditions there is no gain on the objective, no end-to-end speed benefit, and no gain in
+> recovery that survives comparison with an unsparsified run of a better detector, and the
+> accounting in common use reports one anyway.~~
+
+**Killed by adding one detector.** Graclus takes $k$ as an input and, unlike Metis, imposes no
+balance constraint, so it isolates the condition from the confound. On the LFR sweep that
+produced Table VIII it shows **no transition**: $\Delta Q > 0$ in 3/12, 8/12, 6/12, 7/12, 6/12
+by degree against Metis's 0/12, 0/12, 8/12, 10/12, 12/12, and it is positive in the mean by
+$d=24.6$. On recovery it never gains at any degree. On the seven real networks the two
+detectors disagree about which network gains, and each gains where it is the weaker baseline:
+Graclus on the five sparse networks where it trails Metis by 0.016 to 0.066, Metis on wiki-Vote
+where it trails Graclus by 0.034, and neither on email-Eu-core at $k=8$ where they sit within
+0.011. A protocol check confirmed this is not the seed convention: recomputing Metis against
+the mean of its seeds rather than the best leaves it at 0 of 128, since its seed spread buys
+only 0.0004 to 0.0044 against a 0.05 effect.
+
+So the degree-50 threshold was the density at which **Metis** falls decisively behind what a
+fixed-$k$ detector can reach on these graphs. The Metis/Graclus AMI gap opens from 0.008 at
+$d=11$ to 0.228 at $d=49$ and stays there, which is exactly where the "boundary" sat. Density
+did not stop being a variable; it stopped governing the gain and now governs the damage.
+
+*The second condition was inferred from a single detector, and the first thing that tested it
+falsified it. That is the same failure mode as superseded version 1 below: a pattern true of
+one arm, promoted to a condition.*
+
+*Superseded version 1, and why:*
 
 > ~~Sparsification's effect on community detection is determined by average degree and algorithm
 > family, not by the sparsifier, and the threshold sits near average degree 50.~~
