@@ -115,3 +115,26 @@ which is the same dissociation the paper reports elsewhere.
 3. The honest generalization the data supports is about the **baseline**, not the density:
    sparsification recovers ground for a detector that was weak on that graph, and does not
    carry it past a detector that was not.
+
+## V5 — validity check: the difference is not the seed protocol
+
+exp_AD gave Metis the **best of ten partitioner seeds** as its baseline. Graclus is
+deterministic, so exp_AE's baseline is a single exact run. Best-of-ten is the stronger
+baseline, so Metis was held to a harder target, and that asymmetry could in principle
+manufacture the whole difference. It does not.
+
+Recomputing Metis's worst-case margin against the **mean** of its seeds, which is the
+like-for-like comparison with a single deterministic run:
+
+| comparison | cells | worst-case positive | best cell |
+|---|---|---|---|
+| Metis vs best of 10 seeds (as published) | 128 | 0 | $-0.0167$ |
+| Metis vs mean of seeds (equalised) | 128 | **0** | $-0.0123$ |
+| Graclus vs its deterministic baseline | 128 | **7** | $+0.0383$ |
+
+Metis stays at zero either way. The reason is that its seed spread is negligible on these
+graphs: best-of-ten buys between $+0.0004$ and $+0.0044$ over the mean, while the distance
+between Metis's best cell and Graclus's best cell is roughly $0.05$. The protocol asymmetry
+is worth about a tenth of the effect it would have to explain.
+
+**The difference between the two detectors is the detector.**
