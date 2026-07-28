@@ -1,0 +1,309 @@
+\documentclass[10pt,a4paper]{article}
+\usepackage[margin=2.2cm]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage[hidelinks]{hyperref}
+\usepackage{parskip}
+\usepackage{enumitem}
+\setlist{nosep,leftmargin=1.4em}
+
+\title{\textbf{Graph Sparsification and Community Detection}\\[2pt]
+\large A chronological review of the literature, 1996--2026,\\
+with an audit of what this project holds and what it does not}
+\author{Compiled 2026-07-27}
+\date{}
+
+\begin{document}
+\maketitle
+
+\section*{Scope, and how to read the verification marks}
+
+This covers one question and its immediate neighbourhood: \emph{does removing edges from a graph
+before running community detection help, hurt, or leave it unchanged?} It is not a survey of
+graph sparsification in general, nor of community detection in general. Works from those fields
+appear only where the pipeline depends on them.
+
+Every entry carries a verification mark, because the value of a review of this kind is entirely
+in whether its statements can be trusted:
+
+\begin{description}[leftmargin=2.6em,style=nextline]
+\item[\textbf{[FULL]}] The paper was read end to end from the PDF, and any characterization of
+what it claims can be relied on. Eight papers are in this class and the reading notes are in
+\texttt{PAPER\_RESTRUCTURE/references/}.
+\item[\textbf{[META]}] Bibliographic fields were read off a publisher record, DOI resolver,
+arXiv, or the Semantic Scholar API. Safe to cite. Says nothing about whether the paper was read.
+\item[\textbf{[2ND]}] Described from a fetched page or search summary, not read directly. Listed
+as a lead. \emph{Not safe to characterize.}
+\end{description}
+
+Where a claim about a paper's content appears below without a \textbf{[FULL]} mark, it is a
+statement about what the paper says it does, not a verified account of what it does.
+
+\section{Prehistory: what sparsification guaranteed before anyone applied it to communities}
+
+The theory arrived first and it never promised what the pipeline later assumed.
+
+\textbf{Bencz\'ur and Karger (1996, journal 2015)}~\cite{benczur2015randomized} \textbf{[META]}
+preserve every cut of a graph to within $1 \pm \epsilon$ by sampling edges with probability
+proportional to connectivity and reweighting the survivors.
+
+\textbf{Spielman and Teng (2004, journal 2014)}~\cite{spielman2004nearly, spielman2014nearly}
+\textbf{[META]} and \textbf{Spielman and Srivastava (2008)}~\cite{spielman2008graph}
+\textbf{[META]} preserve the Laplacian quadratic form by sampling according to effective
+resistance~\cite{lovasz1993random, doyle1984random}, giving a spectral sparsifier with
+$O(n \log n / \epsilon^2)$ edges.
+
+\emph{What this does and does not license.} The guarantee is about the Laplacian spectrum.
+Community structure is related to that spectrum through the eigenvectors that encode
+cuts~\cite{von2007tutorial, shi2000normalized, newman2013spectral}, but it is not determined by
+it. Every later claim that a spectral sparsifier ``preserves communities'' is an extrapolation
+beyond the theorem, and the gap between the two is the space this literature occupies.
+
+Two structural filters predate the pipeline and are still used as baselines: the \emph{disparity
+filter} of \textbf{Serrano et al.\ (2009)}~\cite{serrano2009extracting} \textbf{[META]}, which
+keeps edges improbable under a local null, and its noise-corrected successor from
+\textbf{Coscia and Neffke (2017)}~\cite{coscia2017backboning} \textbf{[META]}.
+
+\section{The founding claim: Satuluri, Parthasarathy and Ruan, SIGMOD 2011}
+
+\textbf{[FULL]}~\cite{satuluri2011local}. This is the origin of the sparsify-then-detect
+pipeline and everything downstream is a response to it. Read in full; notes in
+\texttt{NOTES\_satuluri2011.md}.
+
+The method, \emph{L-Spar}, ranks each edge by the Jaccard similarity of its endpoints'
+neighbourhoods, computed via minhash signatures, and has each vertex retain its top
+$\lceil d_v^{\,e}\rceil$ edges. The abstract claims speedups ``often in the range 10--50'' with
+``little or no deterioration in the quality of the resulting clusters,'' and, decisively,
+``for at least two of the four clustering algorithms, our sparsification consistently enables
+higher clustering accuracies.''
+
+\emph{Which two.} Transcribed from their Table 2 (p.~729), ground-truth F-score by algorithm:
+Metis 4W/0L, Graclus 3W/0L, Metis+MQI 2W/2L, MLR-MCL 1W/4L. The accuracy claim is about the two
+\textbf{fixed-$k$ cut partitioners}. The flow-based algorithm is the one L-Spar does not help.
+This is the single most misquoted fact in the downstream literature.
+
+\emph{What they got right, and what the field then lost.} Their \S4.3 states, verbatim, that
+clusters obtained from a sparsified graph cannot be scored on that same graph, ``since that
+would tell us nothing about how well the sparsified graph retained the cluster structure in the
+original graph,'' and they report every conductance on the original graph. They fix the number
+of communities once per network and give it to every arm, so granularity is matched by
+construction. They charge sparsification time to the reported speedup. On all three counts the
+1996--2011 origin paper is stricter than much of what followed it.
+
+\emph{Their own scope conditions.} A synthetic sweep in their \S4.5 reports the method beginning
+to outperform clustering on the unsparsified graph only from average degree $\approx 50$. Their
+speedups are measured against clustering runs lasting hours, with an approximate minhash
+similarity reported as two orders of magnitude cheaper than exact Jaccard. Their disclosed
+limitation is that L-Spar cannot handle bipartite or triangle-free structure without a
+bibliographic-coupling transform.
+
+The two detectors the accuracy claim is about:
+\textbf{Graclus}~\cite{dhillon2007weighted} \textbf{[META]}, multilevel weighted kernel
+$k$-means for normalized cut, with no balance constraint; and
+\textbf{Metis}~\cite{karypis1998metis} \textbf{[META]}, multilevel $k$-way partitioning with a
+hard balance constraint. The flow-based one is
+\textbf{MLR-MCL}~\cite{satuluri2009scalable} \textbf{[META]}. All three are distributed by their
+authors and build on a current toolchain.
+
+\section{The parallel question: does sampling preserve community structure at all?}
+
+A separate lineage asks whether \emph{any} reduction preserves communities, independent of
+whether it accelerates anything.
+
+\textbf{Leskovec and Faloutsos (2006)}~\cite{leskovec2006sampling} \textbf{[META]} set the
+graph-sampling problem. \textbf{Maiya and Berger-Wolf (2010)}~\cite{maiya2010sampling}
+\textbf{[META]} sample explicitly to preserve community structure.
+
+\textbf{Blagus et al.\ (2015)}~\cite{blagus2015sampling} \textbf{[META]} is the dissenting
+result and deserves more attention than it gets: sampling can \emph{manufacture} the appearance
+of community structure rather than preserve it. Any measured ``improvement'' after reduction has
+to clear this before it can be called a gain.
+
+\textbf{Peng, Kolda and Pinar (2014)}~\cite{peng2014accelerating} \textbf{[META]} reduce by
+$k$-core before detecting, which removes vertices as well as edges and therefore scores its
+partition on a smaller, denser vertex set.
+
+\section{Adoption and extension, 2016--2021}
+
+\textbf{Hamann et al.\ (2016)}~\cite{hamann2016structure} \textbf{[FULL]} is the systematic
+comparison, and it released the implementations now distributed in standard graph libraries,
+including Local Degree, Local Similarity and K-Neighbor. Two of its findings matter here and are
+frequently ignored. First, verbatim: normalized mutual information ``reports higher similarity
+values for a larger number of found communities \dots\ This makes it unsuitable for comparing
+partitions on sparsified networks,'' with the adjusted Rand index recommended instead. Second,
+that filtering ``does lead the algorithm into finding different community structures,'' and that
+the preserved structure ``is not necessarily the same as the one the Louvain algorithm finds.''
+
+\textbf{Sotiropoulos and Tsourakakis} contribute twice: a unifying framework for
+spectrum-preserving sparsification and coarsening at NeurIPS
+2019~\cite{sotiropoulos2019unifying} \textbf{[META]}, and triangle-aware spectral sparsifiers at
+KDD 2021~\cite{sotiropoulos2021triangle} \textbf{[FULL]}. The 2021 paper is worth reading for
+its framing alone: it treats sparsification as an established and effective route to community
+detection whose \emph{success requires explanation}, opening ``how can we explain its empirical
+success?''\ By 2021 the pipeline is a premise, not a proposition.
+
+\textbf{Satuluri et al.\ (2020)}~\cite{satuluri2020simclusters} \textbf{[META]} put
+sparsification before community detection in production at Twitter.
+\textbf{Wu and Chen (2020)}~\cite{wu2020gsgan} \textbf{[META]} train a GAN to produce the
+subgraph.
+
+\textbf{Laeuchli (2020)}~\cite{laeuchli2020fast} \textbf{[FULL]} is the one analysis that
+identifies a regime where the approach provably pays: dense planted-partition graphs with
+spectral solvers, where detection cost is superlinear in the number of edges and the planted
+structure survives heavy deletion. It is the honest boundary of the pipeline's scope, and it is
+not the regime the pipeline is usually applied to.
+
+\section{The GNN turn, and what it cost this question}
+
+\textbf{Liu et al.\ (2023)}~\cite{liu2023dspar} \textbf{[FULL]} introduce \emph{DSpar},
+approximating the effective resistance of $(u,v)$ by $1/d_u + 1/d_v$ and thereby obtaining a
+spectral sparsifier at the cost of reading the degree sequence. It is designed for GNN training,
+not community detection, and its adoption for the latter is downstream extrapolation.
+
+\textbf{Hashemi et al.\ (IJCAI 2024)}~\cite{hashemi2024survey} \textbf{[FULL]} survey graph
+reduction across sparsification, coarsening and condensation. The most useful fact about this
+survey is negative and was established by text search: it contains four occurrences of ``graph
+classification,'' one of ``node classification,'' one of ``clustering,'' and \textbf{zero} of
+``community.'' The modern reduction field has reoriented entirely around GNN prediction and has
+dropped community detection as an evaluation target. The question was asked in 2011--2016,
+answered optimistically, and then abandoned rather than settled.
+
+\section{The benchmark era: Chen et al., PVLDB 2024}
+
+\textbf{[FULL]}~\cite{chen2024demystifying}, notes in \texttt{NOTES\_chen\_and\_fastcd.md}.
+Twelve sparsifiers, sixteen graph properties, fourteen networks. Conclusions: no single
+sparsifier preserves all properties; the choice should follow the downstream task; pruning
+fragments graphs; and fidelity to the full graph's partition degrades monotonically with the
+prune rate.
+
+Two things about this paper matter disproportionately.
+
+\emph{What it owns.} Fragmentation-with-pruning at benchmark scale, and monotone fidelity
+degradation, are established facts of this literature and belong to Chen et al.
+
+\emph{What it does not measure.} It never computes a quality objective for community detection.
+Its clustering metric is fidelity to the full graph's partition, not whether the sparsified
+partition is \emph{better or worse}. It also never times the downstream task. So the field's two
+central premises, that sparsification preserves quality and delivers speed, are both untested in
+the field's most rigorous benchmark. Further, its released code computes modularity for the
+sparsified condition \emph{on the sparsified graph}
+(\texttt{metrics\_nk.py:414}), which is the clearest available evidence that the
+scoring hazard is present in the tooling of the most careful work in the area.
+
+\section{Redundancy: why any of this is possible}
+
+A separate and largely disconnected strand explains why graphs can lose most of their edges at
+all.
+
+The \emph{metric backbone} of a weighted graph is the union of its all-pairs shortest paths; an
+edge outside it is redundant in the exact sense that no shortest path uses it.
+\textbf{Correia, Barrat and Rocha (2023)}~\cite{correia2023contact} \textbf{[META]} report the
+backbone to be a small fraction of the edges of real contact networks while community structure
+is retained. \textbf{Dreveton, Chucri, Grossglauser and Thiran (NeurIPS 2024)}
+\cite{dreveton2024metric} \textbf{[META, abstract read verbatim]} prove that deleting every edge
+outside the backbone preserves community structure on a broad class of weighted random graphs
+with communities.
+
+\textbf{He, Drineas and Khanna (2025)}~\cite{he2025structure} \textbf{[META, abstract read
+verbatim]} prove that under strong clusterability, characterized by a structure ratio
+$\Upsilon(k) = \lambda_{k+1}/\rho_G(k)$, \emph{uniform} edge sampling preserves the spectral
+subspace used for clustering, bypassing importance sampling entirely. If this holds empirically
+it is a significant negative for the whole similarity-based line: the expensive selection rule
+would be unnecessary where the structure is strong, and where it is weak the guarantee lapses.
+The paper reports no empirical evaluation on community detection.
+
+\section{The current wave, 2024--2026}
+
+The pipeline is not historical. Five works in three years, all proposing or applying it.
+
+\textbf{Socievole and Pizzuti} publish twice: ASONAM 2024~\cite{socievole2024community}
+\textbf{[META]} and \emph{Soft Computing} 30:2109--2133, 2026~\cite{socievole2026effective}
+\textbf{[FULL]}, notes in \texttt{NOTES\_socievole\_pizzuti\_2026.md}. The 2026 method weights a
+graph by effective resistance, applies a kernel, sparsifies by weight thresholding, and runs a
+genetic algorithm maximizing weighted modularity on the result. It is worth reading for three
+reasons. Its evaluation measure is NMI against ground truth rather than a self-scored objective,
+so it does not commit the scoring error. It compares against unsparsified Louvain and Infomap
+throughout. And its own tables show those unsparsified baselines matching or beating every
+sparsified variant it tests: at mixing $0.3$ on 1000-node LFR, Louvain reaches NMI $1$ against
+the sparsified method's $0.601$, and its \S6.2 states that on the densest network ``OmeGANet
+achieves only 0.3522 as NMI value, while Louvain and Infomap are able to perfectly match the
+ground-truth.'' The gains it reports are of kernels and the genetic algorithm over its own
+no-kernel baseline, not of sparsification over no sparsification.
+
+\textbf{Setiadi, Yaakub and Abu Bakar (2025)}~\cite{setiadi2025community} \textbf{[FULL]},
+$k$-core community-preserving sparsification, notes in \texttt{NOTES\_kcore\_ijain2026.md}.
+Reproduced and falsified in this project. Its reported modularity of $0.63$ on Zachary's karate
+club exceeds $0.4198$, the maximum attainable on that graph over all partitions, which
+identifies the scored graph as the sparsified one.
+
+\textbf{Pari, Bhandari and Raha (2026)}~\cite{pari2026effective} \textbf{[FULL]},
+effective-resistance sparsification and community detection, notes in
+\texttt{NOTES\_effres\_2026.md}. Reports modularity $0.87$ on the American College Football
+network, whose maximum over all partitions is $0.6046$. Same diagnosis.
+
+\textbf{Gottesb\"{u}ren et al.\ (ESA 2025)}~\cite{gottesburen2025linear} \textbf{[META]} come
+from graph partitioning rather than community detection and observe the cost point directly:
+sparsification overhead can cancel the speedup it is meant to produce.
+
+\section{What the corpus contains, and what it does not}
+
+\subsection*{Holdings}
+
+\begin{center}
+\begin{tabular}{@{}lr@{}}
+\toprule
+Papers read end to end, with written notes & 8 \\
+PDFs archived locally & 8 \\
+Lines of verified reading notes & 2{,}664 \\
+Bibliography entries, all fields from fetched records & 72 \\
+On-subject works spanning 2011--2026 & 14 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+The eight read in full are Satuluri et al.\ 2011 (plus the author's thesis), Hamann et al.\ 2016,
+Laeuchli 2020, Sotiropoulos and Tsourakakis 2021, Liu et al.\ 2023, Chen et al.\ 2024, Hashemi et
+al.\ 2024, Setiadi et al.\ 2025, Pari et al.\ 2026, and Socievole and Pizzuti 2026. Four of these
+were not merely read but \emph{reproduced}, and two of the reproductions falsified the paper's
+central claim.
+
+\subsection*{Genuine gaps, in priority order}
+
+\begin{enumerate}
+\item \textbf{He, Drineas and Khanna (2025) is unread.} \textbf{[META]} only. If uniform sampling
+provably suffices under strong clusterability, it bears directly on whether any similarity-based
+selection rule is necessary. This is the highest-value unread paper in the area.
+\item \textbf{Sotiropoulos and Tsourakakis (NeurIPS 2019) is unread.} \textbf{[META]} only. The
+unifying spectrum-preserving framework is prior art for several framing choices.
+\item \textbf{Dreveton et al.\ (2024): the proof is verified, the experiments are not.} The
+abstract was read verbatim; the evaluation protocol was described only through a page summary.
+Whether they control granularity under Leiden is unknown.
+\item \textbf{Socievole and Pizzuti (ASONAM 2024) is unread.} The 2026 paper is its extension.
+\item \textbf{The 2012--2015 window is thin} on this specific question. Repeated searches return
+the same core corpus, which is consistent with the Hashemi survey's finding that the question was
+largely dormant, but absence of search results is weak evidence.
+\item \textbf{Coarsening and condensation applied to community detection} is covered only through
+the Hashemi survey and Peng et al. If the pipeline has a modern descendant it is here.
+\end{enumerate}
+
+\subsection*{Assessment}
+
+For the purpose of grounding a paper on this question, the corpus is close to complete on the
+\emph{lineage} and thin on the \emph{theory adjacent to it}. Every work that proposes or applies
+sparsify-then-detect and that a reviewer is likely to name has been located, and the five that
+matter most have been read in full and in four cases reproduced. What is missing is not more
+instances of the pipeline; searching for those has reached saturation, with the same dozen works
+returning across many differently-phrased queries. What is missing is the recent theory that
+constrains it, items 1 to 3 above, and of those only He et al.\ could change how the question is
+posed.
+
+\emph{Recommended additional work: read three papers.} He et al.\ 2025, Sotiropoulos and
+Tsourakakis 2019, and the experimental section of Dreveton et al.\ 2024. That is the whole of
+what a further literature effort should consist of. Beyond those three, further searching is
+unlikely to return anything the corpus does not already hold.
+
+\bibliographystyle{plain}
+\bibliography{refs}
+
+\end{document}
