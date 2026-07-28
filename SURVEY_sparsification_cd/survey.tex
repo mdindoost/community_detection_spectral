@@ -29,7 +29,7 @@ in whether its statements can be trusted:
 
 \begin{description}[leftmargin=2.6em,style=nextline]
 \item[\textbf{[FULL]}] The paper was read end to end from the PDF, and any characterization of
-what it claims can be relied on. Eight papers are in this class and the reading notes are in
+what it claims can be relied on. Eleven papers are in this class; reading notes for most are in
 \texttt{PAPER\_RESTRUCTURE/references/}.
 \item[\textbf{[META]}] Bibliographic fields were read off a publisher record, DOI resolver,
 arXiv, or the Semantic Scholar API. Safe to cite. Says nothing about whether the paper was read.
@@ -135,10 +135,18 @@ partitions on sparsified networks,'' with the adjusted Rand index recommended in
 that filtering ``does lead the algorithm into finding different community structures,'' and that
 the preserved structure ``is not necessarily the same as the one the Louvain algorithm finds.''
 
-\textbf{Sotiropoulos and Tsourakakis} contribute twice: a unifying framework for
-spectrum-preserving sparsification and coarsening at NeurIPS
-2019~\cite{sotiropoulos2019unifying} \textbf{[META]}, and triangle-aware spectral sparsifiers at
-KDD 2021~\cite{sotiropoulos2021triangle} \textbf{[FULL]}. The 2021 paper is worth reading for
+\textbf{Bravo-Hermsdorff and Gunderson (NeurIPS 2019)}~\cite{hermsdorff2019unifying}
+\textbf{[FULL]} unify sparsification and coarsening, which had been treated as separate
+operations. Their observation is that for a planar graph edge deletion corresponds to edge
+contraction in the dual, and that with respect to Laplacian dynamics the two are the reciprocal
+limits of edge weight $0$ and $\infty$. Their algorithm reduces a graph while preserving the
+Laplacian pseudoinverse $L^\dagger$, unbiased and variance-minimizing. \emph{It does not evaluate
+community detection.} Its comparisons are on preservation of $L^\dagger$ and spectral distance
+against other reduction algorithms. It cites Satuluri et al.\ but tests something else, so it is
+context for the pipeline rather than evidence about it.
+
+\textbf{Sotiropoulos and Tsourakakis (KDD 2021)}~\cite{sotiropoulos2021triangle} \textbf{[FULL]}
+introduce triangle-aware spectral sparsifiers. The paper is worth reading for
 its framing alone: it treats sparsification as an established and effective route to community
 detection whose \emph{success requires explanation}, opening ``how can we explain its empirical
 success?''\ By 2021 the pipeline is a premise, not a proposition.
@@ -201,17 +209,50 @@ edge outside it is redundant in the exact sense that no shortest path uses it.
 \textbf{Correia, Barrat and Rocha (2023)}~\cite{correia2023contact} \textbf{[META]} report the
 backbone to be a small fraction of the edges of real contact networks while community structure
 is retained. \textbf{Dreveton, Chucri, Grossglauser and Thiran (NeurIPS 2024)}
-\cite{dreveton2024metric} \textbf{[META, abstract read verbatim]} prove that deleting every edge
-outside the backbone preserves community structure on a broad class of weighted random graphs
-with communities.
+\cite{dreveton2024metric} \textbf{[FULL]} prove that deleting every edge outside the backbone
+preserves community structure on a broad class of weighted random graphs with communities.
 
-\textbf{He, Drineas and Khanna (2025)}~\cite{he2025structure} \textbf{[META, abstract read
-verbatim]} prove that under strong clusterability, characterized by a structure ratio
-$\Upsilon(k) = \lambda_{k+1}/\rho_G(k)$, \emph{uniform} edge sampling preserves the spectral
-subspace used for clustering, bypassing importance sampling entirely. If this holds empirically
-it is a significant negative for the whole similarity-based line: the expensive selection rule
-would be unnecessary where the structure is strong, and where it is weak the guarantee lapses.
-The paper reports no empirical evaluation on community detection.
+Their experimental section deserves separate comment, because it is the most carefully controlled
+evaluation in this entire literature. They preprocess each graph into a proximity graph using
+weighted Jaccard similarity, convert to a distance graph, and compare the metric backbone against
+a threshold graph and against Spielman--Srivastava spectral sparsification \emph{at equal edge
+count}, $|E^{mb}| = |E^{\theta}| = |E^{ss}|$, which is a matched-retention control. They evaluate
+with the \emph{adjusted} Rand index against ground-truth communities, so chance is subtracted.
+They run three algorithms, a Bayesian block model via graph-tool, Leiden, and spectral clustering,
+and they include the unsparsified graph as a baseline in every figure.
+
+Their conclusion is preservation, not improvement: ``the metric backbone and the spectral
+sparsification retain equally well the community structure across all data sets and for all
+clustering algorithms tested.'' Thresholding fares worse because it disconnects the graph.
+
+One observation of theirs cuts against the similarity-based line. In their Figure 2 the edges
+present in the backbone but absent from the threshold graph ``are mostly inter-community edges,''
+and the edges the threshold graph keeps but the backbone drops are mostly intra-community. The
+metric backbone \emph{retains} the bridges that L-Spar and its descendants are designed to remove,
+and still preserves the community structure. No runtime or speedup is reported.
+
+\textbf{He, Drineas and Khanna (2025)}~\cite{he2025structure} \textbf{[FULL]} prove that
+under strong clusterability, characterized by a structure ratio
+$\Upsilon(k) = \lambda_{k+1}/\rho_G(k)$, sampling $O(\gamma^2 n \log n / \epsilon^2)$ edges
+\emph{uniformly at random} yields a sparsifier whose top $(n-k)$ eigenspace remains approximately
+orthogonal to the cluster indicators. Importance sampling is bypassed entirely.
+
+They do run experiments, on stochastic block models with four clusters of 200 vertices, on a
+hierarchical block model with sixteen clusters, and on LFR benchmark graphs of 800 vertices with
+the mixing parameter varied. The measured quantity is the largest principal angle between the
+bottom-$k$ eigenvectors of the sparsified graph and the true cluster indicators, which is a
+subspace-alignment error and not a community detection quality score, so the results do not speak
+directly to whether detection improves.
+
+Two findings matter here. Uniform sampling tracks effective-resistance sampling closely, and
+verbatim: ``even in the poorly-clustered setting, uniform sampling still followed an error
+trajectory similar to that of effective resistance sampling.'' And on well-clustered graphs
+uniform sampling was \emph{better}, which they attribute, as a hypothesis they do not test, to
+uniform sampling being ``biased towards undersampling cross cluster edges.''
+
+If this survives contact with an actual detection experiment it is a significant negative for the
+entire similarity-based line, because the expensive selection rule would be unnecessary exactly
+where structure is strong, and where structure is weak the guarantee lapses anyway.
 
 \section{The current wave, 2024--2026}
 
@@ -253,8 +294,8 @@ sparsification overhead can cancel the speedup it is meant to produce.
 \begin{center}
 \begin{tabular}{@{}lr@{}}
 \toprule
-Papers read end to end, with written notes & 8 \\
-PDFs archived locally & 8 \\
+Papers read end to end & 11 \\
+PDFs archived locally & 11 \\
 Lines of verified reading notes & 2{,}664 \\
 Bibliography entries, all fields from fetched records & 72 \\
 On-subject works spanning 2011--2026 & 14 \\
@@ -270,38 +311,64 @@ central claim.
 
 \subsection*{Genuine gaps, in priority order}
 
+The three items that headed this list in the first version of this document have been closed:
+He, Drineas and Khanna, Bravo-Hermsdorff and Gunderson, and the experimental section of Dreveton
+et al.\ were all read in full on 2026-07-27 and their entries above are now \textbf{[FULL]}.
+Reading them changed three things, recorded here rather than buried:
+
 \begin{enumerate}
-\item \textbf{He, Drineas and Khanna (2025) is unread.} \textbf{[META]} only. If uniform sampling
-provably suffices under strong clusterability, it bears directly on whether any similarity-based
-selection rule is necessary. This is the highest-value unread paper in the area.
-\item \textbf{Sotiropoulos and Tsourakakis (NeurIPS 2019) is unread.} \textbf{[META]} only. The
-unifying spectrum-preserving framework is prior art for several framing choices.
-\item \textbf{Dreveton et al.\ (2024): the proof is verified, the experiments are not.} The
-abstract was read verbatim; the evaluation protocol was described only through a page summary.
-Whether they control granularity under Leiden is unknown.
-\item \textbf{Socievole and Pizzuti (ASONAM 2024) is unread.} The 2026 paper is its extension.
+\item \textbf{An attribution error was found and corrected.} The NeurIPS 2019 unifying framework
+is by \textbf{Bravo-Hermsdorff and Gunderson}, not by Sotiropoulos and Tsourakakis. The wrong
+attribution entered this project from a line in \texttt{P1\_EVIDENCE.md} that was explicitly
+marked \texttt{[UNVERIFIED]} and was then promoted into a bibliography entry without being
+checked. It is corrected in \texttt{refs.bib} with a comment recording what happened. No other
+\texttt{[UNVERIFIED]} line has been promoted, but the episode is the reason the verification
+marks in this document exist.
+\item \textbf{Dreveton et al.\ turn out to run the best-controlled evaluation in this
+literature}, not a weak one: matched edge counts across three sparsifiers, a chance-corrected
+index, three detectors, and the unsparsified graph present as a baseline throughout. Their claim
+is preservation, not improvement, and it should be cited as such.
+\item \textbf{He et al.\ is more threatening to the similarity-based line than its abstract
+suggests}, because it does have experiments, including on LFR, and uniform sampling matches or
+beats effective-resistance sampling in all of them.
+\end{enumerate}
+
+What remains open:
+
+\begin{enumerate}
+\item \textbf{Socievole and Pizzuti (ASONAM 2024) is unread.} \textbf{[META]} only. The 2026
+\emph{Soft Computing} paper is its extension and has been read, which limits the exposure.
+\item \textbf{He et al.\ measure subspace alignment, not detection quality.} Nobody has run their
+uniform-sampling result through an actual community detection evaluation. That is an experiment,
+not a reading gap, and it is the most interesting one this review surfaces.
 \item \textbf{The 2012--2015 window is thin} on this specific question. Repeated searches return
-the same core corpus, which is consistent with the Hashemi survey's finding that the question was
-largely dormant, but absence of search results is weak evidence.
+the same core corpus, which is consistent with the Hashemi survey's finding that the question
+went dormant, but absence of search results is weak evidence.
 \item \textbf{Coarsening and condensation applied to community detection} is covered only through
-the Hashemi survey and Peng et al. If the pipeline has a modern descendant it is here.
+the Hashemi survey, Peng et al., and now Bravo-Hermsdorff and Gunderson, none of which evaluates
+detection quality. If the pipeline has a modern descendant it is here.
 \end{enumerate}
 
 \subsection*{Assessment}
 
-For the purpose of grounding a paper on this question, the corpus is close to complete on the
-\emph{lineage} and thin on the \emph{theory adjacent to it}. Every work that proposes or applies
-sparsify-then-detect and that a reviewer is likely to name has been located, and the five that
-matter most have been read in full and in four cases reproduced. What is missing is not more
-instances of the pipeline; searching for those has reached saturation, with the same dozen works
-returning across many differently-phrased queries. What is missing is the recent theory that
-constrains it, items 1 to 3 above, and of those only He et al.\ could change how the question is
-posed.
+For the purpose of grounding a paper on this question the corpus is now close to complete. Every
+work that proposes or applies sparsify-then-detect and that a reviewer is likely to name has been
+located, and eleven have been read end to end, four of those reproduced, two of the reproductions
+falsifying the paper's central claim.
 
-\emph{Recommended additional work: read three papers.} He et al.\ 2025, Sotiropoulos and
-Tsourakakis 2019, and the experimental section of Dreveton et al.\ 2024. That is the whole of
-what a further literature effort should consist of. Beyond those three, further searching is
-unlikely to return anything the corpus does not already hold.
+Searching for further instances of the pipeline has reached saturation: the same dozen works
+return across many differently-phrased queries, in three separate sessions, which is itself
+consistent with the Hashemi survey's finding that the modern reduction literature dropped
+community detection as a target. Further literature search is unlikely to return anything the
+corpus does not hold.
+
+What the review leaves behind is not a reading task but an experimental one. Two questions in the
+sections above are now precisely posed and unanswered by anybody: whether uniform edge sampling,
+which He et al.\ prove suffices for subspace preservation and which beats effective-resistance
+sampling in their own figures, also suffices for community detection quality; and whether the
+metric backbone, which keeps inter-community bridges and still preserves structure, behaves the
+same way under a detection-quality evaluation rather than a preservation one. Neither can be
+settled by reading.
 
 \bibliographystyle{plain}
 \bibliography{refs}
